@@ -1,0 +1,437 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>seafile服务 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="seafile是一个非常好用的，适合于小团队的文件共享服务软件。同时，它还是一款国内的开源软件，难得可贵。这两天我花了一些时间架设seafile服务，记录下来备用。
+seafile介绍
+组件
+
+ccnet：网络服务
+seafile server：负责数据访问
+seahub：网站界面，供用户管理自己在">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="seafile服务"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2013-02-21T15:57:00.000Z"><a href="/2013/02/21/seafile-service/">2013-02-21</a></time>
+      
+      
+  
+    <h1 class="title">seafile服务</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>seafile是一个非常好用的，适合于小团队的文件共享服务软件。同时，它还是一款国内的开源软件，难得可贵。这两天我花了一些时间架设seafile服务，记录下来备用。</p>
+<h2>seafile介绍</h2>
+<p><em>组件</em></p>
+<ul>
+<li>ccnet：网络服务</li>
+<li>seafile server：负责数据访问</li>
+<li>seahub：网站界面，供用户管理自己在服务器上的数据和账户信息</li>
+<li>HttpServer: 负责直接从网站上下载和上传文件</li>
+<li>controller: 负责监控和重启上述部件</li>
+</ul>
+<p><em>seafile环境</em></p>
+<img src="http://dl.dropbox.com/u/74911209/octopress/2013-02-26_seafile-topology.jpg" class="center " title="seafile组网示意图" alt="seafile组网示意图">
+
+
+<p>如图示，seafile服务器位于防火墙之后，需要在防火墙做好端口映射。</p>
+<blockquote>
+<p><strong>NOTE</strong><br>我用的是中国移动的宽带，无法通过官网的下载链接直接下载。必须fanqiang到<a href="https://code.google.com/p/seafile/downloads/list手工下载，然后再通过winscp传送到linux服务器上，颇为费劲。" target="_blank">https://code.google.com/p/seafile/downloads/list手工下载，然后再通过winscp传送到linux服务器上，颇为费劲。</a></p>
+</blockquote>
+<h2>安装</h2>
+<p>服务端支持linux和windows两种操作系统，本文的选择是debian 6 32bit。</p>
+<p><strong>准备存储</strong></p>
+<p>事先安装好nfs client，然后挂载NFS</p>
+<figure class="highlight"><pre><span class="preprocessor"># mkdir -p /mnt/seafile</span>
+<span class="preprocessor"># echo "192.168.55.120:/tank/documents/seafile  /mnt/seafile  nfs  defaults  0 1" &gt;&gt; /etc/fstab</span>
+<span class="preprocessor"># mount /mnt/seafile</span>
+</pre></figure>
+
+<p><strong>准备运行环境</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude update</span>
+<span class="preprocessor"># aptitude install python2.6 python-setuptools python-simplejson python-imaging sqlite3</span>
+</pre></figure>
+
+<p><strong>安装</strong></p>
+<p>查看系统架构，32bit or 64bit</p>
+<pre><code><span class="preprocessor"># uname -m      </span></code></pre>
+<p>创建seafile根目录，源文件将解压到该根目录下</p>
+<pre><code><span class="preprocessor"># mkdir /usr/local/src/seafile</span>
+<span class="preprocessor"># tar -C /usr/local/src/seafile -zxvf seafile-server_1.7.0_i386.tar.gz</span></code></pre>
+<p>that&#39;s all.</p>
+<h2>配置</h2>
+<figure class="highlight"><pre><span class="preprocessor"># cd /usr/local/src/seafile-server-*</span>
+<span class="preprocessor"># ./setup-seafile.sh</span>
+</pre></figure>
+
+<p>配置参数如下：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>seafile server name</td>
+<td>seafile服务器的名字，3~15 个字符，可用英文字母，数字，下划线</td>
+</tr>
+<tr>
+<td>seafile server ip or domain</td>
+<td>seafile服务器的IP地址或者域名。客户端将通过这个IP或者域名来访问Seafile服务。需要注意的是，在本例中，该IP地址应设为防火墙的互联网IP</td>
+</tr>
+<tr>
+<td>ccnet server port</td>
+<td>默认：10001</td>
+</tr>
+<tr>
+<td>seafile data dir</td>
+<td>seafile数据存放目录，默认是./seafile/seafile-data，建议放在一个NFS服务器中，方便日后的扩容和维护。</td>
+</tr>
+<tr>
+<td>seafile server port</td>
+<td>seafile服务器使用的TCP端口，默认为12001</td>
+</tr>
+<tr>
+<td>seafile httpserver port</td>
+<td>seafile httpserver使用的TCP端口，默认为8082</td>
+</tr>
+<tr>
+<td>seahub admin email</td>
+<td>sehaub管理员的帐户。该帐号仅是管理员帐号，用于发送邮件通知的email帐号需在seafile.conf中进行配置。</td>
+</tr>
+<tr>
+<td>seahub admin password</td>
+<td>seahub管理员的密码</td>
+</tr>
+</tbody>
+</table>
+<p>seafile的配置文件是分布式的，不同组件的配置文件单独分开，不利于维护。</p>
+<p><strong>启动</strong></p>
+<figure class="highlight"><pre><span class="xml"></span><span class="comment"># ./seafile.sh start</span><span class="xml">
+</span><span class="comment"># ./seahub.sh start</span><span class="xml">
+假如seahub的端口不是默认的</span><span class="number">8000</span><span class="xml">，则
+./seahub.sh start <span class="tag">&lt;<span class="title">new_port</span>&gt;</span></span>
+</pre></figure>
+
+<p><strong>停止</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># ./seafile.sh stop</span>
+<span class="preprocessor"># ./seahub.sh stop</span>
+</pre></figure>
+
+<p><strong>重启</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># ./seafile.sh restart</span>
+<span class="preprocessor"># ./seahub.sh restart</span>
+</pre></figure>
+
+<p>假如seahub的端口不是默认的8000，则</p>
+<figure class="highlight"><pre># ./seahub.sh restart <span class="tag">&lt;<span class="title">new_port</span>&gt;</span>
+</pre></figure>
+
+<h1>升级</h1>
+<p>由于seafile的开发非常活跃，新版本层出不穷，因而经常需要升级。</p>
+<p>升级前需先中止seahub和seafile进程：</p>
+<figure class="highlight"><pre><span class="preprocessor"># ./seahub.sh stop</span>
+<span class="preprocessor"># ./seafile.sh stop</span>
+</pre></figure>
+
+<p>新下载的版本也一并解压到seafile的根目录下，在本文中指的是<code>/usr/local/src/seafile</code>，读者也可以自行选择其它目录。最终的目录结构如下：</p>
+<figure class="highlight"><pre><span class="comment">/usr/local/src</span>
+   <span class="literal">-</span><span class="literal">-</span> <span class="comment">seafile</span>-<span class="comment">server</span>-<span class="comment">1</span>.<span class="comment">7</span>.<span class="comment">0</span>
+   <span class="literal">-</span><span class="literal">-</span> <span class="comment">seafile</span>-<span class="comment">server</span>-<span class="comment">1</span>.<span class="comment">4</span>.<span class="comment">5</span>
+   <span class="literal">-</span><span class="literal">-</span> <span class="comment">ccnet</span>
+   <span class="literal">-</span><span class="literal">-</span> <span class="comment">seafile</span>-<span class="comment">data
+</pre></figure>
+
+<p><strong>小版本升级</strong></p>
+<p>指的是从1.6.0升级到1.6.1。</p>
+<figure class="highlight"><pre><span class="comment">cd</span> <span class="comment">/usr/local/src/seafile/seafile</span>-<span class="comment">server</span>-<span class="comment">1</span>.<span class="comment">3</span>.<span class="comment">1/seahub/media</span>
+<span class="comment">cp</span> <span class="literal">-</span><span class="comment">rf</span> <span class="comment">avatars/*</span> <span class="string">.</span><span class="string">.</span><span class="comment">/</span>.<span class="string">.</span><span class="comment">/</span>.<span class="string">.</span><span class="comment">/seahub</span>-<span class="comment">data/avatars/</span>
+<span class="comment">rm</span> <span class="literal">-</span><span class="comment">rf</span> <span class="comment">avatars</span>
+<span class="comment">ln</span> <span class="literal">-</span><span class="comment">s</span> <span class="string">.</span><span class="string">.</span><span class="comment">/</span>.<span class="string">.</span><span class="comment">/</span>.<span class="string">.</span><span class="comment">/seahub</span>-<span class="comment">data/avatars
+</pre></figure>
+
+<p><strong>连续版本升级</strong></p>
+<p>指的是从1.6.0升级到1.7.0。</p>
+<figure class="highlight"><pre><span class="title">cd</span> /usr/local/src/seafile-server1.<span class="number">7</span>.<span class="number">0</span>/upgrade
+./update_1.6_1.<span class="number">7</span>.sh
+</pre></figure>
+
+<p><strong>非连续版本升级</strong></p>
+<p>现在的版本为1.4，最新版本为1.7，需连续执行</p>
+<figure class="highlight"><pre><span class="comment">cd</span> <span class="comment">/usr/local/src/seafile</span>-<span class="comment">server1</span>.<span class="comment">7</span>.<span class="comment">0/upgrade</span>
+<span class="string">.</span><span class="comment">/update_1</span>.<span class="comment">4_1</span>.<span class="comment">5</span>.<span class="comment">sh</span>
+<span class="string">.</span><span class="comment">/update_1</span>.<span class="comment">5_1</span>.<span class="comment">6</span>.<span class="comment">sh</span>
+<span class="string">.</span><span class="comment">/update_1</span>.<span class="comment">6_1</span>.<span class="comment">7</span>.<span class="comment">sh
+</pre></figure>
+
+<p>升级完毕后启动seahub和seafile进程。</p>
+<p><strong>随机启动</strong></p>
+<p>seafile服务由多个进程共同协作而成，</p>
+<p>创建<code>/etc/init.d/seafile-server</code></p>
+<figure class="highlight"><pre><span class="shebang">#!/bin/sh</span>
+<span class="comment">### BEGIN INIT INFO</span>
+<span class="comment"># Provides:		seafile-server</span>
+<span class="comment"># Required-Start:	$all</span>
+<span class="comment"># Required-Stop:	$all</span>
+<span class="comment"># Should-Start:		$local_fs</span>
+<span class="comment"># Should-Stop:		$local_fs</span>
+<span class="comment"># Default-Start:	2 3 4 5</span>
+<span class="comment"># Default-Stop:		0 1 6</span>
+<span class="comment">### END INIT INFO</span>
+
+<span class="comment"># Change the value of "user" to your user name</span>
+user=root
+
+<span class="comment"># Change the value of "script_path" to your path of seafile installation</span>
+script_path=/usr/local/src/seafile/seafile-server-1.7.0
+
+sudo -u <span class="variable">${user}</span> <span class="variable">${script_path}</span>/seafile.sh start &gt; /tmp/seafile.init.log 2&gt;&1
+sudo -u <span class="variable">${user}</span> <span class="variable">${script_path}</span>/seahub.sh start &gt; /tmp/seahub.init.log 2&gt;&1
+</pre></figure>
+
+<p>以上脚本仅用于start，缺乏stop和restart的功能。</p>
+<p>更新</p>
+<figure class="highlight"><pre><span class="preprocessor"># chmod +x /etc/init.d/seafile-server</span>
+<span class="preprocessor"># update-rc.d seafile-server defaults</span>
+</pre></figure>
+
+<h2>tips</h2>
+<ul>
+<li><p>变更默认端口后，seafile可能会出现问题，这种情况下建议直接重装了事，包括服务端和客户端。</p>
+</li>
+<li><p>客户端的删除</p>
+<ul>
+<li>删除客户端之前请确保ccnet进程已杀掉，否则无法正常卸载。</li>
+<li>卸载完后，手工删除客户端的配置文件夹<code>C:\用户\&lt;用户名&gt;\ccnet</code></li>
+</ul>
+</li>
+<li><p>客户端的配置</p>
+<p>  客户端的配置文件为<code>C:\用户\&lt;用户名&gt;\ccnet\ccnet.conf</code>，假如服务端的变更了默认端口号，需在此进行变更。</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/seafile/">seafile</a>, <a href="/categories/seafile/services/">services</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

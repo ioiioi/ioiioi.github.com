@@ -4,7 +4,7 @@
   <subtitle><![CDATA[focus on security, network management and embeded OS]]></subtitle>
   <link href="http://ioiioi.github.io/atom.xml" rel="self"/>
   <link href="http://ioiioi.github.io"/>
-  <updated>2013-11-08T07:37:30.963Z</updated>
+  <updated>2013-11-08T15:44:39.903Z</updated>
   <id>http://ioiioi.github.io/</id>
   <author>
     <name><![CDATA[alfie chan]]></name>
@@ -15,7 +15,7 @@
     <link href="http://ioiioi.github.io/2013/11/08/KVM-installation/"/>
     <id>http://ioiioi.github.io/2013/11/08/KVM-installation/</id>
     <published>2013-11-08T07:00:00.000Z</published>
-    <updated>2013-11-08T07:34:51.000Z</updated>
+    <updated>2013-11-08T07:38:20.000Z</updated>
     <content type="html"><![CDATA[<p>产品实验室服务器之前安装的是xen，kvm作为后起之秀也值得测试一下，于是将其中一台服务器格了，重装CentOS6和kvm。</p>
 <p>服务器硬件：</p>
 <ul>
@@ -23,6 +23,8 @@
 <li>4 * broadcom千兆网卡</li>
 <li>2 * SAS 300G硬盘</li>
 </ul>
+<a id="more"></a>
+
 <h2>安装</h2>
 <figure class="highlight"><pre><span class="preprocessor"># yum -y groupinstall Virtualization "Virtualization Client" \</span>
                       <span class="string">"Virtualization Platform"</span> \
@@ -309,6 +311,235 @@ pass quick on $lan_if inet proto tcp to $server_2 port <span class="number">80</
 </ul>
 ]]></content>
     <category scheme="http://ioiioi.github.io/categories/openbsd/" term="openbsd"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[OpenWRT网络配置]]></title>
+    <link href="http://ioiioi.github.io/2013/04/26/openwrt-network-config/"/>
+    <id>http://ioiioi.github.io/2013/04/26/openwrt-network-config/</id>
+    <published>2013-04-26T08:00:00.000Z</published>
+    <updated>2013-11-08T15:43:04.000Z</updated>
+    <content type="html"><![CDATA[<h1>软硬件环境</h1>
+<ul>
+<li>硬件：Linksys WRT54G修改版，8M FLASH/64M RAM</li>
+<li>OS：OpenWRT 12.09</li>
+</ul>
+<h1>需求</h1>
+<ul>
+<li>WAN口处于闲置状态，未连接任何网络</li>
+<li>LAN IP: 192.168.44.1/24，wifi IP: 192.168.77.1/24</li>
+<li>wifi与LAN这两个网段之间可互相访问</li>
+<li>在wifi口启用DHCP服务</li>
+<li>wifi处于AP mode，SSID为OpenWRT，启用WPS-PSK2认证</li>
+</ul>
+<h1>配置</h1>
+<figure class="highlight"><pre><span class="preprocessor"># cat /etc/config/network</span>
+
+config <span class="keyword">switch</span> <span class="string">'eth0'</span>
+	option enable <span class="string">'1'</span>
+
+config switch_vlan <span class="string">'eth0_0'</span>
+	option device <span class="string">'eth0'</span>
+	option vlan <span class="string">'0'</span>
+	option ports <span class="string">'0 1 2 3 5'</span>
+
+config switch_vlan <span class="string">'eth0_1'</span>
+	option device <span class="string">'eth0'</span>
+	option vlan <span class="string">'1'</span>
+	option ports <span class="string">'4 5'</span>
+
+config <span class="class"><span class="keyword">interface</span> '<span class="title">loopback</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">lo</span>'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">ipaddr</span> '127.0.0.1'
+	<span class="title">option</span> <span class="title">netmask</span> '255.0.0.0'
+
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">lan</span>'
+	<span class="title">option</span> <span class="title">type</span> '<span class="title">bridge</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">eth0</span>.0'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">netmask</span> '255.255.255.0'
+	<span class="title">option</span> <span class="title">ipaddr</span> '192.168.44.1'
+
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">wan</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">eth0</span>.1'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">dhcp</span>'
+	
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">wifi</span>'
+	<span class="title">option</span> <span class="title">_orig_ifname</span> '<span class="title">radio0</span>.<span class="title">network1</span>'
+	<span class="title">option</span> <span class="title">_orig_bridge</span> '<span class="title">false</span>'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">ipaddr</span> '192.168.77.1'
+	<span class="title">option</span> <span class="title">netmask</span> '255.255.255.0'
+</pre></figure>
+
+<p>注意：在openwrt官网中，wifi section缺乏<code>_orig_ifname</code>和<code>_orig_bridge</code>这两个参数，无法正常工作。</p>
+<figure class="highlight"><pre># cat /etc/config/wireless 
+
+config wifi-device <span class="comment">'radio0'</span>
+	<span class="keyword">option</span> type <span class="comment">'mac80211'</span>
+	<span class="keyword">option</span> channel <span class="comment">'11'</span>
+	<span class="keyword">option</span> macaddr <span class="comment">'00:13:10:e5:bc:53'</span>
+	<span class="keyword">option</span> hwmode <span class="comment">'11g'</span>
+	<span class="keyword">option</span> txpower <span class="comment">'20'</span>
+	<span class="keyword">option</span> country <span class="comment">'00'</span>
+
+config wifi-iface
+	<span class="keyword">option</span> device <span class="comment">'radio0'</span>
+	<span class="keyword">option</span> network <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> mode <span class="comment">'ap'</span>
+	<span class="keyword">option</span> encryption <span class="comment">'psk2'</span>
+	<span class="keyword">option</span> key <span class="comment">'secret'</span>
+	<span class="keyword">option</span> ssid <span class="comment">'OpenWRT'</span>
+</pre></figure>
+
+<figure class="highlight"><pre># cat /etc/config/dhcp
+
+config dnsmasq
+	<span class="keyword">option</span> domainneeded <span class="comment">'1'</span>
+	<span class="keyword">option</span> boguspriv <span class="comment">'1'</span>
+	<span class="keyword">option</span> localise_queries <span class="comment">'1'</span>
+	<span class="keyword">option</span> rebind_protection <span class="comment">'1'</span>
+	<span class="keyword">option</span> rebind_localhost <span class="comment">'1'</span>
+	<span class="keyword">option</span> local <span class="comment">'/lan/'</span>
+	<span class="keyword">option</span> domain <span class="comment">'lan'</span>
+	<span class="keyword">option</span> expandhosts <span class="comment">'1'</span>
+	<span class="keyword">option</span> authoritative <span class="comment">'1'</span>
+	<span class="keyword">option</span> readethers <span class="comment">'1'</span>
+	<span class="keyword">option</span> leasefile <span class="comment">'/tmp/dhcp.leases'</span>
+	<span class="keyword">option</span> resolvfile <span class="comment">'/tmp/resolv.conf.auto'</span>
+	list <span class="built_in">server</span> <span class="comment">'192.168.44.254'</span>
+
+config dhcp <span class="comment">'lan'</span>
+	<span class="keyword">option</span> interface <span class="comment">'lan'</span>
+	<span class="keyword">option</span> ignore <span class="comment">'1'</span>
+
+config dhcp <span class="comment">'wan'</span>
+	<span class="keyword">option</span> interface <span class="comment">'wan'</span>
+	<span class="keyword">option</span> ignore <span class="comment">'1'</span>
+
+config dhcp <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> interface <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> start     <span class="comment">'100'</span>
+	<span class="keyword">option</span> limit     <span class="comment">'20'</span>
+	<span class="keyword">option</span> leasetime <span class="comment">'12h'</span>
+</pre></figure>
+
+<p>配置完成后</p>
+<figure class="highlight"><pre><span class="preprocessor"># ifup wifi</span>
+<span class="preprocessor"># /etc/init.d/dnsmasq restart</span>
+</pre></figure>
+
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/openwrt/" term="openwrt"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[RouterOS学习笔记]]></title>
+    <link href="http://ioiioi.github.io/2013/04/04/RouterOS-study-notes/"/>
+    <id>http://ioiioi.github.io/2013/04/04/RouterOS-study-notes/</id>
+    <published>2013-04-04T08:00:00.000Z</published>
+    <updated>2013-11-08T15:41:05.000Z</updated>
+    <content type="html"><![CDATA[<p>2年前买了个RB493G，它是MikroTik当年出品的一款高性能企业级无线路由器，一直闲置着，落了不少灰。最近恰好要将大量数据从笔记本备份至ZFS存储，实在忍受不了LinkSYS WRT54G的无线速率，于是这两天把RB493G翻出来好好地玩了一把。</p>
+<h1>interface</h1>
+<p>RouterBOARD中的接口类型挺丰富，之前用得最多的就是千兆口和无线网卡，最近新出的RouterBOARD也带有SFP口了。当然，在RouterOS中接触最多的概念则是物理口和逻辑口。</p>
+<h2>PPPoE client</h2>
+<p>逻辑口，也就是拨号上网。注意哦，平时经常说ADSL拨号上网，实际上是两个概念，ADSL是物理层链路，拨号上网是通过PPPoE协议实现拨号、认证和计费。现在我用的是中国移动的家庭宽带，入户的直接就是一根网线，已经不再需要ADSL modern。</p>
+<p>我将入户网线插入到RB493G的ether1中。Oracle的两根网线分别插入ether2和ether3，另外一根ether7置空，留作测试只用。</p>
+<figure class="highlight"><pre>[admin@MikroTik] &gt; <span class="class"><span class="keyword">interface</span> <span class="title">pppoe</span>-<span class="title">client</span> <span class="title">print</span>
+<span class="title">Flags</span>: <span class="title">X</span> - <span class="title">disabled</span>, <span class="title">R</span> - <span class="title">running</span> 
+ 0  <span class="title">R</span> <span class="title">name</span>="<span class="title">pppoe</span>-<span class="title">out1</span>" <span class="title">max</span>-<span class="title">mtu</span>=1480 <span class="title">max</span>-<span class="title">mru</span>=1480 <span class="title">mrru</span>=<span class="title">disabled</span> 
+      <span class="title">interface</span>=<span class="title">ether1</span> <span class="title">user</span>="15904701233" <span class="title">password</span>="123123" 
+      <span class="title">profile</span>=<span class="title">pppoe</span>-<span class="title">client</span>-<span class="title">default</span> <span class="title">service</span>-<span class="title">name</span>="" <span class="title">ac</span>-<span class="title">name</span>="" 
+      <span class="title">add</span>-<span class="title">default</span>-<span class="title">route</span>=<span class="title">yes</span> <span class="title">dial</span>-<span class="title">on</span>-<span class="title">demand</span>=<span class="title">no</span> <span class="title">use</span>-<span class="title">peer</span>-<span class="title">dns</span>=<span class="title">yes</span> 
+      <span class="title">allow</span>=<span class="title">pap</span>,<span class="title">chap</span>,<span class="title">mschap1</span>,<span class="title">mschap2</span>
+</pre></figure>
+
+<h2>ethernet</h2>
+<p>毋庸置疑，物理口。</p>
+<figure class="highlight"><pre>[admin@MikroTik] &gt; <span class="class"><span class="keyword">interface</span> <span class="title">ethernet</span> <span class="title">print</span>
+<span class="title">Flags</span>: <span class="title">X</span> - <span class="title">disabled</span>, <span class="title">R</span> - <span class="title">running</span>, <span class="title">S</span> - <span class="title">slave</span> 
+ #    <span class="title">NAME</span>        <span class="title">MTU</span> <span class="title">MAC</span>-<span class="title">ADDRESS</span>       <span class="title">ARP</span>        <span class="title">MASTER</span>-<span class="title">PORT</span>     <span class="title">SWITCH</span>    
+ 0 <span class="title">R</span>  <span class="title">ether1</span>     1500 00:0<span class="title">C</span>:42:<span class="title">A9</span>:<span class="title">AB</span>:87 <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch1</span>   
+ 1 <span class="title">RS</span> <span class="title">ether2</span>     1500 00:05:5<span class="title">D</span>:72:<span class="title">A5</span>:0<span class="title">D</span> <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch2</span>   
+ 2 <span class="title">RS</span> <span class="title">ether3</span>     1500 00:0<span class="title">C</span>:42:<span class="title">A9</span>:<span class="title">AB</span>:89 <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch2</span>   
+ 3    <span class="title">ether4</span>     1500 00:0<span class="title">C</span>:42:<span class="title">A9</span>:<span class="title">AB</span>:8<span class="title">A</span> <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch2</span>   
+ 4    <span class="title">ether5</span>     1500 00:0<span class="title">C</span>:42:<span class="title">A9</span>:<span class="title">AB</span>:8<span class="title">B</span> <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch2</span>   
+ 5    <span class="title">ether6</span>     1500 00:0<span class="title">C</span>:42:<span class="title">A9</span>:<span class="title">AB</span>:8<span class="title">C</span> <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch1</span>   
+ 6 <span class="title">R</span>  <span class="title">ether7</span>     1500 00:0<span class="title">C</span>:42:<span class="title">A9</span>:<span class="title">AB</span>:8<span class="title">D</span> <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch1</span>   
+ 7    <span class="title">ether8</span>     1500 00:0<span class="title">C</span>:42:<span class="title">A9</span>:<span class="title">AB</span>:8<span class="title">E</span> <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch1</span>   
+ 8    <span class="title">ether9</span>     1500 00:0<span class="title">C</span>:42:<span class="title">A9</span>:<span class="title">AB</span>:8<span class="title">F</span> <span class="title">enabled</span>    <span class="title">none</span>            <span class="title">switch1</span>
+</pre></figure>
+
+<p>比较特别的地方是ether2和ether3均有一个<code>S</code>的标识，这是由于创建了一个bonding逻辑接口，下属口就是ether2和ether3。</p>
+<h2>bonding</h2>
+<p>逻辑口，包含了ether2和ether3，这两个口通过两根网线与solaris 11的两个网口相连，构建Link Aggregation。</p>
+<figure class="highlight"><pre>[admin@MikroTik] &gt; <span class="class"><span class="keyword">interface</span> <span class="title">bonding</span> <span class="title">print</span>         
+<span class="title">Flags</span>: <span class="title">X</span> - <span class="title">disabled</span>, <span class="title">R</span> - <span class="title">running</span> 
+ 0  <span class="title">R</span> <span class="title">name</span>="<span class="title">bonding1</span>" <span class="title">mtu</span>=1500 <span class="title">mac</span>-<span class="title">address</span>=00:05:5<span class="title">D</span>:72:<span class="title">A5</span>:0<span class="title">D</span> <span class="title">arp</span>=<span class="title">enabled</span> 
+      <span class="title">slaves</span>=<span class="title">ether2</span>,<span class="title">ether3</span> <span class="title">mode</span>=802.3<span class="title">ad</span> <span class="title">primary</span>=<span class="title">none</span> <span class="title">link</span>-<span class="title">monitoring</span>=<span class="title">none</span> 
+      <span class="title">arp</span>-<span class="title">interval</span>=100<span class="title">ms</span> <span class="title">arp</span>-<span class="title">ip</span>-<span class="title">targets</span>=192.168.172.20 <span class="title">mii</span>-<span class="title">interval</span>=100<span class="title">ms</span> 
+      <span class="title">down</span>-<span class="title">delay</span>=0<span class="title">ms</span> <span class="title">up</span>-<span class="title">delay</span>=0<span class="title">ms</span> <span class="title">lacp</span>-<span class="title">rate</span>=30<span class="title">secs</span> 
+      <span class="title">transmit</span>-<span class="title">hash</span>-<span class="title">policy</span>=<span class="title">layer</span>-2-<span class="title">and</span>-3
+</pre></figure>
+
+<p>RouterOS中对802.3ad的实现并不完整，尚未兼容layer-3-and-4这种策略，因此对端也只能设置成L2，L3或L2+L3。</p>
+<h2>wireless</h2>
+<p>物理口。此处用的无线网卡是R52n，可以实现2.4G和5G的802.11n。关键在于笔记本的无线网卡，很多仅支持2.4G的802.11n。</p>
+<figure class="highlight"><pre>[admin<span class="property">@MikroTik</span>] /interface&gt; wireless print
+Flags: X - disabled, R - running 
+ <span class="number">0</span>  R name=<span class="string">"wlan1"</span> mtu=<span class="number">1500</span> mac-address=<span class="number">00</span>:<span class="number">0</span>C:<span class="number">42</span>:<span class="number">66</span>:<span class="number">45</span>:<span class="number">56</span> arp=enabled 
+      interface-type=Atheros <span class="number">11</span>N mode=ap-bridge ssid=<span class="string">"RB493G"</span> 
+      frequency=<span class="number">2412</span> band=<span class="number">2</span>ghz-b<span class="regexp">/g/</span>n channel-width=<span class="number">20</span>mhz scan-list=<span class="reserved">default</span> 
+      wireless-protocol=<span class="number">802.11</span> wds-mode=disabled wds-<span class="reserved">default</span>-bridge=none 
+      wds-ignore-ssid=<span class="literal">no</span> bridge-mode=enabled <span class="reserved">default</span>-authentication=<span class="literal">yes</span> 
+      <span class="reserved">default</span>-forwarding=<span class="literal">yes</span> <span class="reserved">default</span>-ap-tx-limit=<span class="number">0</span> 
+      <span class="reserved">default</span>-client-tx-limit=<span class="number">0</span> hide-ssid=<span class="literal">no</span> security-profile=<span class="reserved">default</span> 
+      compression=<span class="literal">no</span>
+</pre></figure>
+
+<p>配置很复杂，还是通过winbox方便一些。即便是再忠诚的命令行拥护者也不能阻挡GUI的诱惑。</p>
+<h1>IP address</h1>
+<figure class="highlight"><pre><span class="title">[</span><span class="comment">admin@MikroTik</span>] <span class="comment">/ip</span>&gt; <span class="comment">address</span> <span class="comment">print</span>
+<span class="comment">Flags:</span> <span class="comment">X</span> <span class="literal">-</span> <span class="comment">disabled</span>, <span class="comment">I</span> <span class="literal">-</span> <span class="comment">invalid</span>, <span class="comment">D</span> <span class="literal">-</span> <span class="comment">dynamic</span> 
+ <span class="comment">#</span>   <span class="comment">ADDRESS</span>            <span class="comment">NETWORK</span>         <span class="comment">INTERFACE</span>                            
+ <span class="comment">0</span>   <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">22</span>.<span class="comment">254/24</span>  <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">22</span>.<span class="comment">0</span>    <span class="comment">wlan1</span>                                
+ <span class="comment">1</span>   <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">172</span>.<span class="comment">254/24</span> <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">172</span>.<span class="comment">0</span>   <span class="comment">bonding1</span>                             
+ <span class="comment">2</span> <span class="comment">D</span> <span class="comment">183</span>.<span class="comment">254</span>.<span class="comment">43</span>.<span class="comment">236/32</span>  <span class="comment">183</span>.<span class="comment">254</span>.<span class="comment">0</span>.<span class="comment">1</span>     <span class="comment">pppoe</span>-<span class="comment">out1</span>                           
+ <span class="comment">3</span>   <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">44</span>.<span class="comment">254/24</span>  <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">44</span>.<span class="comment">0</span>    <span class="comment">ether7
+</pre></figure>
+
+<p>RouterOS跟其它的网络设备配置有些区别，IP地址跟物理口的设置分别在两个不同的菜单中，最终在IP地址菜单中实现两者的捆绑。</p>
+<h1>DHCP server</h1>
+<p>此处仅针对wireless提供DHCP服务。</p>
+<figure class="highlight"><pre>[admin<span class="variable">@MikroTik</span>] /ip&gt; dhcp-server <span class="keyword">print</span>
+Flags: X - disabled, I - invalid 
+ <span class="comment">#   NAME        INTERFACE     RELAY     ADDRESS-POOL        LEASE-TIME ADD-ARP</span>
+ <span class="number">0</span>   dhcpServer   wlan1                     dhcp                  <span class="number">3</span>d        
+[admin<span class="variable">@MikroTik</span>] /ip&gt; pool <span class="keyword">print</span>
+ <span class="comment"># NAME         RANGES                         </span>
+ <span class="number">0</span> dhcp         <span class="number">192.168</span>.<span class="number">22.1</span>-<span class="number">192.168</span>.<span class="number">22.10</span>
+</pre></figure>
+
+<h1>NAT</h1>
+<p>显然，需要为RouterOS中所有网段提供NAT才能正常访问互联网。</p>
+<figure class="highlight"><pre><span class="title">[</span><span class="comment">admin@MikroTik</span>] <span class="comment">/ip</span> <span class="comment">firewall</span>&gt; <span class="comment">nat</span> <span class="comment">print</span>
+<span class="comment">Flags:</span> <span class="comment">X</span> <span class="literal">-</span> <span class="comment">disabled</span>, <span class="comment">I</span> <span class="literal">-</span> <span class="comment">invalid</span>, <span class="comment">D</span> <span class="literal">-</span> <span class="comment">dynamic</span> 
+ <span class="comment">0</span>   <span class="comment">chain=srcnat</span> <span class="comment">action=masquerade</span> <span class="comment">to</span>-<span class="comment">addresses=0</span>.<span class="comment">0</span>.<span class="comment">0</span>.<span class="comment">0</span> <span class="comment">out</span>-<span class="comment">interface=pppoe</span>-<span class="comment">out1
+</pre></figure>
+
+<p>NAT配置位于firewall菜单中，其的选项也很复杂，此处的关键是out-interface需要选择<code>pppoe-out1</code>。</p>
+<h1>Link Aggregation</h1>
+<p>Oracle的文档非常详尽，MikroTik的RouterOS也很简单，因此创建Link Aggregation倒是很(容易)[]。</p>
+<p>然而，两者通过两根网线连接后，死活ping不通，我尝试着更换了各种组合，譬如solaris侧分别设置了Policy: L2、L3和L2/L3，LACPactivity: active、passive和off等各种组合，RouterOS中的link monitor也尝试了arp、mii-1等，均未成功。实在没办法，于是只能采用终极大法：升级固件。</p>
+<p>升级之后，终于实现Link Aggregation。手工模拟故障，先在RouterOS上ping solaris11的IP地址，拔掉任意一条网线均不影响两者之间的互联，顶多掉一个包。问题得到解决，solaris 11.1最终设置成了：</p>
+<figure class="highlight"><pre># dladm <span class="operator"><span class="keyword">show</span>-aggr aggr0
+</pre></figure>
+
+<h1>固件升级</h1>
+<p>我所买的RB493G的license是Level5，因此可以升级到后续的两个大版本号，比如说现在的RouterOS是V4.16，则最高可以升级到V6。</p>
+<p>RouterBOARD的升级非常简单，在winbox界面中，打开file，然后将最新的firmware拖进winbox中，最后在terminal中<code>system reboot</code>重启即可。</p>
+<p>自从将Linksys WRT54G换成了RB493G后，一个明显的感觉就是，笔记本通过无线浏览网页的速度比以前快多了，难道是心理作用？</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/RouterOS/" term="RouterOS"/>
   </entry>
   <entry>
     <title type="html"><![CDATA[OpenVPN on OpenBSD]]></title>
@@ -605,30 +836,270 @@ pass inet proto { tcp, udp } from <span class="tag">&lt;<span class="title">vpn_
     <category scheme="http://ioiioi.github.io/categories/openbsd/" term="openbsd"/>
   </entry>
   <entry>
+    <title type="html"><![CDATA[一次业务迁移的经验小结]]></title>
+    <link href="http://ioiioi.github.io/2013/04/01/some-tips-about-app-migration/"/>
+    <id>http://ioiioi.github.io/2013/04/01/some-tips-about-app-migration/</id>
+    <published>2013-04-01T05:00:00.000Z</published>
+    <updated>2013-11-08T15:38:53.000Z</updated>
+    <content type="html"><![CDATA[<h2>移动介质的FS要足够普通</h2>
+<p>我准备了一块160G的移动硬盘，由于容量比较大，因此格式化为exFAT格式，然而生产环境的OS分别是windows 2003和OpenSUSE11.3，都无法识别，而移动硬盘中还有其它数据，不能直接格式化，因此费了一番心思。</p>
+<p>所以，移动介质一定要采用最普通的文件系统，譬如FAT32，windows2003和较老的linux都无法识别exFAT。</p>
+<h2>如何实现快速拷贝</h2>
+<p>windows ntfs文件系统对付小文件力不从心，因此假如有大量小文件需要备份，有两种解决办法：</p>
+<ul>
+<li><p>压缩-传输-解压</p>
+<p>用winzip、winrar这样的压缩软件采用zip方式打包（不压缩，选择最快速度）小文件后，作为一个打文件传送到另外一个服务器，然后在目的地解压；</p>
+</li>
+<li><p>使用第三方拷贝软件</p>
+<p>譬如fastcopy和ultracopier，千万别用teracopy，在cmoa业务数据备份的过程中发现它有两个问题：</p>
+<ol>
+<li>拷贝速度不稳定，下跌厉害；</li>
+<li>拷贝文件出现错误。而fastcopy就非常稳定，而且不会出错。</li>
+</ol>
+</li>
+</ul>
+<p>经测试，采用CIFS/SMB共享方式，fastcopy的拷贝速度可达15MB/s，基本上是千兆网络速率的极限。</p>
+<h2>尽量使用域名</h2>
+<p>基于B/S架构的业务系统尽量用域名访问，否则IP地址变更后，如何通知几百个客户是非常痛苦的一件事情，尤其是政府客户。</p>
+<h2>基础服务和业务应用分开部署</h2>
+<p>2009年部署业务应用的时缺乏经验，将一些基础服务，譬如DNS、radius、AD和OpenVPN等基础服务连同业务应用全部部署在同一台物理服务器上，导致业务应用迁移前需先做好基础服务的迁移。当然，假如物理服务器数量足够的话，没有人愿意将多个服务部署在一台服务器。</p>
+<h2>VMware中修改guest OS的MAC地址</h2>
+<p>很多业务应用的license都跟服务器的MAC地址进行绑定，因此需要提前了解VMware环境中的MAC地址修改技巧。</p>
+<p>有两种方式</p>
+<ul>
+<li><p>修改VMware的VMX文件</p>
+</li>
+<li><p>修改guest OS中的AMC地址，windows中我经常用的是K-mac，linux则直接在网卡的配置文件中设定即可。</p>
+</li>
+</ul>
+<h2>新不如旧</h2>
+<p>前面的文件系统是这样，接下来的无线路由器也是这样，在本次迁移的过程中，顺手用一个D-link DIR600M换掉一台古老的linksys WRT54G。</p>
+<p>DIR600M支持AP和无线路由两种无线工作方式，AP方式指的是WAN、LAN和wifi处于同一个网段：192.168.0.0/24，而且这个网段还不能手工改，无线路由方式指的是WAN连接互联网，LAN和wifi处于同一个网段。好在LAN可以自行设置IP地址。因此最终选择了“无线路由”方式。DIR600M仅有4M rom和32M ram，刷OpenWRT就不必了，还比不上两年前买的LinkSYS WRT54G mod，至少还有8M rom和64M ram呢。</p>
+<p>所以说，并不是越新就越好，成本的下降往往意味着偷工减料。</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/tech/" term="tech"/>
+    <category scheme="http://ioiioi.github.io/categories/tech/tips/" term="tips"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[seafile服务]]></title>
+    <link href="http://ioiioi.github.io/2013/02/21/seafile-service/"/>
+    <id>http://ioiioi.github.io/2013/02/21/seafile-service/</id>
+    <published>2013-02-21T15:57:00.000Z</published>
+    <updated>2013-11-08T15:37:10.000Z</updated>
+    <content type="html"><![CDATA[<p>seafile是一个非常好用的，适合于小团队的文件共享服务软件。同时，它还是一款国内的开源软件，难得可贵。这两天我花了一些时间架设seafile服务，记录下来备用。</p>
+<h2>seafile介绍</h2>
+<p><em>组件</em></p>
+<ul>
+<li>ccnet：网络服务</li>
+<li>seafile server：负责数据访问</li>
+<li>seahub：网站界面，供用户管理自己在服务器上的数据和账户信息</li>
+<li>HttpServer: 负责直接从网站上下载和上传文件</li>
+<li>controller: 负责监控和重启上述部件</li>
+</ul>
+<p><em>seafile环境</em></p>
+<img src="http://dl.dropbox.com/u/74911209/octopress/2013-02-26_seafile-topology.jpg" class="center " title="seafile组网示意图" alt="seafile组网示意图">
+
+
+<p>如图示，seafile服务器位于防火墙之后，需要在防火墙做好端口映射。</p>
+<blockquote>
+<p><strong>NOTE</strong><br>我用的是中国移动的宽带，无法通过官网的下载链接直接下载。必须fanqiang到<a href="https://code.google.com/p/seafile/downloads/list手工下载，然后再通过winscp传送到linux服务器上，颇为费劲。" target="_blank">https://code.google.com/p/seafile/downloads/list手工下载，然后再通过winscp传送到linux服务器上，颇为费劲。</a></p>
+</blockquote>
+<h2>安装</h2>
+<p>服务端支持linux和windows两种操作系统，本文的选择是debian 6 32bit。</p>
+<p><strong>准备存储</strong></p>
+<p>事先安装好nfs client，然后挂载NFS</p>
+<figure class="highlight"><pre><span class="preprocessor"># mkdir -p /mnt/seafile</span>
+<span class="preprocessor"># echo "192.168.55.120:/tank/documents/seafile  /mnt/seafile  nfs  defaults  0 1" &gt;&gt; /etc/fstab</span>
+<span class="preprocessor"># mount /mnt/seafile</span>
+</pre></figure>
+
+<p><strong>准备运行环境</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude update</span>
+<span class="preprocessor"># aptitude install python2.6 python-setuptools python-simplejson python-imaging sqlite3</span>
+</pre></figure>
+
+<p><strong>安装</strong></p>
+<p>查看系统架构，32bit or 64bit</p>
+<pre><code><span class="preprocessor"># uname -m      </span></code></pre>
+<p>创建seafile根目录，源文件将解压到该根目录下</p>
+<pre><code><span class="preprocessor"># mkdir /usr/local/src/seafile</span>
+<span class="preprocessor"># tar -C /usr/local/src/seafile -zxvf seafile-server_1.7.0_i386.tar.gz</span></code></pre>
+<p>that&#39;s all.</p>
+<h2>配置</h2>
+<figure class="highlight"><pre><span class="preprocessor"># cd /usr/local/src/seafile-server-*</span>
+<span class="preprocessor"># ./setup-seafile.sh</span>
+</pre></figure>
+
+<p>配置参数如下：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>seafile server name</td>
+<td>seafile服务器的名字，3~15 个字符，可用英文字母，数字，下划线</td>
+</tr>
+<tr>
+<td>seafile server ip or domain</td>
+<td>seafile服务器的IP地址或者域名。客户端将通过这个IP或者域名来访问Seafile服务。需要注意的是，在本例中，该IP地址应设为防火墙的互联网IP</td>
+</tr>
+<tr>
+<td>ccnet server port</td>
+<td>默认：10001</td>
+</tr>
+<tr>
+<td>seafile data dir</td>
+<td>seafile数据存放目录，默认是./seafile/seafile-data，建议放在一个NFS服务器中，方便日后的扩容和维护。</td>
+</tr>
+<tr>
+<td>seafile server port</td>
+<td>seafile服务器使用的TCP端口，默认为12001</td>
+</tr>
+<tr>
+<td>seafile httpserver port</td>
+<td>seafile httpserver使用的TCP端口，默认为8082</td>
+</tr>
+<tr>
+<td>seahub admin email</td>
+<td>sehaub管理员的帐户。该帐号仅是管理员帐号，用于发送邮件通知的email帐号需在seafile.conf中进行配置。</td>
+</tr>
+<tr>
+<td>seahub admin password</td>
+<td>seahub管理员的密码</td>
+</tr>
+</tbody>
+</table>
+<p>seafile的配置文件是分布式的，不同组件的配置文件单独分开，不利于维护。</p>
+<p><strong>启动</strong></p>
+<figure class="highlight"><pre><span class="xml"></span><span class="comment"># ./seafile.sh start</span><span class="xml">
+</span><span class="comment"># ./seahub.sh start</span><span class="xml">
+假如seahub的端口不是默认的</span><span class="number">8000</span><span class="xml">，则
+./seahub.sh start <span class="tag">&lt;<span class="title">new_port</span>&gt;</span></span>
+</pre></figure>
+
+<p><strong>停止</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># ./seafile.sh stop</span>
+<span class="preprocessor"># ./seahub.sh stop</span>
+</pre></figure>
+
+<p><strong>重启</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># ./seafile.sh restart</span>
+<span class="preprocessor"># ./seahub.sh restart</span>
+</pre></figure>
+
+<p>假如seahub的端口不是默认的8000，则</p>
+<figure class="highlight"><pre># ./seahub.sh restart <span class="tag">&lt;<span class="title">new_port</span>&gt;</span>
+</pre></figure>
+
+<h1>升级</h1>
+<p>由于seafile的开发非常活跃，新版本层出不穷，因而经常需要升级。</p>
+<p>升级前需先中止seahub和seafile进程：</p>
+<figure class="highlight"><pre><span class="preprocessor"># ./seahub.sh stop</span>
+<span class="preprocessor"># ./seafile.sh stop</span>
+</pre></figure>
+
+<p>新下载的版本也一并解压到seafile的根目录下，在本文中指的是<code>/usr/local/src/seafile</code>，读者也可以自行选择其它目录。最终的目录结构如下：</p>
+<figure class="highlight"><pre><span class="comment">/usr/local/src</span>
+   <span class="literal">-</span><span class="literal">-</span> <span class="comment">seafile</span>-<span class="comment">server</span>-<span class="comment">1</span>.<span class="comment">7</span>.<span class="comment">0</span>
+   <span class="literal">-</span><span class="literal">-</span> <span class="comment">seafile</span>-<span class="comment">server</span>-<span class="comment">1</span>.<span class="comment">4</span>.<span class="comment">5</span>
+   <span class="literal">-</span><span class="literal">-</span> <span class="comment">ccnet</span>
+   <span class="literal">-</span><span class="literal">-</span> <span class="comment">seafile</span>-<span class="comment">data
+</pre></figure>
+
+<p><strong>小版本升级</strong></p>
+<p>指的是从1.6.0升级到1.6.1。</p>
+<figure class="highlight"><pre><span class="comment">cd</span> <span class="comment">/usr/local/src/seafile/seafile</span>-<span class="comment">server</span>-<span class="comment">1</span>.<span class="comment">3</span>.<span class="comment">1/seahub/media</span>
+<span class="comment">cp</span> <span class="literal">-</span><span class="comment">rf</span> <span class="comment">avatars/*</span> <span class="string">.</span><span class="string">.</span><span class="comment">/</span>.<span class="string">.</span><span class="comment">/</span>.<span class="string">.</span><span class="comment">/seahub</span>-<span class="comment">data/avatars/</span>
+<span class="comment">rm</span> <span class="literal">-</span><span class="comment">rf</span> <span class="comment">avatars</span>
+<span class="comment">ln</span> <span class="literal">-</span><span class="comment">s</span> <span class="string">.</span><span class="string">.</span><span class="comment">/</span>.<span class="string">.</span><span class="comment">/</span>.<span class="string">.</span><span class="comment">/seahub</span>-<span class="comment">data/avatars
+</pre></figure>
+
+<p><strong>连续版本升级</strong></p>
+<p>指的是从1.6.0升级到1.7.0。</p>
+<figure class="highlight"><pre><span class="title">cd</span> /usr/local/src/seafile-server1.<span class="number">7</span>.<span class="number">0</span>/upgrade
+./update_1.6_1.<span class="number">7</span>.sh
+</pre></figure>
+
+<p><strong>非连续版本升级</strong></p>
+<p>现在的版本为1.4，最新版本为1.7，需连续执行</p>
+<figure class="highlight"><pre><span class="comment">cd</span> <span class="comment">/usr/local/src/seafile</span>-<span class="comment">server1</span>.<span class="comment">7</span>.<span class="comment">0/upgrade</span>
+<span class="string">.</span><span class="comment">/update_1</span>.<span class="comment">4_1</span>.<span class="comment">5</span>.<span class="comment">sh</span>
+<span class="string">.</span><span class="comment">/update_1</span>.<span class="comment">5_1</span>.<span class="comment">6</span>.<span class="comment">sh</span>
+<span class="string">.</span><span class="comment">/update_1</span>.<span class="comment">6_1</span>.<span class="comment">7</span>.<span class="comment">sh
+</pre></figure>
+
+<p>升级完毕后启动seahub和seafile进程。</p>
+<p><strong>随机启动</strong></p>
+<p>seafile服务由多个进程共同协作而成，</p>
+<p>创建<code>/etc/init.d/seafile-server</code></p>
+<figure class="highlight"><pre><span class="shebang">#!/bin/sh</span>
+<span class="comment">### BEGIN INIT INFO</span>
+<span class="comment"># Provides:		seafile-server</span>
+<span class="comment"># Required-Start:	$all</span>
+<span class="comment"># Required-Stop:	$all</span>
+<span class="comment"># Should-Start:		$local_fs</span>
+<span class="comment"># Should-Stop:		$local_fs</span>
+<span class="comment"># Default-Start:	2 3 4 5</span>
+<span class="comment"># Default-Stop:		0 1 6</span>
+<span class="comment">### END INIT INFO</span>
+
+<span class="comment"># Change the value of "user" to your user name</span>
+user=root
+
+<span class="comment"># Change the value of "script_path" to your path of seafile installation</span>
+script_path=/usr/local/src/seafile/seafile-server-1.7.0
+
+sudo -u <span class="variable">${user}</span> <span class="variable">${script_path}</span>/seafile.sh start &gt; /tmp/seafile.init.log 2&gt;&1
+sudo -u <span class="variable">${user}</span> <span class="variable">${script_path}</span>/seahub.sh start &gt; /tmp/seahub.init.log 2&gt;&1
+</pre></figure>
+
+<p>以上脚本仅用于start，缺乏stop和restart的功能。</p>
+<p>更新</p>
+<figure class="highlight"><pre><span class="preprocessor"># chmod +x /etc/init.d/seafile-server</span>
+<span class="preprocessor"># update-rc.d seafile-server defaults</span>
+</pre></figure>
+
+<h2>tips</h2>
+<ul>
+<li><p>变更默认端口后，seafile可能会出现问题，这种情况下建议直接重装了事，包括服务端和客户端。</p>
+</li>
+<li><p>客户端的删除</p>
+<ul>
+<li>删除客户端之前请确保ccnet进程已杀掉，否则无法正常卸载。</li>
+<li>卸载完后，手工删除客户端的配置文件夹<code>C:\用户\&lt;用户名&gt;\ccnet</code></li>
+</ul>
+</li>
+<li><p>客户端的配置</p>
+<p>  客户端的配置文件为<code>C:\用户\&lt;用户名&gt;\ccnet\ccnet.conf</code>，假如服务端的变更了默认端口号，需在此进行变更。</p>
+</li>
+</ul>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/seafile/" term="seafile"/>
+    <category scheme="http://ioiioi.github.io/categories/seafile/services/" term="services"/>
+  </entry>
+  <entry>
     <title type="html"><![CDATA[升级OpenBSD]]></title>
     <link href="http://ioiioi.github.io/2012/12/22/upgrade-openbsd/"/>
     <id>http://ioiioi.github.io/2012/12/22/upgrade-openbsd/</id>
     <published>2012-12-22T04:30:00.000Z</published>
-    <updated>2013-02-16T01:56:57.000Z</updated>
+    <updated>2013-11-08T08:00:35.000Z</updated>
     <content type="html"><![CDATA[<p>我目前的两台防火墙是OpenBSD4.9，需要升级到5.2。由于OpenBSD不支持跨版本升级，因此需要采用4.9-&gt;5.0-&gt;5.1-&gt;5.2这种逐步升级的方式。</p>
 <p>下面步骤是官网推荐的upgrade by install kernel。</p>
-<pre><code><span class="number">1.</span> <span class="preprocessor"># mkdir /backup</span>
-<span class="number">2.</span> <span class="preprocessor"># mv /bsd.rd /backup/bsd.rd.50</span>
-<span class="number">3.</span> <span class="preprocessor"># wget http://ftp.jaist.ac.jp/pub/OpenBSD/5.2/i386/bsd.rd</span>
-<span class="number">4.</span> <span class="preprocessor"># shutdown -r now</span>
-<span class="number">5.</span> 在boot的提示符中输入
-&gt;bsd<span class="variable">.rd</span>
-<span class="number">6.</span> 选择(U)pgrade
-然后选择合适的sets，我只选择了
-bsd<span class="variable">.rd</span>
-bsd
-base<span class="variable">.tgz</span>
-comp52<span class="variable">.tgz</span>
-man52<span class="variable">.tgz</span>
-<span class="number">7.</span> <span class="preprocessor"># wget http://ftp.jaist.ac.jp/pub/OpenBSD/5.2/i386/etc52.tgz</span>
-<span class="number">8.</span> <span class="preprocessor"># sysmerge -x /backup/etc52.tgz</span>
-<span class="number">9.</span> <span class="preprocessor"># 最后是确认所有的配置文件是否正确</span>
-<span class="number">10.</span> <span class="preprocessor"># shutdown -r now</span></code></pre>
+<pre><code><span class="preprocessor"># mkdir /backup</span>
+<span class="preprocessor"># mv /bsd.rd /backup/bsd.rd.50</span>
+<span class="preprocessor"># wget http://ftp.jaist.ac.jp/pub/OpenBSD/5.2/i386/bsd.rd</span>
+<span class="preprocessor"># shutdown -r now</span></code></pre>
+<p>在boot的提示符中输入</p>
+<pre><code>&gt;<span class="filename">bsd.rd</code></pre>
+<p>选择<code>(U)pgrade</code>，然后选择合适的sets: <code>bsd.rd</code>,<code>bsd</code>,<code>base.tgz</code>,<code>comp52.tgz</code>,<code>man52.tgz</code></p>
+<pre><code><span class="preprocessor"># wget http://ftp.jaist.ac.jp/pub/OpenBSD/5.2/i386/etc52.tgz</span>
+<span class="preprocessor"># sysmerge -x /backup/etc52.tgz</span></code></pre>
+<p>最后是确认所有的配置文件是否正确</p>
+<pre><code><span class="preprocessor"># shutdown -r now</span></code></pre>
 ]]></content>
     <category scheme="http://ioiioi.github.io/categories/openbsd/" term="openbsd"/>
   </entry>
@@ -794,29 +1265,15 @@ Disk /dev/sdc doesn<span class="string">'t contain a valid partition table
     <category scheme="http://ioiioi.github.io/categories/networking/" term="networking"/>
   </entry>
   <entry>
-    <title type="html"><![CDATA[zabbix tips]]></title>
-    <link href="http://ioiioi.github.io/2012/07/15/zabbix-tips/"/>
-    <id>http://ioiioi.github.io/2012/07/15/zabbix-tips/</id>
-    <published>2012-07-15T04:30:00.000Z</published>
-    <updated>2012-07-15T03:39:36.000Z</updated>
-    <content type="html"><![CDATA[<p>graph时间问题</p>
-<p>graph的时间显示比系统时间快了8个小时，可通过以下操作修复：</p>
-<ol>
-<li>调整系统时区</li>
-<li>hwclock —systohc</li>
-<li>调整php.ini时区</li>
-</ol>
-]]></content>
-    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
-  </entry>
-  <entry>
     <title type="html"><![CDATA[在CentOS中使用Serial console]]></title>
     <link href="http://ioiioi.github.io/2012/07/15/serial-console-on-centos/"/>
     <id>http://ioiioi.github.io/2012/07/15/serial-console-on-centos/</id>
     <published>2012-07-15T04:30:00.000Z</published>
-    <updated>2013-02-15T15:30:09.000Z</updated>
+    <updated>2013-11-08T08:02:54.000Z</updated>
     <content type="html"><![CDATA[<p>手头上有一台HP ML110服务器，准备拿来当流控设备，安装完CentOS后发现机柜里面没有显示器，还得配置serial console，方便日后维护。</p>
-<p>在网上搜了很多文档，都说国外的文档质量高，可是就serial console这个问题也折腾了我大半天，因此记下来以免忘记。<br><a id="more"></a></p>
+<p>在网上搜了很多文档，都说国外的文档质量高，可是就serial console这个问题也折腾了我大半天，因此记下来以免忘记。</p>
+<a id="more"></a>
+
 <h2>准备</h2>
 <h3>检查serial口</h3>
 <figure class="highlight"><pre>$ su<span class="operator"><span class="keyword">do</span> dmesg | grep tty
@@ -851,41 +1308,11 @@ Disk /dev/sdc doesn<span class="string">'t contain a valid partition table
 
 <p>配置完后需要重启服务器。</p>
 <h2>SecuCRT</h2>
-<p>需要注意的是，Flow Control要选择XON/XOFF，否则在登录界面中，无法在<code>Login：</code>提示符下输入帐号和密码。这是大多数网络文档没有说清楚的。</p>
+<p>Flow Control要选择<code>XON/XOFF</code>，否则在登录界面中，无法在<code>Login：</code>提示符下输入帐号和密码。这是大多数网络文档没有说清楚的。</p>
 <h2>附录：什么是tty</h2>
-<p>pts</p>
 <p>譬如说在screen或tmux中，创建了3个窗口，则每个窗口对应一个pts</p>
-<p>$ sudo ps -ef | grep pts</p>
-<p>echo “hello world” &gt; /etc/pts/3</p>
-<p>会出现press any key xx<br>当在console中press any key时，就在console中<br>当在serial中xx时，…</p>
+<p><code>$ sudo ps -ef | grep pts</code></p>
 ]]></content>
-  </entry>
-  <entry>
-    <title type="html"><![CDATA[将VMware server迁移到VirtualBox]]></title>
-    <link href="http://ioiioi.github.io/2012/07/04/migrate-from-vmware-server-to-virtualbox/"/>
-    <id>http://ioiioi.github.io/2012/07/04/migrate-from-vmware-server-to-virtualbox/</id>
-    <published>2012-07-04T04:30:00.000Z</published>
-    <updated>2013-02-17T02:29:07.000Z</updated>
-    <content type="html"><![CDATA[<p>VMware GSX是VMware公司于200x年推出的一款企业级虚拟化产品，后来迫于VirtualBox的压力，VMware公司决定将其改名为VMware server，并免费提供给用户使用。2010年，VMware公司发布了臃肿迟缓的2.0版本，用户怨声载道，随后不久VMware公司便宣布终止更新该产品，并劝说用户迁移到VMware player。但是明眼人都知道，VMware公司并不愿意看到这个免费而优秀的产品，继续分流他们的客户，我甚至认为，VMware公司之所以推出错误百出的2.0版本是为了找一个冠冕堂皇的理由，将VMware server给埋了，这样对广大用户也有个交代，这一招实在是太狠了。<br><a id="more"></a></p>
-<p>所以我一直坚守VMware server 1.0.10版本。</p>
-<p>然而时光荏苒，虚拟化技术不断推陈出新，VMware server 1.0已跟不上时代的步伐，特别是VirtualBox被Oracle收购后，得到突飞猛进的发展，版本更新极快，新增了很多企业级特性：</p>
-<ul>
-<li>完全支持命令行管理</li>
-<li>HOST支持多操作系统：windows、Linux、Mac OS X、solaris</li>
-<li>支持iSCSI</li>
-<li>Guest支持SMP</li>
-<li>支持headless模式</li>
-</ul>
-<p>这些都是VMware server所缺乏的，所以，我心动了。于是便有了下面一系列的VirtualBox之旅。</p>
-<ol>
-<li><a href="../blog/how-to-install-virtualbox-on-opensuse">如何在openSUSE中安装最新版VirtualBox</a></li>
-<li><a href="../blog/debian-template-on-virtualbox">如何在virtualbox中安装和克隆Debian VM</a></li>
-<li><a href="../blog/windows-template-on-virtualbox">如何在virtualbox中安装和克隆Windows VM</a></li>
-<li><a href="../blog/how-to-run-virtualbox-with-non-root-user">如何以non root帐号运行VirtualBox</a></li>
-<li><a href="../blog/virtualbox-tips">VirtualBox使用技巧</a></li>
-</ol>
-]]></content>
-    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
   </entry>
   <entry>
     <title type="html"><![CDATA[VirtualBox Host中drop packet错误]]></title>
@@ -921,6 +1348,33 @@ Disk /dev/sdc doesn<span class="string">'t contain a valid partition table
 <p>也许，这项应用就是罪魁祸首，于是我停用了mirror功能，接着<code>ifconfig eth1 down</code>，故障排除！</p>
 <p>我终于舒了一口气，消除了PRTG的嫌疑，PRTG重回我的十大兵器谱头名。</p>
 <p>2012-10，实际上该修改未能解决问题，virtualbox on linux的网络还是有问题，所以最后还是放弃了virtualbox。<br>{: class=“info” }</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[将VMware server迁移到VirtualBox]]></title>
+    <link href="http://ioiioi.github.io/2012/07/04/migrate-from-vmware-server-to-virtualbox/"/>
+    <id>http://ioiioi.github.io/2012/07/04/migrate-from-vmware-server-to-virtualbox/</id>
+    <published>2012-07-04T04:30:00.000Z</published>
+    <updated>2013-02-17T02:29:07.000Z</updated>
+    <content type="html"><![CDATA[<p>VMware GSX是VMware公司于200x年推出的一款企业级虚拟化产品，后来迫于VirtualBox的压力，VMware公司决定将其改名为VMware server，并免费提供给用户使用。2010年，VMware公司发布了臃肿迟缓的2.0版本，用户怨声载道，随后不久VMware公司便宣布终止更新该产品，并劝说用户迁移到VMware player。但是明眼人都知道，VMware公司并不愿意看到这个免费而优秀的产品，继续分流他们的客户，我甚至认为，VMware公司之所以推出错误百出的2.0版本是为了找一个冠冕堂皇的理由，将VMware server给埋了，这样对广大用户也有个交代，这一招实在是太狠了。<br><a id="more"></a></p>
+<p>所以我一直坚守VMware server 1.0.10版本。</p>
+<p>然而时光荏苒，虚拟化技术不断推陈出新，VMware server 1.0已跟不上时代的步伐，特别是VirtualBox被Oracle收购后，得到突飞猛进的发展，版本更新极快，新增了很多企业级特性：</p>
+<ul>
+<li>完全支持命令行管理</li>
+<li>HOST支持多操作系统：windows、Linux、Mac OS X、solaris</li>
+<li>支持iSCSI</li>
+<li>Guest支持SMP</li>
+<li>支持headless模式</li>
+</ul>
+<p>这些都是VMware server所缺乏的，所以，我心动了。于是便有了下面一系列的VirtualBox之旅。</p>
+<ol>
+<li><a href="../blog/how-to-install-virtualbox-on-opensuse">如何在openSUSE中安装最新版VirtualBox</a></li>
+<li><a href="../blog/debian-template-on-virtualbox">如何在virtualbox中安装和克隆Debian VM</a></li>
+<li><a href="../blog/windows-template-on-virtualbox">如何在virtualbox中安装和克隆Windows VM</a></li>
+<li><a href="../blog/how-to-run-virtualbox-with-non-root-user">如何以non root帐号运行VirtualBox</a></li>
+<li><a href="../blog/virtualbox-tips">VirtualBox使用技巧</a></li>
+</ol>
 ]]></content>
     <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
   </entry>
@@ -1106,11 +1560,11 @@ ACL<span class="attribute">'s</span> step <span class="keyword">is</span> <span 
     <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
   </entry>
   <entry>
-    <title type="html"><![CDATA[ROS中的几个调试工具]]></title>
-    <link href="http://ioiioi.github.io/2012/06/09/some-troubleshooting-tools-on-ros/"/>
-    <id>http://ioiioi.github.io/2012/06/09/some-troubleshooting-tools-on-ros/</id>
+    <title type="html"><![CDATA[RouterOS中的几个调试工具]]></title>
+    <link href="http://ioiioi.github.io/2012/06/09/some-troubleshooting-tools-on-routeros/"/>
+    <id>http://ioiioi.github.io/2012/06/09/some-troubleshooting-tools-on-routeros/</id>
     <published>2012-06-09T03:30:00.000Z</published>
-    <updated>2013-09-22T00:38:49.000Z</updated>
+    <updated>2013-11-08T07:55:36.000Z</updated>
     <content type="html"><![CDATA[<p>ROS的几个有用的测试工具</p>
 <p>1、ping</p>
 <ul>
@@ -1252,8 +1706,10 @@ rancid-adimin-&lt;group-name&gt; : mail-address@domain.name
     <link href="http://ioiioi.github.io/2012/06/07/how-to-setup-tftpd-on-debian/"/>
     <id>http://ioiioi.github.io/2012/06/07/how-to-setup-tftpd-on-debian/</id>
     <published>2012-06-07T15:30:00.000Z</published>
-    <updated>2012-06-30T12:20:07.000Z</updated>
-    <content type="html"><![CDATA[<p>tftp服务类似FTP服务，但它短小精干，仅适合于小文件的传输，所以大多数网络设备都选择tftp作为配置文件备份、firmware升级等操作的默认传输方式。<br><a id="more"></a></p>
+    <updated>2013-11-08T07:55:00.000Z</updated>
+    <content type="html"><![CDATA[<p>tftp服务类似FTP服务，但它短小精干，仅适合于小文件的传输，所以大多数网络设备都选择tftp作为配置文件备份、firmware升级等操作的默认传输方式。</p>
+<a id="more"></a>
+
 <p>tftp采用的是C/S架构，由服务端和客户端组成，其中网络设备就是客户端。</p>
 <h1>1. tftp服务端</h1>
 <p>tftp服务端有多个选择，debian的官方文档推荐的是tftpd-hpa，那我们就用它吧。</p>
@@ -1264,8 +1720,7 @@ rancid-adimin-&lt;group-name&gt; : mail-address@domain.name
 <li><p>daemon</p>
 <p> 这种方式适用于使用频率高的场景，不论是否有tftp客户端连接，tftpd进程都将常驻内存，一直监听<code>69</code>端口，这种方式的优点是响应迅速；</p>
 </li>
-<li><p>xinetd</p>
-<p> 该方式适用于偶尔使用的场景，由xinetd监听<code>69</code>端口，tftpd进程处于休眠状态，只有当tftp客户端尝试连接<code>69</code>端口的时候，才由xinetd唤醒tftpd进程，这种方式比较节省资源，并且安全性高，当然响应速度就稍慢一些；当一段时间内没有tftp客户端活动，xinetd便会终止tftpd进程。</p>
+<li><p>xinetd<br> 该方式适用于偶尔使用的场景，由xinetd监听<code>69</code>端口，tftpd进程处于休眠状态，只有当tftp客户端尝试连接<code>69</code>端口的时候，才由xinetd唤醒tftpd进程，这种方式比较节省资源，并且安全性高，当然响应速度就稍慢一些；当一段时间内没有tftp客户端活动，xinetd便会终止tftpd进程。</p>
 </li>
 </ol>
 <p>下面是xinetd方式的一个完整历程：</p>
@@ -1349,214 +1804,10 @@ service tftpd
 
 <p>将<code>service tftp</code>误写成<code>service tftpd</code>，导致in.tftpd无法正常启动</p>
 <h1>4. TIPS</h1>
-<p>1、当xinetd停掉的时候，in.tftpd进程不会自动停止，还需要<code>/etc/init.d/tftpd stop</code></p>
+<ul>
+<li>当xinetd停掉的时候，in.tftpd进程不会自动停止，还需要<code>/etc/init.d/tftpd stop</code></li>
+</ul>
 ]]></content>
     <category scheme="http://ioiioi.github.io/categories/debian/" term="debian"/>
-  </entry>
-  <entry>
-    <title type="html"><![CDATA[如何以non root帐号运行VirtualBox]]></title>
-    <link href="http://ioiioi.github.io/2012/06/07/how-to-run-virtualbox-with-non-root-user/"/>
-    <id>http://ioiioi.github.io/2012/06/07/how-to-run-virtualbox-with-non-root-user/</id>
-    <published>2012-06-07T15:30:00.000Z</published>
-    <updated>2012-06-30T12:39:10.000Z</updated>
-    <content type="html"><![CDATA[<p>在openSUSE 11.3中，root帐号可以正常地创建、注册、启动、停止和注销VM，然而non-root帐号就不行，使用<code>vboxmanage</code>的时候提示：</p>
-<pre><code><span class="attribute">ERROR</span>: <span class="string">failed to initialize COM!</span></code></pre>
-<p>请教了google大神，该问题得以解决：<br><a id="more"></a></p>
-<p>1、修改<code>/etc/udev/rules.d/10-vboxdrv.rules</code></p>
-<pre><code><span class="setting">KERNEL=<span class="value">=<span class="string">"vboxdrv"</span>, NAME=<span class="string">"vboxdrv"</span>, OWNER=<span class="string">"root"</span>, GROUP=<span class="string">"vboxusers"</span>, MODE=<span class="string">"0600"</span></span></span></code></pre>
-<p>2、将<non-root>加入vboxusers组</p>
-<pre><code># usermod -G vboxuser <span class="tag">&lt;<span class="title">non-root</span>&gt;</span></code></pre>
-<p>3、将<code>/vbox.images</code>目录属主更改为<non-root></p>
-<pre><code># chown -R <span class="tag">&lt;<span class="title">non-root</span>&gt;</span>:vboxusers /vbox.images/</code></pre>
-<p>在前面的章节中，我将VirtualBox默认目录更改为<code>/vbox.images/</code><br>{: class=“info”}</p>
-<p>4、将non-root的<code>machinefolder</code>更换为<code>/vbox.images/</code></p>
-<pre><code><span class="variable">$ </span>vboxmanage setproperty machinefolder /vbox.images/</code></pre>
-<p>5、重新注册VM</p>
-<pre><code>$ vboxmanage registervm /vbox<span class="variable">.images</span>/netmgmt-deb6/netmgmt-deb6<span class="variable">.vbox</span></code></pre>
-<p>6、启动VM</p>
-<pre><code><span class="comment">$</span> <span class="comment">vboxheadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">netmgmt</span>-<span class="comment">deb6</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">vrde=off</span> <span class="comment">&amp;</code></pre>
-<p>打完，收工。</p>
-]]></content>
-    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
-  </entry>
-  <entry>
-    <title type="html"><![CDATA[如何在VirtualBox中安装和克隆Debian VM]]></title>
-    <link href="http://ioiioi.github.io/2012/06/06/debian-template-on-virtualbox/"/>
-    <id>http://ioiioi.github.io/2012/06/06/debian-template-on-virtualbox/</id>
-    <published>2012-06-06T15:30:00.000Z</published>
-    <updated>2012-06-30T16:51:02.000Z</updated>
-    <content type="html"><![CDATA[<p>上一回中讲了<a href="../how-to-install-virtualbox-on-opensuse">如何在openSUSE中安装最新版VirtualBox</a>，本回将讲如何安装和克隆Debian VM。</p>
-<h1>1. 环境：</h1>
-<ol>
-<li>HOST  OS : openSUSE11.3</li>
-<li>Guest OS : Debian 6.0.5 netinstall</li>
-<li>VirtualBox : 4.1.16</li>
-</ol>
-<a id="more"></a>
-
-<h1>2. 创建虚拟机</h1>
-<p><strong>2.1 创建vm模版</strong></p>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createvm</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">modifyvm</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">memory</span> <span class="comment">512</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">acpi</span> <span class="comment">on</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">boot1</span> <span class="comment">dvd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nic1</span> <span class="comment">bridged</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nictype1</span> <span class="comment">virtio</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">bridgeadapter1</span> <span class="comment">eth0</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createhd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">filename</span> <span class="comment">/vbox</span>.<span class="comment">images/deb6</span>-<span class="comment">template/deb6</span>-<span class="comment">template</span>.<span class="comment">vdi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">size</span> <span class="comment">8000</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storagectl</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">sata</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">controller</span> <span class="comment">IntelAhci</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">hdd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/vbox</span>.<span class="comment">images/deb6</span>-<span class="comment">template/deb6</span>-<span class="comment">template</span>.<span class="comment">vdi</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/home/software/debian</span>-<span class="comment">6</span>.<span class="comment">0</span>.<span class="comment">5</span>-<span class="comment">i386</span>-<span class="comment">netinst</span>.<span class="comment">iso
-</pre></figure>
-
-<p>有四种硬盘接口选择：IDE、SATA、SCSI和SAS，从性能上来说，IDE最弱，SATA、SCSI和SAS相差无几，从兼容性来讲IDE最好，不过实际上现在的操作系统基本都已内置了SATA驱动，因此兼容性已经不是问题。<br>网卡类型有多种选择：AMD系列、intel系列和virtio，其中AMD系列对OS的兼容性最佳，而virtio的性能则最好的，不过对操作系统有一定的要求。</p>
-<blockquote>
-<p>Starting with version 3.1, VirtualBox provides support for the industry-standard “virtio” networking drivers, which are part of the open-source KVM project. The “virtio” networking drivers are available for the following guest operating systems:</p>
-<ol>
-<li>Linux kernels version 2.6.25 or later can be configured to provide virtio support; some distributions also back-ported virtio to older kernels.</li>
-<li>For Windows 2000, XP and Vista, virtio drivers can be downloaded and installed from the KVM project web page.</li>
-</ol>
-</blockquote>
-<p><strong>2.2 安装vm</strong></p>
-<p>启动vm：</p>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vboxheadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">"deb6</span>-<span class="comment">template"
-</pre></figure>
-
-<p>然后通过RDP客户端（windows中是“远程连接”，linux中可用“rdesktop”）连接该vm，并按照正常的步骤完成Debian 6.0.5的安装。</p>
-<h1>3. 安装常用工具</h1>
-<figure class="highlight"><pre><span class="preprocessor"># aptitude install tmux nmap tcpdump lsof htop git-core less iftop net-snmp</span>
-<span class="preprocessor"># aptitude purge vim-tiny && aptitude install vim</span>
-</pre></figure>
-
-<h1>4. 升级VBoxGuestAddition</h1>
-<p>Debian6.0.5自带的VBoxGuestAddition为3.2.0版本，版本比较老，因此需要升级至4.1.16。</p>
-<p>4.1 确保安装相关软件包</p>
-<figure class="highlight"><pre><span class="preprocessor"># aptitude install bzip2 dkms gcc make linux-header-2.6.32-5-686</span>
-</pre></figure>
-
-<p>4.2 插入VBoxGuestAddition光盘</p>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/usr/share/virtualbox/VBoxGuestAdditions</span>.<span class="comment">iso
-</pre></figure>
-
-<p>在openSUSE中安装完VirtualBox之后，VBoxGuestAddition光盘以iso文件方式保存在<code>/usr/share/virtualbox/VBoxGuestAddition.iso</code><br>{: class=“info” }</p>
-<p>4.3 升级</p>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">mkdir</span> <span class="comment">/mnt/cdrom</span>
-<span class="comment">#</span> <span class="comment">mount</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">iso9660</span> <span class="comment">/mnt/cdrom</span> <span class="comment">/dev/sr0</span>
-<span class="comment">#</span> <span class="comment">sh</span> <span class="string">.</span><span class="comment">/VBoxLinuxAdditions</span>.<span class="comment">run</span>
-<span class="comment">Verifying</span> <span class="comment">archive</span> <span class="comment">integrity</span>.<span class="string">.</span><span class="string">.</span> <span class="comment">All</span> <span class="comment">good</span>.
-<span class="comment">Uncompressing</span> <span class="comment">VirtualBox</span> <span class="comment">4</span>.<span class="comment">1</span>.<span class="comment">16</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">for</span> <span class="comment">Linux</span>.<span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span>
-<span class="comment">VirtualBox</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">installer</span>
-<span class="comment">Removing</span> <span class="comment">existing</span> <span class="comment">VirtualBox</span> <span class="comment">DKMS</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
-<span class="comment">Removing</span> <span class="comment">existing</span> <span class="comment">VirtualBox</span> <span class="comment">non</span>-<span class="comment">DKMS</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
-<span class="comment">Building</span> <span class="comment">the</span> <span class="comment">VirtualBox</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
-<span class="comment">Doing</span> <span class="comment">non</span>-<span class="comment">kernel</span> <span class="comment">setup</span> <span class="comment">of</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
-<span class="comment">You</span> <span class="comment">should</span> <span class="comment">restart</span> <span class="comment">your</span> <span class="comment">guest</span> <span class="comment">to</span> <span class="comment">make</span> <span class="comment">sure</span> <span class="comment">the</span> <span class="comment">new</span> <span class="comment">modules</span> <span class="comment">are</span> <span class="comment">actually</span> <span class="comment">used</span>
-
-<span class="comment">Installing</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">drivers</span>
-<span class="comment">Installing</span> <span class="comment">X</span>.<span class="comment">Org</span> <span class="comment">Server</span> <span class="comment">1</span>.<span class="comment">7</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
-<span class="comment">Setting</span> <span class="comment">up</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">to</span> <span class="comment">use</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
-<span class="comment">You</span> <span class="comment">may</span> <span class="comment">need</span> <span class="comment">to</span> <span class="comment">restart</span> <span class="comment">the</span> <span class="comment">hal</span> <span class="comment">service</span> <span class="comment">and</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">(or</span> <span class="comment">just</span> <span class="comment">restart</span>
-<span class="comment">the</span> <span class="comment">guest</span> <span class="comment">system)</span> <span class="comment">to</span> <span class="comment">enable</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span>.
-
-<span class="comment">Installing</span> <span class="comment">graphics</span> <span class="comment">libraries</span> <span class="comment">and</span> <span class="comment">desktop</span> <span class="comment">services</span> <span class="comment">components</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
-</pre></figure>
-
-<p>4.4 检查版本</p>
-<p>最后重启guest并检查VBoxGuestAddition版本</p>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">showvminfo</span> <span class="comment">"deb6</span>-<span class="comment">template"</span>
-<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
-<span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span>
-<span class="comment">Guest:</span>
-
-<span class="comment">Configured</span> <span class="comment">memory</span> <span class="comment">balloon</span> <span class="comment">size:</span>      <span class="comment">0</span> <span class="comment">MB</span>
-<span class="comment">OS</span> <span class="comment">type:</span>                             <span class="comment">Linux26</span>
-<span class="comment">Additions</span> <span class="comment">run</span> <span class="comment">level:</span>                 <span class="comment">1</span>
-<span class="comment">Additions</span> <span class="comment">version:</span>                   <span class="comment">4</span>.<span class="comment">1</span>.<span class="comment">16r78094</span>
-<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
-</pre></figure>
-
-<p>说明VBoxGuestAddition已经升级为4.1.16了。</p>
-<h1>5. 收尾</h1>
-<p>5.1 弹出安装光盘</p>
-<pre><code><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">emptydrive</code></pre>
-<p>下次启动的时候，就不会从光盘启动了。</p>
-<p>5.2 解决eth1的问题</p>
-<p>linux利用udev对硬件设备进行识别，当udev检测到新网卡时（新mac地址），将在<code>/etc/udev/rules.d/70-persistent-net.rules</code>文件中生成新的记录，为新网卡分配一个ethX这样的网卡id，X从0开始，依次是1，2…</p>
-<p>克隆的时候，VirtualBox会为目标vm的网卡生成新的mac地址，而<code>70-persistent-net.rules</code>文件中已经含有源vm网卡的记录：eth0，因此，udev为目标vm的网卡重新分配网卡id：eth1，这导致IP地址失效，网卡id怪异等问题。</p>
-<p>解决该问题的方法是删掉源vm中的<code>/etc/udev/rules.d/70-persistent-net.rules</code>这个文件，目标vm启动后找不到该文件就会自行创建一个，永远都不会有eth0占用的问题。</p>
-<p>5.3 清空IP地址配置</p>
-<p>修改<code>/etc/network/interfaces</code>，注释掉eth0的配置信息，避免与目标vm的IP冲突。</p>
-<p>5.4 调整系统时间</p>
-<p>请参考“<a href="../ntp-service">NTP服务</a>”</p>
-<p>至此，完成一个Debian VM模版的安装和配置。</p>
-<h1>6. 克隆</h1>
-<pre><code><span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">clonevm</span> <span class="comment">"</span>&lt;<span class="comment">source</span> <span class="comment">vm</span>&gt;<span class="comment">"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name="</span>&lt;<span class="comment">destination</span> <span class="comment">vm</span>&gt;<span class="comment">"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">mode</span> <span class="comment">machine</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</code></pre>
-<p>源vm的config和vdi文件在同一个目录下，克隆后，目标vm的config和vdi文件也在同一个目录下。</p>
-<p>6.1 更改主机名</p>
-<pre><code><span class="preprocessor"># echo "&lt;destination vm&gt;" &gt; /etc/hostname</span>
-<span class="preprocessor"># hostname -F /etc/hostname</span></code></pre>
-<p>6.2 更改IP地址</p>
-<pre><code><span class="preprocessor"># vim /etc/network/interface</span></code></pre>
-<p>6.3 重启</p>
-<pre><code><span class="preprocessor"># shutdown -r now</span></code></pre>
-<p>本回说的是Debian VM，那Windows VM呢，且听<a href="../windows-template-on-virtualbox">下回分解</a></p>
-]]></content>
-    <category scheme="http://ioiioi.github.io/categories/debian/" term="debian"/>
-    <category scheme="http://ioiioi.github.io/categories/debian/virtualbox/" term="virtualbox"/>
-  </entry>
-  <entry>
-    <title type="html"><![CDATA[如何在VirtualBox中安装和克隆windows VM]]></title>
-    <link href="http://ioiioi.github.io/2012/06/06/windows-template-on-virtualbox/"/>
-    <id>http://ioiioi.github.io/2012/06/06/windows-template-on-virtualbox/</id>
-    <published>2012-06-06T15:30:00.000Z</published>
-    <updated>2012-06-30T16:50:14.000Z</updated>
-    <content type="html"><![CDATA[<p>上回讲了<a href="../debian-template-on-virtualbox">如何安装和克隆Debian VM</a>，本回说说Windows<br> VM。</p>
-<h1>1. 创建windows VM</h1>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createvm</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">modifyvm</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">memory</span> <span class="comment">512</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">acpi</span> <span class="comment">on</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">boot1</span> <span class="comment">dvd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nic1</span> <span class="comment">bridged</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nictype1</span> <span class="comment">virtio</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">bridgeadapter1</span> <span class="comment">eth0</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createhd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">filename</span> <span class="comment">/vbox</span>.<span class="comment">images/win2k3</span>-<span class="comment">template/win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">size</span> <span class="comment">20000</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storagectl</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">IDE</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">controller</span> <span class="comment">IntelAhci</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">hdd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/vbox</span>.<span class="comment">images/win2k3</span>-<span class="comment">template/win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi</span>
-<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/home/software/Windows</span>.<span class="comment">Server</span>.<span class="comment">2003</span>.<span class="comment">SP2</span>.<span class="comment">ent</span>.<span class="comment">iso
-</pre></figure>
-
-<a id="more"></a>
-
-<p>细心的读者可能会发现，硬盘控制器用的是IDE，为什么不用更快的SATA呢？因为windows 2003没有SATA驱动，所以需先以IDE的方式进行安装，进入操作系统之后再安装SATA驱动，随后再切换回SATA。</p>
-<p>网卡类型也一样，windows 2003没有virtio驱动，用户只有安装完windows 2003后，再安装<a href="http://www.linux-kvm.org/page/Virtio" target="_blank">linux-kvm.org</a>提供的驱动，才能用上virtio网卡。</p>
-<h1>2. 安装操作系统</h1>
-<pre><code><span class="comment">#</span> <span class="comment">vboxheadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="comment">e</span> <span class="comment">vrdeproperty</span> <span class="comment">tcp/ports=3390</code></pre>
-<p>假如有多个vm需要以headless的方式启动，则每台vm的VRDP所占用端口不能相同，默认是<code>3389</code>，因为该端口已被占用，因此本处选择其它端口：<code>3390</code></p>
-<h1>3. 常用软件和服务</h1>
-<ol>
-<li>mtPuTTY</li>
-<li>QQ拼音</li>
-<li>Microsoft Forefront client security</li>
-<li>xplorer_lite</li>
-<li>dotnet framework</li>
-<li>Terminal Service</li>
-</ol>
-<h1>4. 收尾</h1>
-<h2>4.1 sharedfoler</h2>
-<p>详见<a href="../virtualbox-tips">VirtualBox Tips</a></p>
-<h2>4.2 VBoxGuestAddition</h2>
-<p>类似于VMware tools，提供Guest中的图形显示优化，时间同步等有用的功能。</p>
-<p><strong>HOST</strong></p>
-<figure class="highlight"><pre><span class="comment">$</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/usr/share/virtualbox/VBoxGuestAdditions</span>.<span class="comment">iso
-</pre></figure>
-
-<p>该操作不需要关闭VM。</p>
-<p><strong>GUEST</strong></p>
-<p>在“windows资源管理器”中打开光驱，就会自动弹出安装界面，根据提示完成安装。</p>
-<h2>4.3 virtio</h2>
-<p>不知为何，网卡类型选择virtio之后，VM的FTP下载速度仅为0.1KB/s，但上传速度可达到30MB/s，尚未找到解决的办法。不过采用默认的Intel网卡，速度已经完全可以满足日常的使用，因此本文放弃了virtio这个驱动。</p>
-<h2>4.4 SATA</h2>
-<p><strong>待续</strong></p>
-<h1>5. TIPS</h1>
-<p>在“远程桌面”窗口，如何向VM发送Ctrl+Alt+Del呢？请讲快捷键更换为Ctrl+Alt+End。</p>
-<p>讲到这，我们已经完成了</p>
-<ol>
-<li><a href="../debian-template-on-virtualbox">如何安装和克隆Debian VM</a></li>
-<li><a href="../windows-template-on-virtualbox">如何安装和克隆Windows VM</a></li>
-</ol>
-<p>但是，随着VM的增多，怎样才能更好的管理和使用VirtualBox呢？且听<a href="../virtualbox-tips">下回分解</a></p>
-]]></content>
-    <category scheme="http://ioiioi.github.io/categories/windows/" term="windows"/>
-    <category scheme="http://ioiioi.github.io/categories/windows/virtualbox/" term="virtualbox"/>
   </entry>
 </feed>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>kvm | linuxabc</title>
+  <title>tech | linuxabc</title>
   <meta name="author" content="alfie chan">
   
   
@@ -42,7 +42,7 @@
 <div class="clearfix"></div></header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
-<h2 class="archive-title category">kvm</h2>
+<h2 class="archive-title category">tech</h2>
 
 
   
@@ -52,34 +52,51 @@
     <header>
       
         <div class="icon"></div>
-        <time datetime="2012-04-29T02:12:00.000Z"><a href="/2012/04/29/virt-notes/">2012-04-29</a></time>
+        <time datetime="2013-04-01T05:00:00.000Z"><a href="/2013/04/01/some-tips-about-app-migration/">2013-04-1</a></time>
       
       
   
-    <h1 class="title"><a href="/2012/04/29/virt-notes/">虚拟化学习笔记</a></h1>
+    <h1 class="title"><a href="/2013/04/01/some-tips-about-app-migration/">一次业务迁移的经验小结</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>kvm vs xen</p>
-<p>redhat自rhel6.0之后抛弃了xen，转为支持kvm，经过几年的发展，代码和社区已趋成熟，性能跟xen持平。目前缺的就是大规模商用的案例，阿里云已转向了kvm(<a href="http://sheepdog.taobao.com)，就等着有大规模应用之后再上。" target="_blank">http://sheepdog.taobao.com)，就等着有大规模应用之后再上。</a></p>
+        <h2>移动介质的FS要足够普通</h2>
+<p>我准备了一块160G的移动硬盘，由于容量比较大，因此格式化为exFAT格式，然而生产环境的OS分别是windows 2003和OpenSUSE11.3，都无法识别，而移动硬盘中还有其它数据，不能直接格式化，因此费了一番心思。</p>
+<p>所以，移动介质一定要采用最普通的文件系统，譬如FAT32，windows2003和较老的linux都无法识别exFAT。</p>
+<h2>如何实现快速拷贝</h2>
+<p>windows ntfs文件系统对付小文件力不从心，因此假如有大量小文件需要备份，有两种解决办法：</p>
 <ul>
-<li>kvm</li>
-</ul>
+<li><p>压缩-传输-解压</p>
+<p>用winzip、winrar这样的压缩软件采用zip方式打包（不压缩，选择最快速度）小文件后，作为一个打文件传送到另外一个服务器，然后在目的地解压；</p>
+</li>
+<li><p>使用第三方拷贝软件</p>
+<p>譬如fastcopy和ultracopier，千万别用teracopy，在cmoa业务数据备份的过程中发现它有两个问题：</p>
 <ol>
-<li>首选平台是centos</li>
-<li>次选平台是smartos</li>
+<li>拷贝速度不稳定，下跌厉害；</li>
+<li>拷贝文件出现错误。而fastcopy就非常稳定，而且不会出错。</li>
 </ol>
+</li>
+</ul>
+<p>经测试，采用CIFS/SMB共享方式，fastcopy的拷贝速度可达15MB/s，基本上是千兆网络速率的极限。</p>
+<h2>尽量使用域名</h2>
+<p>基于B/S架构的业务系统尽量用域名访问，否则IP地址变更后，如何通知几百个客户是非常痛苦的一件事情，尤其是政府客户。</p>
+<h2>基础服务和业务应用分开部署</h2>
+<p>2009年部署业务应用的时缺乏经验，将一些基础服务，譬如DNS、radius、AD和OpenVPN等基础服务连同业务应用全部部署在同一台物理服务器上，导致业务应用迁移前需先做好基础服务的迁移。当然，假如物理服务器数量足够的话，没有人愿意将多个服务部署在一台服务器。</p>
+<h2>VMware中修改guest OS的MAC地址</h2>
+<p>很多业务应用的license都跟服务器的MAC地址进行绑定，因此需要提前了解VMware环境中的MAC地址修改技巧。</p>
+<p>有两种方式</p>
 <ul>
-<li>xen</li>
+<li><p>修改VMware的VMX文件</p>
+</li>
+<li><p>修改guest OS中的AMC地址，windows中我经常用的是K-mac，linux则直接在网卡的配置文件中设定即可。</p>
+</li>
 </ul>
-<ol>
-<li>3.4.3的首选平台是centos + gitco3.4.3</li>
-<li>4.1.x的首选平台尚无定论，候选者是ubuntu（自由度高，文档多，目前而言似乎是最好的选择）、xcp（基于centos，自由度小，文档较少）、netbsd（开发时间太长，文档最少）</li>
-</ol>
-<p>网络带宽控制(依赖网卡支持) 基于网卡SR-iov技术，可以将网卡vf直接分配给虚拟机，这样可以降低网络延迟(和物理机器基本一致), 并可以做虚拟机流量控制</p>
-<p>Debian 6<br>CentOS 6<br>Ubuntu 12.04<br>OpenSUSE 12.1<br>SUSE 11<br>Redhat 6<br>Arch 2012<br>Gentoo<br>Slackware<br>Scientific 6<br>FreeBSD<br>NetBSD<br>Fedora</p>
+<h2>新不如旧</h2>
+<p>前面的文件系统是这样，接下来的无线路由器也是这样，在本次迁移的过程中，顺手用一个D-link DIR600M换掉一台古老的linksys WRT54G。</p>
+<p>DIR600M支持AP和无线路由两种无线工作方式，AP方式指的是WAN、LAN和wifi处于同一个网段：192.168.0.0/24，而且这个网段还不能手工改，无线路由方式指的是WAN连接互联网，LAN和wifi处于同一个网段。好在LAN可以自行设置IP地址。因此最终选择了“无线路由”方式。DIR600M仅有4M rom和32M ram，刷OpenWRT就不必了，还比不上两年前买的LinkSYS WRT54G mod，至少还有8M rom和64M ram呢。</p>
+<p>所以说，并不是越新就越好，成本的下降往往意味着偷工减料。</p>
 
       
     </div>
@@ -117,17 +134,17 @@
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -141,13 +158,11 @@
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -157,9 +172,9 @@
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -171,15 +186,23 @@
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -187,13 +210,13 @@
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -201,13 +224,11 @@
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

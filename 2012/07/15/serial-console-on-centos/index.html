@@ -61,7 +61,9 @@
     <div class="entry">
       
         <p>手头上有一台HP ML110服务器，准备拿来当流控设备，安装完CentOS后发现机柜里面没有显示器，还得配置serial console，方便日后维护。</p>
-<p>在网上搜了很多文档，都说国外的文档质量高，可是就serial console这个问题也折腾了我大半天，因此记下来以免忘记。<br><a id="more"></a></p>
+<p>在网上搜了很多文档，都说国外的文档质量高，可是就serial console这个问题也折腾了我大半天，因此记下来以免忘记。</p>
+<a id="more"></a>
+
 <h2>准备</h2>
 <h3>检查serial口</h3>
 <figure class="highlight"><pre>$ su<span class="operator"><span class="keyword">do</span> dmesg | grep tty
@@ -96,13 +98,10 @@
 
 <p>配置完后需要重启服务器。</p>
 <h2>SecuCRT</h2>
-<p>需要注意的是，Flow Control要选择XON/XOFF，否则在登录界面中，无法在<code>Login：</code>提示符下输入帐号和密码。这是大多数网络文档没有说清楚的。</p>
+<p>Flow Control要选择<code>XON/XOFF</code>，否则在登录界面中，无法在<code>Login：</code>提示符下输入帐号和密码。这是大多数网络文档没有说清楚的。</p>
 <h2>附录：什么是tty</h2>
-<p>pts</p>
 <p>譬如说在screen或tmux中，创建了3个窗口，则每个窗口对应一个pts</p>
-<p>$ sudo ps -ef | grep pts</p>
-<p>echo “hello world” &gt; /etc/pts/3</p>
-<p>会出现press any key xx<br>当在console中press any key时，就在console中<br>当在serial中xx时，…</p>
+<p><code>$ sudo ps -ef | grep pts</code></p>
 
       
     </div>
@@ -150,17 +149,17 @@
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -174,13 +173,11 @@
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -190,9 +187,9 @@
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -204,15 +201,23 @@
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -220,13 +225,13 @@
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -234,13 +239,11 @@
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

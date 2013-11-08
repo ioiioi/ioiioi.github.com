@@ -48,6 +48,130 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2012-06-07T15:30:00.000Z"><a href="/2012/06/07/how-to-run-virtualbox-with-non-root-user/">2012-06-7</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/07/how-to-run-virtualbox-with-non-root-user/">如何以non root帐号运行VirtualBox</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在openSUSE 11.3中，root帐号可以正常地创建、注册、启动、停止和注销VM，然而non-root帐号就不行，使用<code>vboxmanage</code>的时候提示：</p>
+<pre><code><span class="attribute">ERROR</span>: <span class="string">failed to initialize COM!</span></code></pre>
+<p>请教了google大神，该问题得以解决：<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/07/how-to-run-virtualbox-with-non-root-user/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-06T15:30:00.000Z"><a href="/2012/06/06/windows-template-on-virtualbox/">2012-06-6</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/06/windows-template-on-virtualbox/">如何在VirtualBox中安装和克隆windows VM</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>上回讲了<a href="../debian-template-on-virtualbox">如何安装和克隆Debian VM</a>，本回说说Windows<br> VM。</p>
+<h1>1. 创建windows VM</h1>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createvm</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">modifyvm</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">memory</span> <span class="comment">512</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">acpi</span> <span class="comment">on</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">boot1</span> <span class="comment">dvd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nic1</span> <span class="comment">bridged</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nictype1</span> <span class="comment">virtio</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">bridgeadapter1</span> <span class="comment">eth0</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createhd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">filename</span> <span class="comment">/vbox</span>.<span class="comment">images/win2k3</span>-<span class="comment">template/win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">size</span> <span class="comment">20000</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storagectl</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">IDE</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">controller</span> <span class="comment">IntelAhci</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">hdd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/vbox</span>.<span class="comment">images/win2k3</span>-<span class="comment">template/win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/home/software/Windows</span>.<span class="comment">Server</span>.<span class="comment">2003</span>.<span class="comment">SP2</span>.<span class="comment">ent</span>.<span class="comment">iso
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/06/windows-template-on-virtualbox/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-06T15:30:00.000Z"><a href="/2012/06/06/debian-template-on-virtualbox/">2012-06-6</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/06/debian-template-on-virtualbox/">如何在VirtualBox中安装和克隆Debian VM</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>上一回中讲了<a href="../how-to-install-virtualbox-on-opensuse">如何在openSUSE中安装最新版VirtualBox</a>，本回将讲如何安装和克隆Debian VM。</p>
+<h1>1. 环境：</h1>
+<ol>
+<li>HOST  OS : openSUSE11.3</li>
+<li>Guest OS : Debian 6.0.5 netinstall</li>
+<li>VirtualBox : 4.1.16</li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/06/debian-template-on-virtualbox/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2012-06-05T15:00:00.000Z"><a href="/2012/06/05/how-to-install-virtualbox-on-opensuse/">2012-06-5</a></time>
       
       
@@ -158,46 +282,15 @@
       
         <p>最近需要在一台openSUSE 11.1上安装virtualbox，死活装不上去，请教google大神后发现，大多数成功的案例都是在11.3下发生的，于是便开始了我下面的11.1到11.3的升级之旅。</p>
 <p>openSUSE官方forum上看到不少跨版本升级失败的例子，因此决定采用步步为营的升级法，也很简单，就是先从11.1升级到11.2，然后再从11.2升级到11.3，虽然啰嗦了一些，但是安全。</p>
-<p>1、禁用旧的repos</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper mr –all -d</span>
-</pre></figure>
-
-<p>2、添加新版本的repos</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/distribution/11.2/repo/non-oss/ "11.2-repo-non-oss"</span>
-<span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/distribution/11.2/repo/oss/ "11.2-repo-oss"</span>
-<span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/update/11.2/ "11.2-repo-update"</span>
-</pre></figure>
-
-<p>3、更新local metadata和repo内容</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper refresh</span>
-</pre></figure>
-
-<p>4、安装新版本的zypper</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper in zypper</span>
-</pre></figure>
-
-<p>5、升级版本</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper dup</span>
-</pre></figure>
-
-<p>6、配置</p>
-<figure class="highlight"><pre><span class="preprocessor"># SuSEconfig</span>
-</pre></figure>
-
-<p>7、重启</p>
-<figure class="highlight"><pre><span class="preprocessor"># shutdown -r now</span>
-</pre></figure>
-
-<p>8、验证</p>
-<figure class="highlight"><pre><span class="preprocessor"># cat /etc/SuSE-release</span>
-</pre></figure>
-
-<p>大约耗时2.5小时，过程还算顺利，此步骤完成了从11.1升级到11.2，接着再重复一次整个步骤又可以从11.2升级到11.3了。</p>
 
       
     </div>
     <footer>
       
+        
+          <div class="alignleft">
+            <a href="/2012/06/04/how-to-upgrade-opensuse-from-11.1-to-11.3/#more" class="more-link">Read More</a>
+          </div>
         
         
       
@@ -208,7 +301,7 @@
 
 
 
-  <article class="post">
+  <article class="draft">
   
   <div class="post-content">
     <header>
@@ -224,13 +317,7 @@
     </header>
     <div class="entry">
       
-        <h1>baseline</h1>
-<p>256M VPS能做什么，首先在debian 256M VPS上做一个baseline，通过apt-get安装常用的软件，譬如apache2、mysql、php、wordpress之后，使用</p>
-<p>作为一名网络/系统工程师，接触最多的就是console界面，tcpdump、nmap、iftop、pftop、systat等等工具都是在终端下才能来去自如，所以虽然现在的GUI是越来越华丽，但是仍然取代不了console，简捷是最大的优点。</p>
-<p>用得最多的当然是shell，bash、zsh<br>用得第二多的就是编辑器，因为我们要经常跟；<br>用的第三多的得是email了，mutt<br>第四多的就存在争议，网页我把这个位置给了IM，譬如gtalk、IRC，IRC在国内并不流行，gtalk也用的很少。</p>
-<p>serverfault</p>
-<h1>ps -C apache2 v</h1>
-<p>查看每个进程的内存占用率。</p>
+        <p>作为一名网络/系统工程师，接触最多的就是console界面，tcpdump、nmap、iftop、pftop、systat等等工具都是在终端下才能来去自如，所以虽然现在的GUI是越来越华丽，但是仍然取代不了console，简捷是最大的优点。</p>
 <ol>
 <li>美化使用环境：统一使用solarized作为主题，包括PuTTY、zsh、vim和mutt</li>
 <li>搭建博客；<br>2.1 octopress；<br>2.2 wordpress；</li>
@@ -251,7 +338,7 @@
 <blockquote>
 <p>“All mail clients suck. This one just sucks less.” Michael Elkins, ca. 1995</p>
 </blockquote>
-<p>mutt是一个高效、高度可配置的基于console的邮件用户代理（mail user agent/MUA）</p>
+<p>mutt是一个高效、高度可配置的基于console的邮件用户代理（MUA）</p>
 <p>debian中提供了mutt-patched这个包，包含了sidebar功能。</p>
 <h1>solarized</h1>
 <p>solarize是一个非常流行的配色，目前已移植到多个应用程序中。</p>
@@ -263,16 +350,16 @@
 <h2>mutt 配色</h2>
 <p>mutt-colors-solarized-256.muttrc<br>mutt-colors-solarized-16.muttrc</p>
 <p>默认情况下，term的颜色仅支持8色，</p>
-<pre><code><span class="title">tput</span> colors
+<pre><code><span class="preprocessor"># tput colors</span>
 <span class="number">8</span></code></pre>
 <p>需要安装ncurse-term这个软件包来解决</p>
-<pre><code><span class="title">aptitude</span> install ncurse-term</code></pre>
+<pre><code><span class="preprocessor"># aptitude install ncurse-term</span></code></pre>
 <p>然后重新登录</p>
-<pre><code><span class="title">tput</span> colors
+<pre><code><span class="preprocessor"># tput colors</span>
 <span class="number">256</span></code></pre>
 <p>再执行<code>mutt</code>就不会出现</p>
-<p>color not supported的错误了。</p>
-<p>References:</p>
+<pre><code><span class="title">color</span> <span class="keyword">not</span> supported的错误了。</code></pre>
+<p>参考:</p>
 <ol>
 <li><a href="http://promberger.info/linux/2008/04/05/getting-256-color-support-working-for-mutt-in-xfce4-terminal/" target="_blank">Getting 256 color support working for mutt in xfce4-terminal</a></li>
 <li><a href="http://www.robmeerman.co.uk/unix/256colours" target="_blank"><a href="http://www.robmeerman.co.uk/unix/256colours">http://www.robmeerman.co.uk/unix/256colours</a></a></li>
@@ -773,55 +860,6 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
     <header>
       
         <div class="icon"></div>
-        <time datetime="2012-04-29T02:12:00.000Z"><a href="/2012/04/29/virt-notes/">2012-04-29</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/04/29/virt-notes/">虚拟化学习笔记</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>kvm vs xen</p>
-<p>redhat自rhel6.0之后抛弃了xen，转为支持kvm，经过几年的发展，代码和社区已趋成熟，性能跟xen持平。目前缺的就是大规模商用的案例，阿里云已转向了kvm(<a href="http://sheepdog.taobao.com)，就等着有大规模应用之后再上。" target="_blank">http://sheepdog.taobao.com)，就等着有大规模应用之后再上。</a></p>
-<ul>
-<li>kvm</li>
-</ul>
-<ol>
-<li>首选平台是centos</li>
-<li>次选平台是smartos</li>
-</ol>
-<ul>
-<li>xen</li>
-</ul>
-<ol>
-<li>3.4.3的首选平台是centos + gitco3.4.3</li>
-<li>4.1.x的首选平台尚无定论，候选者是ubuntu（自由度高，文档多，目前而言似乎是最好的选择）、xcp（基于centos，自由度小，文档较少）、netbsd（开发时间太长，文档最少）</li>
-</ol>
-<p>网络带宽控制(依赖网卡支持) 基于网卡SR-iov技术，可以将网卡vf直接分配给虚拟机，这样可以降低网络延迟(和物理机器基本一致), 并可以做虚拟机流量控制</p>
-<p>Debian 6<br>CentOS 6<br>Ubuntu 12.04<br>OpenSUSE 12.1<br>SUSE 11<br>Redhat 6<br>Arch 2012<br>Gentoo<br>Slackware<br>Scientific 6<br>FreeBSD<br>NetBSD<br>Fedora</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
         <time datetime="2012-04-27T15:00:00.000Z"><a href="/2012/04/27/the-principle-of-choosing-a-project-management-software/">2012-04-27</a></time>
       
       
@@ -901,77 +939,6 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2012-04-16T09:40:00.000Z"><a href="/2012/04/16/netmgmt-on-OpenBSD/">2012-04-16</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/04/16/netmgmt-on-OpenBSD/">OpenBSD中的网络管理</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>这些天我花了一些时间研究了一下OpenBSD中的系统/网络监控软件，走了不少弯路，在这里跟与诸位分享一些心得体会。</p>
-<p>一开始，我直奔主题，花了不少精力尝试了大量网管软件，考察的对象包括：Munin、Monit、collectd、nagios/icinga和symon。<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2012/04/16/netmgmt-on-OpenBSD/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2012-04-12T13:00:00.000Z"><a href="/2012/04/12/OpenNTPd-on-OpenBSD/">2012-04-12</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/04/12/OpenNTPd-on-OpenBSD/">OpenNTPd on OpenBSD</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>计算机时间是否同步是一个简单但很重要的命题，因为很多应用都要求计算机之间的时间一致，譬如VPN的构建、AD域的认证，log日志的排错等均需要时间同步，因此，早在1985年就诞生了NTP协议，它的全称是network time protocol（网络时间协议），被广泛用于计算机时间同步。它是一个协议，任何人都可以根据这个协议开发时间同步的软件，最著名的实现是ntp.org维护的同名套件，然而OpenBSD的开发人员对这个套件并不感冒，于是他们另起炉灶，重新开发了OpenNTPd，它旨在实现：<br>
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2012/04/12/OpenNTPd-on-OpenBSD/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
 
 <nav id="pagination">
   
@@ -997,17 +964,17 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -1021,13 +988,11 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -1037,9 +1002,9 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -1051,15 +1016,23 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -1067,13 +1040,13 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -1081,13 +1054,11 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

@@ -162,46 +162,15 @@
       
         <p>最近需要在一台openSUSE 11.1上安装virtualbox，死活装不上去，请教google大神后发现，大多数成功的案例都是在11.3下发生的，于是便开始了我下面的11.1到11.3的升级之旅。</p>
 <p>openSUSE官方forum上看到不少跨版本升级失败的例子，因此决定采用步步为营的升级法，也很简单，就是先从11.1升级到11.2，然后再从11.2升级到11.3，虽然啰嗦了一些，但是安全。</p>
-<p>1、禁用旧的repos</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper mr –all -d</span>
-</pre></figure>
-
-<p>2、添加新版本的repos</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/distribution/11.2/repo/non-oss/ "11.2-repo-non-oss"</span>
-<span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/distribution/11.2/repo/oss/ "11.2-repo-oss"</span>
-<span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/update/11.2/ "11.2-repo-update"</span>
-</pre></figure>
-
-<p>3、更新local metadata和repo内容</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper refresh</span>
-</pre></figure>
-
-<p>4、安装新版本的zypper</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper in zypper</span>
-</pre></figure>
-
-<p>5、升级版本</p>
-<figure class="highlight"><pre><span class="preprocessor"># zypper dup</span>
-</pre></figure>
-
-<p>6、配置</p>
-<figure class="highlight"><pre><span class="preprocessor"># SuSEconfig</span>
-</pre></figure>
-
-<p>7、重启</p>
-<figure class="highlight"><pre><span class="preprocessor"># shutdown -r now</span>
-</pre></figure>
-
-<p>8、验证</p>
-<figure class="highlight"><pre><span class="preprocessor"># cat /etc/SuSE-release</span>
-</pre></figure>
-
-<p>大约耗时2.5小时，过程还算顺利，此步骤完成了从11.1升级到11.2，接着再重复一次整个步骤又可以从11.2升级到11.3了。</p>
 
       
     </div>
     <footer>
       
+        
+          <div class="alignleft">
+            <a href="/2012/06/04/how-to-upgrade-opensuse-from-11.1-to-11.3/#more" class="more-link">Read More</a>
+          </div>
         
         
       
@@ -234,17 +203,17 @@
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -258,13 +227,11 @@
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -274,9 +241,9 @@
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -288,15 +255,23 @@
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -304,13 +279,13 @@
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -318,13 +293,11 @@
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

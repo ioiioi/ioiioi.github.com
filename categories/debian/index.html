@@ -202,7 +202,8 @@ rancid-adimin-&lt;group-name&gt; : mail-address@domain.name
     </header>
     <div class="entry">
       
-        <p>tftp服务类似FTP服务，但它短小精干，仅适合于小文件的传输，所以大多数网络设备都选择tftp作为配置文件备份、firmware升级等操作的默认传输方式。<br>
+        <p>tftp服务类似FTP服务，但它短小精干，仅适合于小文件的传输，所以大多数网络设备都选择tftp作为配置文件备份、firmware升级等操作的默认传输方式。</p>
+
       
     </div>
     <footer>
@@ -269,11 +270,11 @@ rancid-adimin-&lt;group-name&gt; : mail-address@domain.name
     <header>
       
         <div class="icon"></div>
-        <time datetime="2012-04-30T15:00:00.000Z"><a href="/2012/04/30/what-can-we-deal-with-little-vps/">2012-04-30</a></time>
+        <time datetime="2012-04-30T15:00:00.000Z"><a href="/2012/04/30/how-to-install-octopress-on-debian/">2012-04-30</a></time>
       
       
   
-    <h1 class="title"><a href="/2012/04/30/what-can-we-deal-with-little-vps/">在debian中安装octopress</a></h1>
+    <h1 class="title"><a href="/2012/04/30/how-to-install-octopress-on-debian/">在debian中安装octopress</a></h1>
   
 
     </header>
@@ -495,11 +496,11 @@ Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.ym
     <header>
       
         <div class="icon"></div>
-        <time datetime="2012-04-30T15:00:00.000Z"><a href="/2012/04/30/how-to-install-octopress-on-debian/">2012-04-30</a></time>
+        <time datetime="2012-04-30T15:00:00.000Z"><a href="/2012/04/30/what-can-we-deal-with-little-vps/">2012-04-30</a></time>
       
       
   
-    <h1 class="title"><a href="/2012/04/30/how-to-install-octopress-on-debian/">在debian中安装octopress</a></h1>
+    <h1 class="title"><a href="/2012/04/30/what-can-we-deal-with-little-vps/">在debian中安装octopress</a></h1>
   
 
     </header>
@@ -1186,7 +1187,9 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
 <p>使用df -h就可以看到该分区的大小了。</p>
 <p>11、去除逻辑卷</p>
 <pre><code><span class="preprocessor"># lvremove /dev/volgrp/software</span></code></pre>
-<p>前提：先umount该逻辑卷</p>
+<blockquote>
+<p><strong>NOTE</strong> 先umount该逻辑卷</p>
+</blockquote>
 
       
     </div>
@@ -1270,8 +1273,8 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
 <p>在做下一步操作之前强烈建议手工升级内核，Etch引进的udev技术已经无法支持比2.6.15旧的内核，而Debian Etch的软件仓库中的内核版本则是2.6.18。我们安装它就可以了。</p>
 <p>先确认一下你目前的内核版本</p>
 <pre><code><span class="preprocessor"># uname -r</span></code></pre>
-<figure class="highlight lang-bash"><pre><span class="comment"># aptitude search linux-image-2.6*</span>
-<span class="comment"># aptitude install linux-image-2.6-686</span>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude search linux-image-2.6*</span>
+<span class="preprocessor"># aptitude install linux-image-2.6-686</span>
 </pre></figure>
 
 <p>这样就可以安装2.6.18的内核了。</p>
@@ -1282,6 +1285,47 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
 <p>Etch的软件包关系系统引入了签名功能，简言之，没有经过Debian官方<br>签署的软件包无法在etch系统上安装，你当然也可以通过更改<br><code>/etc/apt/</code>来取消这个限制。</p>
 <pre><code># aptitude <span class="operator"><span class="keyword">update</span></code></pre>
 <p>至此，您的操作系统就更新完毕了，整个过程不需要重启，这对服务器而言无疑是非常贴心的一项设计。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2007-04-25T05:14:00.000Z"><a href="/2007/04/25/how-to-add-persistent-static-route-on-debian/">2007-04-25</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2007/04/25/how-to-add-persistent-static-route-on-debian/">如何在debian中添加永久静态路由</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>可以在<code>/etc/network/interfaces</code>中添加静态路由，关机后不会消失。</p>
+<figure class="highlight"><pre><span class="title">iface</span> eth0 inet static
+<span class="title">address</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.1</span>
+<span class="title">netmask</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="title">broadcast</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.255</span>
+<span class="title">up</span> ip add x.x.x<span class="number">.0</span>/<span class="number">24</span> via <span class="number">192.168</span><span class="number">.0</span><span class="number">.254</span> dev eth0
+<span class="title">up</span> ip add y.y.y<span class="number">.0</span>/<span class="number">24</span> via &lt;gw&gt; dev eth0
+</pre></figure>
+
+<p>192.168.0.254是网关。</p>
 
       
     </div>
@@ -1319,17 +1363,17 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -1343,13 +1387,11 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -1359,9 +1401,9 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -1373,15 +1415,23 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -1389,13 +1439,13 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -1403,13 +1453,11 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

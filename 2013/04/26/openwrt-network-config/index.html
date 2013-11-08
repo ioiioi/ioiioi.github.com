@@ -1,0 +1,360 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>OpenWRT网络配置 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="软硬件环境
+
+硬件：Linksys WRT54G修改版，8M FLASH/64M RAM
+OS：OpenWRT 12.09
+
+需求
+
+WAN口处于闲置状态，未连接任何网络
+LAN IP: 192.168.44.1/24，wifi IP: 192.168.77.1/24
+wifi与LAN这两个网段之间">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="OpenWRT网络配置"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2013-04-26T08:00:00.000Z"><a href="/2013/04/26/openwrt-network-config/">2013-04-26</a></time>
+      
+      
+  
+    <h1 class="title">OpenWRT网络配置</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h1>软硬件环境</h1>
+<ul>
+<li>硬件：Linksys WRT54G修改版，8M FLASH/64M RAM</li>
+<li>OS：OpenWRT 12.09</li>
+</ul>
+<h1>需求</h1>
+<ul>
+<li>WAN口处于闲置状态，未连接任何网络</li>
+<li>LAN IP: 192.168.44.1/24，wifi IP: 192.168.77.1/24</li>
+<li>wifi与LAN这两个网段之间可互相访问</li>
+<li>在wifi口启用DHCP服务</li>
+<li>wifi处于AP mode，SSID为OpenWRT，启用WPS-PSK2认证</li>
+</ul>
+<h1>配置</h1>
+<figure class="highlight"><pre><span class="preprocessor"># cat /etc/config/network</span>
+
+config <span class="keyword">switch</span> <span class="string">'eth0'</span>
+	option enable <span class="string">'1'</span>
+
+config switch_vlan <span class="string">'eth0_0'</span>
+	option device <span class="string">'eth0'</span>
+	option vlan <span class="string">'0'</span>
+	option ports <span class="string">'0 1 2 3 5'</span>
+
+config switch_vlan <span class="string">'eth0_1'</span>
+	option device <span class="string">'eth0'</span>
+	option vlan <span class="string">'1'</span>
+	option ports <span class="string">'4 5'</span>
+
+config <span class="class"><span class="keyword">interface</span> '<span class="title">loopback</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">lo</span>'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">ipaddr</span> '127.0.0.1'
+	<span class="title">option</span> <span class="title">netmask</span> '255.0.0.0'
+
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">lan</span>'
+	<span class="title">option</span> <span class="title">type</span> '<span class="title">bridge</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">eth0</span>.0'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">netmask</span> '255.255.255.0'
+	<span class="title">option</span> <span class="title">ipaddr</span> '192.168.44.1'
+
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">wan</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">eth0</span>.1'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">dhcp</span>'
+	
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">wifi</span>'
+	<span class="title">option</span> <span class="title">_orig_ifname</span> '<span class="title">radio0</span>.<span class="title">network1</span>'
+	<span class="title">option</span> <span class="title">_orig_bridge</span> '<span class="title">false</span>'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">ipaddr</span> '192.168.77.1'
+	<span class="title">option</span> <span class="title">netmask</span> '255.255.255.0'
+</pre></figure>
+
+<p>注意：在openwrt官网中，wifi section缺乏<code>_orig_ifname</code>和<code>_orig_bridge</code>这两个参数，无法正常工作。</p>
+<figure class="highlight"><pre># cat /etc/config/wireless 
+
+config wifi-device <span class="comment">'radio0'</span>
+	<span class="keyword">option</span> type <span class="comment">'mac80211'</span>
+	<span class="keyword">option</span> channel <span class="comment">'11'</span>
+	<span class="keyword">option</span> macaddr <span class="comment">'00:13:10:e5:bc:53'</span>
+	<span class="keyword">option</span> hwmode <span class="comment">'11g'</span>
+	<span class="keyword">option</span> txpower <span class="comment">'20'</span>
+	<span class="keyword">option</span> country <span class="comment">'00'</span>
+
+config wifi-iface
+	<span class="keyword">option</span> device <span class="comment">'radio0'</span>
+	<span class="keyword">option</span> network <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> mode <span class="comment">'ap'</span>
+	<span class="keyword">option</span> encryption <span class="comment">'psk2'</span>
+	<span class="keyword">option</span> key <span class="comment">'secret'</span>
+	<span class="keyword">option</span> ssid <span class="comment">'OpenWRT'</span>
+</pre></figure>
+
+<figure class="highlight"><pre># cat /etc/config/dhcp
+
+config dnsmasq
+	<span class="keyword">option</span> domainneeded <span class="comment">'1'</span>
+	<span class="keyword">option</span> boguspriv <span class="comment">'1'</span>
+	<span class="keyword">option</span> localise_queries <span class="comment">'1'</span>
+	<span class="keyword">option</span> rebind_protection <span class="comment">'1'</span>
+	<span class="keyword">option</span> rebind_localhost <span class="comment">'1'</span>
+	<span class="keyword">option</span> local <span class="comment">'/lan/'</span>
+	<span class="keyword">option</span> domain <span class="comment">'lan'</span>
+	<span class="keyword">option</span> expandhosts <span class="comment">'1'</span>
+	<span class="keyword">option</span> authoritative <span class="comment">'1'</span>
+	<span class="keyword">option</span> readethers <span class="comment">'1'</span>
+	<span class="keyword">option</span> leasefile <span class="comment">'/tmp/dhcp.leases'</span>
+	<span class="keyword">option</span> resolvfile <span class="comment">'/tmp/resolv.conf.auto'</span>
+	list <span class="built_in">server</span> <span class="comment">'192.168.44.254'</span>
+
+config dhcp <span class="comment">'lan'</span>
+	<span class="keyword">option</span> interface <span class="comment">'lan'</span>
+	<span class="keyword">option</span> ignore <span class="comment">'1'</span>
+
+config dhcp <span class="comment">'wan'</span>
+	<span class="keyword">option</span> interface <span class="comment">'wan'</span>
+	<span class="keyword">option</span> ignore <span class="comment">'1'</span>
+
+config dhcp <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> interface <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> start     <span class="comment">'100'</span>
+	<span class="keyword">option</span> limit     <span class="comment">'20'</span>
+	<span class="keyword">option</span> leasetime <span class="comment">'12h'</span>
+</pre></figure>
+
+<p>配置完成后</p>
+<figure class="highlight"><pre><span class="preprocessor"># ifup wifi</span>
+<span class="preprocessor"># /etc/init.d/dnsmasq restart</span>
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/openwrt/">openwrt</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

@@ -61,7 +61,9 @@
     <div class="entry">
       
         <p>这些天我花了一些时间研究了一下OpenBSD中的系统/网络监控软件，走了不少弯路，在这里跟与诸位分享一些心得体会。</p>
-<p>一开始，我直奔主题，花了不少精力尝试了大量网管软件，考察的对象包括：Munin、Monit、collectd、nagios/icinga和symon。<br><a id="more"></a></p>
+<p>一开始，我直奔主题，花了不少精力尝试了大量网管软件，考察的对象包括：Munin、Monit、collectd、nagios/icinga和symon。</p>
+<a id="more"></a>
+
 <h2>Munin</h2>
 <blockquote>
 <p>Munin is programmed in Perl, which can be installed on most operating systems. In addition, it needs some perl modules, which you can fetch from CPAN.</p>
@@ -131,7 +133,9 @@
 <li>OpenBSD/snmpd提供网络流量、pf等数据，并集中到zenoss进行统一网管；</li>
 <li>OpenBSD/pflog提供netflow，使用intermapper flow进行分析处理。</li>
 </ul>
-<p>关于网管软件，我的思路一直在变，前段时间迷上了graphite，于是果断抛弃了zenoss和zabbix这种大而全的软件模式，现在更佳倾向于collectd+graphite这样的组合。实际上，服务器的各种性能参数可以通过各种各样的daemon收集，然后输出给graphite进行绘图，graph everything是网管系统的终极目标。<br>{: .info}</p>
+<blockquote>
+<p><strong>UPDATE</strong><br>关于网管软件，我的思路一直在变，前段时间迷上了graphite，于是果断抛弃了zenoss和zabbix这种大而全的软件模式，现在更佳倾向于collectd+graphite这样的组合。实际上，服务器的各种性能参数可以通过各种各样的daemon收集，然后输出给graphite进行绘图，graph everything是网管系统的终极目标。</p>
+</blockquote>
 
       
     </div>
@@ -184,17 +188,17 @@
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -208,13 +212,11 @@
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -224,9 +226,9 @@
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -238,15 +240,23 @@
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -254,13 +264,13 @@
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -268,13 +278,11 @@
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

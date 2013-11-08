@@ -52,6 +52,148 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2013-04-26T08:00:00.000Z"><a href="/2013/04/26/openwrt-network-config/">2013-04-26</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2013/04/26/openwrt-network-config/">OpenWRT网络配置</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h1>软硬件环境</h1>
+<ul>
+<li>硬件：Linksys WRT54G修改版，8M FLASH/64M RAM</li>
+<li>OS：OpenWRT 12.09</li>
+</ul>
+<h1>需求</h1>
+<ul>
+<li>WAN口处于闲置状态，未连接任何网络</li>
+<li>LAN IP: 192.168.44.1/24，wifi IP: 192.168.77.1/24</li>
+<li>wifi与LAN这两个网段之间可互相访问</li>
+<li>在wifi口启用DHCP服务</li>
+<li>wifi处于AP mode，SSID为OpenWRT，启用WPS-PSK2认证</li>
+</ul>
+<h1>配置</h1>
+<figure class="highlight"><pre><span class="preprocessor"># cat /etc/config/network</span>
+
+config <span class="keyword">switch</span> <span class="string">'eth0'</span>
+	option enable <span class="string">'1'</span>
+
+config switch_vlan <span class="string">'eth0_0'</span>
+	option device <span class="string">'eth0'</span>
+	option vlan <span class="string">'0'</span>
+	option ports <span class="string">'0 1 2 3 5'</span>
+
+config switch_vlan <span class="string">'eth0_1'</span>
+	option device <span class="string">'eth0'</span>
+	option vlan <span class="string">'1'</span>
+	option ports <span class="string">'4 5'</span>
+
+config <span class="class"><span class="keyword">interface</span> '<span class="title">loopback</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">lo</span>'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">ipaddr</span> '127.0.0.1'
+	<span class="title">option</span> <span class="title">netmask</span> '255.0.0.0'
+
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">lan</span>'
+	<span class="title">option</span> <span class="title">type</span> '<span class="title">bridge</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">eth0</span>.0'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">netmask</span> '255.255.255.0'
+	<span class="title">option</span> <span class="title">ipaddr</span> '192.168.44.1'
+
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">wan</span>'
+	<span class="title">option</span> <span class="title">ifname</span> '<span class="title">eth0</span>.1'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">dhcp</span>'
+	
+<span class="title">config</span> <span class="title">interface</span> '<span class="title">wifi</span>'
+	<span class="title">option</span> <span class="title">_orig_ifname</span> '<span class="title">radio0</span>.<span class="title">network1</span>'
+	<span class="title">option</span> <span class="title">_orig_bridge</span> '<span class="title">false</span>'
+	<span class="title">option</span> <span class="title">proto</span> '<span class="title">static</span>'
+	<span class="title">option</span> <span class="title">ipaddr</span> '192.168.77.1'
+	<span class="title">option</span> <span class="title">netmask</span> '255.255.255.0'
+</pre></figure>
+
+<p>注意：在openwrt官网中，wifi section缺乏<code>_orig_ifname</code>和<code>_orig_bridge</code>这两个参数，无法正常工作。</p>
+<figure class="highlight"><pre># cat /etc/config/wireless 
+
+config wifi-device <span class="comment">'radio0'</span>
+	<span class="keyword">option</span> type <span class="comment">'mac80211'</span>
+	<span class="keyword">option</span> channel <span class="comment">'11'</span>
+	<span class="keyword">option</span> macaddr <span class="comment">'00:13:10:e5:bc:53'</span>
+	<span class="keyword">option</span> hwmode <span class="comment">'11g'</span>
+	<span class="keyword">option</span> txpower <span class="comment">'20'</span>
+	<span class="keyword">option</span> country <span class="comment">'00'</span>
+
+config wifi-iface
+	<span class="keyword">option</span> device <span class="comment">'radio0'</span>
+	<span class="keyword">option</span> network <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> mode <span class="comment">'ap'</span>
+	<span class="keyword">option</span> encryption <span class="comment">'psk2'</span>
+	<span class="keyword">option</span> key <span class="comment">'secret'</span>
+	<span class="keyword">option</span> ssid <span class="comment">'OpenWRT'</span>
+</pre></figure>
+
+<figure class="highlight"><pre># cat /etc/config/dhcp
+
+config dnsmasq
+	<span class="keyword">option</span> domainneeded <span class="comment">'1'</span>
+	<span class="keyword">option</span> boguspriv <span class="comment">'1'</span>
+	<span class="keyword">option</span> localise_queries <span class="comment">'1'</span>
+	<span class="keyword">option</span> rebind_protection <span class="comment">'1'</span>
+	<span class="keyword">option</span> rebind_localhost <span class="comment">'1'</span>
+	<span class="keyword">option</span> local <span class="comment">'/lan/'</span>
+	<span class="keyword">option</span> domain <span class="comment">'lan'</span>
+	<span class="keyword">option</span> expandhosts <span class="comment">'1'</span>
+	<span class="keyword">option</span> authoritative <span class="comment">'1'</span>
+	<span class="keyword">option</span> readethers <span class="comment">'1'</span>
+	<span class="keyword">option</span> leasefile <span class="comment">'/tmp/dhcp.leases'</span>
+	<span class="keyword">option</span> resolvfile <span class="comment">'/tmp/resolv.conf.auto'</span>
+	list <span class="built_in">server</span> <span class="comment">'192.168.44.254'</span>
+
+config dhcp <span class="comment">'lan'</span>
+	<span class="keyword">option</span> interface <span class="comment">'lan'</span>
+	<span class="keyword">option</span> ignore <span class="comment">'1'</span>
+
+config dhcp <span class="comment">'wan'</span>
+	<span class="keyword">option</span> interface <span class="comment">'wan'</span>
+	<span class="keyword">option</span> ignore <span class="comment">'1'</span>
+
+config dhcp <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> interface <span class="comment">'wifi'</span>
+	<span class="keyword">option</span> start     <span class="comment">'100'</span>
+	<span class="keyword">option</span> limit     <span class="comment">'20'</span>
+	<span class="keyword">option</span> leasetime <span class="comment">'12h'</span>
+</pre></figure>
+
+<p>配置完成后</p>
+<figure class="highlight"><pre><span class="preprocessor"># ifup wifi</span>
+<span class="preprocessor"># /etc/init.d/dnsmasq restart</span>
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2011-04-16T15:30:00.000Z"><a href="/2011/04/16/upgrade-openwrt/">2011-04-16</a></time>
       
       
@@ -151,17 +293,17 @@ Image check failed.
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -175,13 +317,11 @@ Image check failed.
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -191,9 +331,9 @@ Image check failed.
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -205,15 +345,23 @@ Image check failed.
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -221,13 +369,13 @@ Image check failed.
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -235,13 +383,11 @@ Image check failed.
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

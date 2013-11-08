@@ -48,6 +48,78 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2012-04-16T09:40:00.000Z"><a href="/2012/04/16/netmgmt-on-OpenBSD/">2012-04-16</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/16/netmgmt-on-OpenBSD/">OpenBSD中的网络管理</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>这些天我花了一些时间研究了一下OpenBSD中的系统/网络监控软件，走了不少弯路，在这里跟与诸位分享一些心得体会。</p>
+<p>一开始，我直奔主题，花了不少精力尝试了大量网管软件，考察的对象包括：Munin、Monit、collectd、nagios/icinga和symon。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/16/netmgmt-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-12T13:00:00.000Z"><a href="/2012/04/12/OpenNTPd-on-OpenBSD/">2012-04-12</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/12/OpenNTPd-on-OpenBSD/">OpenNTPd on OpenBSD</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>计算机时间是否同步是一个简单但很重要的命题，因为很多应用都要求计算机之间的时间一致，譬如VPN的构建、AD域的认证，log日志的排错等均需要时间同步，因此，早在1985年就诞生了NTP协议，它的全称是network time protocol（网络时间协议），被广泛用于计算机时间同步。它是一个协议，任何人都可以根据这个协议开发时间同步的软件，最著名的实现是ntp.org维护的同名套件，然而OpenBSD的开发人员对这个套件并不感冒，于是他们另起炉灶，重新开发了OpenNTPd，它旨在实现：<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/12/OpenNTPd-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2012-04-12T05:00:00.000Z"><a href="/2012/04/12/unbound-on-OpenBSD/">2012-04-12</a></time>
       
       
@@ -396,181 +468,6 @@
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2012-02-12T15:30:00.000Z"><a href="/2012/02/12/how-to-install-ubuntu-domU/">2012-02-12</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/02/12/how-to-install-ubuntu-domU/">安装ubuntu domU</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <h2>一、创建虚拟机硬盘</h2>
-<pre><code><span class="comment">#</span> <span class="comment">lvcreate</span> <span class="literal">-</span><span class="comment">L</span> <span class="comment">4096M</span> <span class="literal">-</span><span class="comment">n</span> <span class="comment">lucid</span>-<span class="comment">srv</span> <span class="comment">domU</code></pre>
-
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2012/02/12/how-to-install-ubuntu-domU/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2012-02-11T15:30:00.000Z"><a href="/2012/02/11/how-to-install-debian-domU/">2012-02-11</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/02/11/how-to-install-debian-domU/">安装debian domU</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在CentOS(dom0)安装debian/ubuntu有多种方式：</p>
-<ol>
-<li>debootstrap</li>
-<li>virt-manager</li>
-<li>cowboy</li>
-</ol>
-<p>在这里给大家演示后两种</p>
-<p>dom0环境为：CentOS5.7，xen的版本是3.1.2，redhat在该版本中增加了对grub2的支持<br>{: class=“info” }</p>
-<h2>一、virt-manager</h2>
-<p>通过 virt-manager安装linux(hvm)很简单，就像在平常在物理机上安装linux一样，准备好iso镜像文件，再根据安装程序的提示，一步步操作就可以了。在安装的过程中，硬盘选择file backend，文件名为deb6-template，后面的步骤需要用到该镜像文件。</p>
-<p>从官方网站下载的iso文件名为：debian-6.0.2.1-amd64-xfce+lxde-cd-1.iso，文件名太长了，在virt-manager中无法识别，因此需要修改文件名，譬如debian6-amd64.iso<br>{: class=“note” }</p>
-<h2>二、cowboy</h2>
-<p>cowboy这个词来自《the book of xen》，我估计是因为这种方式比较粗野，所以作者用了cowboy这个词。这种方式的思路是直接打包一台domU的系统文件，然后解压到另一台domU的硬盘中。虽说办法是糙了一点，但是非常适合于命令行下操作，可以实现大规模部署。</p>
-<h3>2.1 创建模版</h3>
-<p>上面我们已经使用virt-manager安装了一台debian 6.0.2的源domU，接下来通过这个源domU先创建模版</p>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">mount</span> <span class="literal">-</span><span class="comment">o</span> <span class="comment">loop</span> <span class="comment">deb6</span>-<span class="comment">template</span>.<span class="comment">img</span> <span class="comment">/tmp/deb6</span>-<span class="comment">template</span>
-<span class="comment">#</span> <span class="comment">chroot</span> <span class="comment">/tmp/deb6</span>-<span class="comment">template</span>
-<span class="comment">#</span> <span class="comment">tar</span> <span class="literal">-</span><span class="comment">cvpzf</span> <span class="comment">deb6</span>.<span class="comment">0</span>.<span class="comment">2</span>-<span class="comment">template</span>.<span class="comment">tar</span>.<span class="comment">gz</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/deb6</span>.<span class="comment">0</span>.<span class="comment">2</span>-<span class="comment">template</span>.<span class="comment">tar</span>.<span class="comment">gz</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/tmp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/lost</span>+<span class="comment">found</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/media</span> <span class="comment">/</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/mnt</span>  <span class="comment">/
-</pre></figure>
-
-<p>假如没有chroot的话，命令应该是：</p>
-<pre><code><span class="comment">#</span> <span class="comment">tar</span> <span class="literal">-</span><span class="comment">cvpzf</span> <span class="comment">deb6</span>.<span class="comment">0</span>.<span class="comment">2</span>-<span class="comment">template</span>.<span class="comment">tar</span>.<span class="comment">gz</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/deb6</span>.<span class="comment">0</span>.<span class="comment">2</span>-<span class="comment">template</span>.<span class="comment">tar</span>.<span class="comment">gz</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/tmp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/lost</span>+<span class="comment">found</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/media</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/mnt</span>  <span class="comment">/</code></pre>
-<p>网上很多文档都说在创建模版的时候要exclude掉<code>/sys</code>和<code>/proc</code>这两个目录，因为在系统运行的状态下，这两个目录含有一些临时文件，但是这些文档只说了一半，解压后到domU存储后，还要记得创建这两个目录，否则，系统运行会出错。另外，也可以将源domU关机，然后打包，因为关机后，domU中这两个目录是空的。<br>{: class=“note” }</p>
-<h3>2.2 准备目标domU存储</h3>
-<p>在这里，我们选择镜像文件作为参考，读者也可以选择lvm作为目标domU的存储。</p>
-<figure class="highlight"><pre><span class="preprocessor"># dd if=/dev/zero of=/staff/domU/deb6-1.img bs=1000 count=2000K</span>
-<span class="preprocessor"># parted /staff/domU/deb6-1.img mklabel msdos</span>
-<span class="preprocessor"># parted /staff/domU/deb6-1.img mkpartfs primary ext2 0 1536</span>
-<span class="preprocessor"># parted /staff/domU/deb6-1.img mkpart extend 1537 2048</span>
-<span class="preprocessor"># parted /staff/domU/deb6-1.img mkpartfs logical linux-swap 1537 2048</span>
-</pre></figure>
-
-<p>以上命令是创建一个镜像文件，然后对其分区，先创建主分区，接着是扩展，然后是逻辑分区，swap分区位于逻辑分区。</p>
-<figure class="highlight"><pre><span class="comment"># parted deb6-1.img</span>
-&gt;<span class="keyword">set</span> <span class="number">1</span> boot <span class="function_start"><span class="keyword">on</span>
-</span>&gt;quit
-</pre></figure>
-
-<p>这个步骤是为了将主分区置为boot，实际上这个步骤是多余的，即使primary不是boot flag也能启动。</p>
-<h3>2.3 转换分区文件系统</h3>
-<p>大家有没有注意到上面的步骤中，分区类型是ext2，这是因为CentOS5.7的parted版本为1.8.1，只支持ext2，最新的parted版本是3.03倒是支持ext3，然而没有for centos5.7的rpm，所以我们还需要将ext2手工转换成ext3。<br>{: class=“info” }</p>
-<pre><code><span class="comment">#</span> <span class="comment">kpartx</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">""</span> <span class="literal">-</span><span class="comment">av</span> <span class="comment">/staff/domU/deb6</span>-<span class="comment">1</span>.<span class="comment">img</code></pre>
-<p>将在/dev/mapper/下生成loopX1和loopX5两个device map，其中loopX1是primary分区，loopX5是swap分区</p>
-<pre><code><span class="preprocessor"># tune2fs -j /dev/mapper/loopX1</span></code></pre>
-<p>这样就将ext2转换成了ext3。</p>
-<h3>2.4 克隆</h3>
-<figure class="highlight"><pre><span class="preprocessor"># mount /dev/mapper/loopX1 /tmp/deb6-1</span>
-<span class="preprocessor"># mount /dev/mapper/loopX1 /tmp/deb6-template</span>
-<span class="preprocessor"># cp -rfp /tmp/deb6-template/* /tmp/deb6-1/</span>
-</pre></figure>
-
-<p>将文件拷贝到新的domU中之后，要记得卸载分区</p>
-<figure class="highlight"><pre><span class="preprocessor"># umount /tmp/deb6-1</span>
-<span class="preprocessor"># umount /tmp/deb6-template</span>
-<span class="preprocessor"># kpartx -d /staff/domU/deb6-1.img</span>
-<span class="preprocessor"># kpartx -d /staff/domU/deb6-template.img</span>
-</pre></figure>
-
-<h3>2.5 创建配置文件</h3>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vim</span> <span class="comment">/etc/xen/deb6</span>-<span class="comment">hvm</span>.<span class="comment">cfg</span>
-
-<span class="comment">import</span> <span class="comment">os</span>, <span class="comment">re</span>
-<span class="comment">arch</span> <span class="comment">=</span> <span class="comment">os</span>.<span class="comment">uname()</span>[<span class="comment">4</span>]
-<span class="comment">if</span> <span class="comment">re</span>.<span class="comment">search('64'</span>, <span class="comment">arch):</span>
-    <span class="comment">arch_libdir</span> <span class="comment">=</span> <span class="comment">'lib64'</span>
-<span class="comment">else:</span>
-    <span class="comment">arch_libdir</span> <span class="comment">=</span> <span class="comment">'lib'</span>
-
-<span class="comment">kernel</span> <span class="comment">=</span> <span class="comment">"/usr/lib/xen/boot/hvmloader"</span>
-<span class="comment">builder='hvm'</span>
-<span class="comment">memory</span> <span class="comment">=</span> <span class="comment">1024</span>
-
-<span class="comment">#</span> <span class="comment">Should</span> <span class="comment">be</span> <span class="comment">at</span> <span class="comment">least</span> <span class="comment">2KB</span> <span class="comment">per</span> <span class="comment">MB</span> <span class="comment">of</span> <span class="comment">domain</span> <span class="comment">memory</span>, <span class="comment">plus</span> <span class="comment">a</span> <span class="comment">few</span> <span class="comment">MB</span> <span class="comment">per</span> <span class="comment">vcpu</span>.
-<span class="comment">shadow_memory</span> <span class="comment">=</span> <span class="comment">8</span>
-<span class="comment">name</span> <span class="comment">=</span> <span class="comment">'deb6</span>-<span class="comment">hvm'</span>
-<span class="comment">vif</span> <span class="comment">=</span> <span class="title">[</span> <span class="comment">'type=ioemu</span>, <span class="comment">bridge=eth0'</span> <span class="title">]</span>
-<span class="comment">#acpi</span> <span class="comment">=</span> <span class="comment">1</span>
-<span class="comment">#apic</span> <span class="comment">=</span> <span class="comment">1</span>
-<span class="comment">disk</span> <span class="comment">=</span> <span class="title">[</span> <span class="comment">'file:/home/staff/vm</span>.<span class="comment">images/deb6</span>-<span class="comment">hvm</span>.<span class="comment">img</span>,<span class="comment">sda</span>,<span class="comment">w'</span>,
-         <span class="comment">'file:/home/chenr/software/debian</span>-<span class="comment">6</span>.<span class="comment">0</span>.<span class="comment">2</span>.<span class="comment">1</span>-<span class="comment">amd64</span>.<span class="comment">iso</span>,<span class="comment">ioemu:hdc:cdrom</span>,<span class="comment">r'</span>
-<span class="title">]</span>
-
-<span class="comment">device_model</span> <span class="comment">=</span> <span class="comment">'/usr/'</span> <span class="literal">+</span> <span class="comment">arch_libdir</span> <span class="literal">+</span> <span class="comment">'/xen/bin/qemu</span>-<span class="comment">dm'</span>
-
-<span class="comment">#</span>-<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
-<span class="comment">#</span> <span class="comment">boot</span> <span class="comment">on</span> <span class="comment">floppy</span> <span class="comment">(a)</span>, <span class="comment">hard</span> <span class="comment">disk</span> <span class="comment">(c)</span> <span class="comment">or</span> <span class="comment">CD</span>-<span class="comment">ROM</span> <span class="comment">(d)</span>
-<span class="comment">#</span> <span class="comment">default:</span> <span class="comment">hard</span> <span class="comment">disk</span>, <span class="comment">cd</span>-<span class="comment">rom</span>, <span class="comment">floppy</span>
-<span class="comment">boot="c"</span>
-<span class="comment">sdl=0</span>
-<span class="comment">vnc=1</span>
-<span class="comment">vncconsole=3</span>
-<span class="comment">vncpasswd=''</span>
-
-<span class="comment">serial='pty'</span>
-<span class="comment">usbdevice='tablet'</span>
-<span class="comment">#on_reboot="destroy"</span>
-<span class="comment">#on_poweroff="destroy"</span>
-<span class="comment">#on_shutdown="destroy"</span>
-<span class="comment">on_crash="preserve"
-</pre></figure>
-
-<p>需要注意的是，disk选项必须是：</p>
-<pre><code><span class="setting">disk = <span class="value">[<span class="string">"file:/staff/domU/deb6-hvm.img,sda,w"</span>]</span></span></code></pre>
-<p>不能是</p>
-<pre><code><span class="setting">disk = <span class="value">[<span class="string">"tap:aio:/staff/domU/deb6-hvm.img,xvda,w"</span>]</span></span></code></pre>
-<p>因为xen3.1.2不支持tap/xvda。</p>
-<p>virt-manager是一种通用的安装方法，适合于安装全系列的linux/windows操作系统，不过不利于大规模部署，而cowboy的方式则适合于大规模、快速部署，跟virt-manager形成互补。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
 
 <nav id="pagination">
   
@@ -596,17 +493,17 @@
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -620,13 +517,11 @@
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -636,9 +531,9 @@
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -650,15 +545,23 @@
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -666,13 +569,13 @@
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -680,13 +583,11 @@
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

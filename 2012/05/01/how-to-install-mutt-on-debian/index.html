@@ -6,9 +6,9 @@
   <title>小VPS能干什么？ | linuxabc</title>
   <meta name="author" content="alfie chan">
   
-  <meta name="description" content="baseline
-256M VPS能做什么，首先在debian 256M VPS上做一个baseline，通过apt-get安装常用的软件，譬如apache2、mysql、php、wordpress之后，使用
-作为一名网络/系统工程师，接触最多的就是console界面，tcpdump、nmap、if">
+  <meta name="description" content="作为一名网络/系统工程师，接触最多的就是console界面，tcpdump、nmap、iftop、pftop、systat等等工具都是在终端下才能来去自如，所以虽然现在的GUI是越来越华丽，但是仍然取代不了console，简捷是最大的优点。
+
+美化使用环境：统一使用solarized作为主题，包括P">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -45,7 +45,7 @@
 </nav>
 <div class="clearfix"></div></header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="draft">
   
   <div class="post-content">
     <header>
@@ -61,13 +61,7 @@
     </header>
     <div class="entry">
       
-        <h1>baseline</h1>
-<p>256M VPS能做什么，首先在debian 256M VPS上做一个baseline，通过apt-get安装常用的软件，譬如apache2、mysql、php、wordpress之后，使用</p>
-<p>作为一名网络/系统工程师，接触最多的就是console界面，tcpdump、nmap、iftop、pftop、systat等等工具都是在终端下才能来去自如，所以虽然现在的GUI是越来越华丽，但是仍然取代不了console，简捷是最大的优点。</p>
-<p>用得最多的当然是shell，bash、zsh<br>用得第二多的就是编辑器，因为我们要经常跟；<br>用的第三多的得是email了，mutt<br>第四多的就存在争议，网页我把这个位置给了IM，譬如gtalk、IRC，IRC在国内并不流行，gtalk也用的很少。</p>
-<p>serverfault</p>
-<h1>ps -C apache2 v</h1>
-<p>查看每个进程的内存占用率。</p>
+        <p>作为一名网络/系统工程师，接触最多的就是console界面，tcpdump、nmap、iftop、pftop、systat等等工具都是在终端下才能来去自如，所以虽然现在的GUI是越来越华丽，但是仍然取代不了console，简捷是最大的优点。</p>
 <ol>
 <li>美化使用环境：统一使用solarized作为主题，包括PuTTY、zsh、vim和mutt</li>
 <li>搭建博客；<br>2.1 octopress；<br>2.2 wordpress；</li>
@@ -88,7 +82,7 @@
 <blockquote>
 <p>“All mail clients suck. This one just sucks less.” Michael Elkins, ca. 1995</p>
 </blockquote>
-<p>mutt是一个高效、高度可配置的基于console的邮件用户代理（mail user agent/MUA）</p>
+<p>mutt是一个高效、高度可配置的基于console的邮件用户代理（MUA）</p>
 <p>debian中提供了mutt-patched这个包，包含了sidebar功能。</p>
 <h1>solarized</h1>
 <p>solarize是一个非常流行的配色，目前已移植到多个应用程序中。</p>
@@ -100,16 +94,16 @@
 <h2>mutt 配色</h2>
 <p>mutt-colors-solarized-256.muttrc<br>mutt-colors-solarized-16.muttrc</p>
 <p>默认情况下，term的颜色仅支持8色，</p>
-<pre><code><span class="title">tput</span> colors
+<pre><code><span class="preprocessor"># tput colors</span>
 <span class="number">8</span></code></pre>
 <p>需要安装ncurse-term这个软件包来解决</p>
-<pre><code><span class="title">aptitude</span> install ncurse-term</code></pre>
+<pre><code><span class="preprocessor"># aptitude install ncurse-term</span></code></pre>
 <p>然后重新登录</p>
-<pre><code><span class="title">tput</span> colors
+<pre><code><span class="preprocessor"># tput colors</span>
 <span class="number">256</span></code></pre>
 <p>再执行<code>mutt</code>就不会出现</p>
-<p>color not supported的错误了。</p>
-<p>References:</p>
+<pre><code><span class="title">color</span> <span class="keyword">not</span> supported的错误了。</code></pre>
+<p>参考:</p>
 <ol>
 <li><a href="http://promberger.info/linux/2008/04/05/getting-256-color-support-working-for-mutt-in-xfce4-terminal/" target="_blank">Getting 256 color support working for mutt in xfce4-terminal</a></li>
 <li><a href="http://www.robmeerman.co.uk/unix/256colours" target="_blank"><a href="http://www.robmeerman.co.uk/unix/256colours">http://www.robmeerman.co.uk/unix/256colours</a></a></li>
@@ -189,17 +183,17 @@
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -213,13 +207,11 @@
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -229,9 +221,9 @@
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -243,15 +235,23 @@
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -259,13 +259,13 @@
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -273,13 +273,11 @@
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>

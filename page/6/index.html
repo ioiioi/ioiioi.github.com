@@ -48,6 +48,167 @@
     <header>
       
         <div class="icon"></div>
+        <time datetime="2011-04-14T00:48:00.000Z"><a href="/2011/04/14/how-to-config-vlan-trunk-on-RB450/">2011-04-14</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/04/14/how-to-config-vlan-trunk-on-RB450/">如何在RB450中做vlan trunk</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>RB450是MikroTik公司出品的基于RouterOS的三层路由器，提供了丰富的功能：动态路由协议（OSPF、BGP）、802.1q、QoS（单IP限速）、netflow exporter、NTP、OpenVPN、PPPoE、radius等。今天我主要用它来创建36个vlan，每个vlan都分配一个网关IP，接着通过一个以太口与一台二层交换机的vlan trunk相连，实现了这36个vlan的互访。</p>
+<p>以下是相关配置：</p>
+<figure class="highlight"><pre>/<span class="class"><span class="keyword">interface</span> <span class="title">vlan</span>
+<span class="title">add</span> <span class="title">arp</span>=<span class="title">enabled</span> <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> <span class="title">interface</span>=<span class="title">ether1</span> <span class="title">l2mtu</span>=1522 <span class="title">mtu</span>=1500 \
+    <span class="title">name</span>=<span class="title">vlan5</span> <span class="title">use</span>-<span class="title">service</span>-<span class="title">tag</span>=<span class="title">no</span> <span class="title">vlan</span>-<span class="title">id</span>=5
+<span class="title">add</span> <span class="title">arp</span>=<span class="title">enabled</span> <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> <span class="title">interface</span>=<span class="title">ether1</span> <span class="title">l2mtu</span>=1522 <span class="title">mtu</span>=1500 \
+    <span class="title">name</span>=<span class="title">vlan2</span> <span class="title">use</span>-<span class="title">service</span>-<span class="title">tag</span>=<span class="title">no</span> <span class="title">vlan</span>-<span class="title">id</span>=2
+<span class="title">add</span> <span class="title">arp</span>=<span class="title">enabled</span> <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> <span class="title">interface</span>=<span class="title">ether1</span> <span class="title">l2mtu</span>=1522 <span class="title">mtu</span>=1500 \
+    <span class="title">name</span>=<span class="title">vlan41</span> <span class="title">use</span>-<span class="title">service</span>-<span class="title">tag</span>=<span class="title">no</span> <span class="title">vlan</span>-<span class="title">id</span>=41
+...
+/<span class="title">ip</span> <span class="title">address</span>
+<span class="title">add</span> <span class="title">address</span>=172.16.60.254/24 <span class="title">broadcast</span>=172.16.60.255 <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> \
+    <span class="title">interface</span>=<span class="title">vlan41</span> <span class="title">network</span>=172.16.60.0
+<span class="title">add</span> <span class="title">address</span>=192.168.100.254/24 <span class="title">broadcast</span>=192.168.100.255 <span class="title">comment</span>="" <span class="title">disabled</span>=\
+    <span class="title">no</span> <span class="title">interface</span>=<span class="title">vlan100</span> <span class="title">network</span>=192.168.100.0
+<span class="title">add</span> <span class="title">address</span>=172.16.59.254/24 <span class="title">broadcast</span>=172.16.59.255 <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> \
+    <span class="title">interface</span>=<span class="title">vlan2</span> <span class="title">network</span>=172.16.59.0
+<span class="title">add</span> <span class="title">address</span>=172.16.58.254/24 <span class="title">broadcast</span>=172.16.58.255 <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> \
+    <span class="title">interface</span>=<span class="title">vlan5</span> <span class="title">network</span>=172.16.58.0
+…
+</pre></figure>
+
+<p>这就实现了vlan trunk的功能，非常简单，但是RouterOS毕竟是linux，所以它与实际的交换机还是有一些区别的，譬如不能在一个vlan trunk中支持untag的vlan，亦即native vlan，不知道换了交换芯片atheros8316的RB450G功能会不会更强大一些，详见：<a href="http://wiki.mikrotik.com/wiki/Switch_Chip_Features" target="_blank">http://wiki.mikrotik.com/wiki/Switch_Chip_Features</a></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-04-14T00:48:00.000Z"><a href="/2011/04/14/firewall-on-RouterOS/">2011-04-14</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/04/14/firewall-on-RouterOS/">RouterOS中的防火墙功能</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>routeros(ros)源于Linux，因此ros中的firewall拥有netfilter的影子，譬如ros的firewall含有INPUT、OUTPUT、FORWARD链，还有nat、mangle表，但是又有区别，特别是以下两点值得注意：</p>
+<ol>
+<li>ros的firewall似乎不支持状态检测；</li>
+<li>默认情况下，ros的firewall允许所有数据包通过。</li>
+</ol>
+<p>这两点我实在无法理解。</p>
+<p>关于第一点，在一般的状态防火墙中，假如欲允许内网用户访问外网的web应用，只需要定义一条从内到外的访问规则即可，状态防火墙会自动识别从外至内的“相关（establised/related）”包，但是ros的firewall还需要额外再定义这两条（establised/related）从外至内的规则。</p>
+<p>关于第二点，一般的防火墙的默认规则是drop，这是符合大多数管理员的思维的：凡是未经许可的连接均应丢弃，这种思路有两个好处：一是安全性高，不至于因为管理员的疏忽导致整个网络开放给外网，一是容易扩展，因为管理员永远都无法掌握或预知所有的威胁，因此仅定义允许的数据流才是正确的防火墙策略管理思路。</p>
+<p>需求：</p>
+<ol>
+<li>允许10.10.10.0/29访问192.168.100.0/24</li>
+<li>允许10.10.10.8/29访问172.16.100.0/24</li>
+<li>允许所有(方向)ping</li>
+<li>允许ROS访问所有区域</li>
+</ol>
+<p>脚本：</p>
+<figure class="highlight"><pre><span class="comment"># apr/17/2011 13:16:32 by RouterOS 4.16</span>
+<span class="comment">#</span>
+/ip firewall filter
+<span class="comment">#### INPUT chain ####</span>
+<span class="comment">## 定义返回的"已连接/相关"数据包</span>
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"Allow Established connections"</span> \
+    connection-<span class="keyword">state</span>=established disabled=<span class="keyword">no</span>
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"Allow Related connections"</span> \
+    connection-<span class="keyword">state</span>=related disabled=<span class="keyword">no</span>
+<span class="comment">## 在所有端口上允许ping ros</span>
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"Allow ICMP"</span> disabled=<span class="keyword">no</span> protocol=icmp
+<span class="comment">## 在所有端口上允许通过SSH访问ros</span>
+add action=<span class="keyword">accept</span> chain=input comment=SSH disabled=<span class="keyword">no</span> dst-port=<span class="number">22</span> protocol=\
+    tcp
+<span class="comment">## 在所有端口上允许通过winbox访问ros</span>
+add action=<span class="keyword">accept</span> chain=input comment=winbox disabled=<span class="keyword">no</span> dst-port=<span class="number">8291</span> \
+    protocol=tcp
+add action=<span class="keyword">accept</span> chain=input comment=DHCP disabled=<span class="keyword">no</span> dst-port=<span class="number">67</span>-<span class="number">68</span> \
+    protocol=tcp
+<span class="comment">## 在所有端口上允许访问ros的DNS服务</span>
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"DNS - TCP"</span> disabled=<span class="keyword">no</span> dst-port=<span class="number">53</span> \
+    protocol=tcp
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"DNS - UDP"</span> disabled=<span class="keyword">no</span> dst-port=<span class="number">53</span> \
+    protocol=udp
+<span class="comment">### 若INPUT的数据包未符合上述定义则全部丢弃</span>
+add action=drop chain=input comment=<span class="string">"### DROP EVERYTHING ELSE - INPUT ###"</span> \
+    disabled=<span class="keyword">no</span> src-address-list=<span class="string">""</span>
+<span class="comment">####FORWARD</span>
+<span class="comment">##允许返回的"已连接/相关"数据包通过</span>
+add action=<span class="keyword">accept</span> chain=forward comment=\
+    <span class="string">"Allow established connections - FORWARD"</span> connection-<span class="keyword">state</span>=established \
+    disabled=<span class="keyword">no</span>
+add action=<span class="keyword">accept</span> chain=forward comment=<span class="string">"Allow related connections - FORWARD"</span> \
+    connection-<span class="keyword">state</span>=related disabled=<span class="keyword">no</span>
+add action=drop chain=forward comment=<span class="string">"Drop invalid connections - FORWARD"</span> \
+    connection-<span class="keyword">state</span>=invalid disabled=<span class="keyword">no</span>
+<span class="comment">##凡是属于tcp的数据包将跳转至tcp chain进行处理(用户自定义)</span>
+add action=jump chain=forward comment=<span class="string">""</span> disabled=<span class="keyword">no</span> jump-target=tcp \
+    protocol=tcp
+<span class="comment">##凡是属于udp的数据包将跳转至udp chain进行处理(用户自定义)</span>
+add action=jump chain=forward comment=<span class="string">""</span> disabled=<span class="keyword">no</span> jump-target=udp \
+    protocol=udp
+<span class="comment">##允许内网用户ping外网主机</span>
+add action=<span class="keyword">accept</span> chain=forward comment=<span class="string">"Allow ICMP"</span> disabled=<span class="keyword">no</span> protocol=\
+    icmp
+<span class="comment">### tcp chain</span>
+<span class="comment">## 在netfilter防火墙中，数据包会流经所有规则，由最后一条符合的规则处理该数据包。</span>
+<span class="comment">## 为了提高效率，我们将数据包按协议划分成tcp、udp和icmp三类，每一类数据包均由各自的用户自</span>
+<span class="comment">## 定义链处理，从而减少数据包检查的次数。这里将利用jump target和用户自定义链来实现。</span>
+add action=<span class="keyword">accept</span> chain=tcp disabled=<span class="keyword">no</span> src-address=<span class="number">10.10</span>.<span class="number">10.0</span>/<span class="number">29</span> dst-address=<span class="number">192.168</span>.<span class="number">100.0</span>/<span class="number">24</span>
+add action=<span class="keyword">accept</span> chain=tcp disabled=<span class="keyword">no</span> src-address=<span class="number">10.10</span>.<span class="number">10.8</span>/<span class="number">29</span> dst-address=<span class="number">172.16</span>.<span class="number">100.0</span>/<span class="number">24</span>
+<span class="comment">### udp chain</span>
+add action=<span class="keyword">accept</span> chain=udp disabled=<span class="keyword">no</span> src-address=<span class="number">10.10</span>.<span class="number">10.0</span>/<span class="number">29</span> dst-address=<span class="number">192.168</span>.<span class="number">100.0</span>/<span class="number">24</span>
+add action=<span class="keyword">accept</span> chain=udp disabled=<span class="keyword">no</span> src-address=<span class="number">10.10</span>.<span class="number">10.8</span>/<span class="number">29</span> dst-address=<span class="number">172.16</span>.<span class="number">100.0</span>/<span class="number">24</span>
+<span class="comment">### 若FORWARD的数据包未符合上述定义则全部丢弃</span>
+add action=drop chain=forward comment=\
+    <span class="string">"### DROP EVERYTHING ELSE - FORWARD ###"</span> disabled=<span class="keyword">no</span>
+</pre></figure>
+
+<p>这里没有涉及到OUTPUT链，因为根据需求，不需要额外对OUTPUT进行限制。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
         <time datetime="2010-10-10T15:30:00.000Z"><a href="/2010/10/10/centralizing-authentication-with-windows-AD-part-2/">2010-10-10</a></time>
       
       
@@ -475,170 +636,6 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
 
 
 
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2007-07-18T04:45:00.000Z"><a href="/2007/07/18/how-to-install-lvm-on-debian/">2007-07-18</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2007/07/18/how-to-install-lvm-on-debian/">如何在debian中安装和使用lvm2</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>本文在VMware的虚拟机中测试通过，为了做这个实验，需要新增加一块硬盘，接着就可以利用该硬盘来安装和使用lvm。</p>
-<h2>一、准备物理硬盘和分区</h2>
-<ol>
-<li><code># cfdisk /dev/sdb</code></li>
-<li>将该硬盘做成extended分区，并write分区表</li>
-<li>使用fdisk -l就可以看到该硬盘了。</li>
-</ol>
-<h2>二、安装并配置lvm</h2>
-<p>1、安装lvm2</p>
-<pre><code><span class="preprocessor"># aptitude install lvm2</span></code></pre>
-<p>2、初始化物理卷</p>
-<pre><code># pv<span class="operator"><span class="keyword">create</span> /dev/sdb5</code></pre>
-<p>3、创建卷组</p>
-<pre><code># vg<span class="operator"><span class="keyword">create</span> volgrp /dev/sdb5</code></pre>
-<p>4、激活卷组</p>
-<pre><code><span class="preprocessor"># vgscan</span></code></pre>
-<p>5、创建逻辑卷</p>
-<pre><code><span class="comment">#</span> <span class="comment">lvcreate</span> <span class="literal">-</span><span class="comment">n</span> <span class="comment">software</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">size</span> <span class="comment">500M</span> <span class="comment">volgrp</code></pre>
-<p>6、格式化并mount该逻辑卷</p>
-<pre><code><span class="preprocessor"># mkfs.ext3 /dev/volgrp/software</span>
-<span class="preprocessor"># mkdir /home/software</span>
-<span class="preprocessor"># mount -t ext3 /dev/volgrp/software /home/software</span></code></pre>
-<p>7、查看逻辑卷</p>
-<pre><code><span class="preprocessor"># lvdisplay</span></code></pre>
-<p>8、改变逻辑卷的大小</p>
-<pre><code><span class="preprocessor"># umount /home/software</span>
-<span class="preprocessor"># lvextended -L+500M /dev/volgrp/software</span></code></pre>
-<p>改变之后，在lvdisplay可以看到大小已经改变，但是实际的文件系统还是500M，所以还需要做以下的操作</p>
-<p>9、改变物理卷大小</p>
-<pre><code><span class="preprocessor"># e2fsck -f /dev/volgrp/software</span>
-<span class="preprocessor"># resize2fs /dev/volgrp/software</span></code></pre>
-<p>10、重新mount该逻辑卷</p>
-<pre><code><span class="preprocessor"># mount -t ext3 /dev/volgrp/software /home/software</span>
-<span class="preprocessor"># df -h</span></code></pre>
-<p>使用df -h就可以看到该分区的大小了。</p>
-<p>11、去除逻辑卷</p>
-<pre><code><span class="preprocessor"># lvremove /dev/volgrp/software</span></code></pre>
-<p>前提：先umount该逻辑卷</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-  <article class="post">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time datetime="2007-05-09T15:00:00.000Z"><a href="/2007/05/09/how-to-upgrade-from-sarge-to-etch/">2007-05-9</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2007/05/09/how-to-upgrade-from-sarge-to-etch/">如何从sarge升级到etch</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>这两天做sarge到etch的升级，参考了官方的release note，<br>结合自己的实践写下本文，以便日后查询之用。</p>
-<p>Debian官方建议使用aptitude来管理包，所以下面的操作均<br>以aptitude为例，需要说明的是一旦用了aptitude，就不要<br>再混用apt-get。</p>
-<p>本文假定用户没有安装X windows系统，毕竟Debian更适合于<br>做服务器，桌面还是用Ubuntu吧。</p>
-<h1>1. 备份</h1>
-<p>将系统中重要的系统文件做备份，一般是配置文件、数据库等</p>
-<pre><code><span class="preprocessor"># tar -cvf /home/backup/etc.bak /etc/*</span></code></pre>
-<h1>2. 准备升级环境</h1>
-<p>升级的过程中会重启一些服务，所以千万不要通过telnet、<br>ssh远程连接方式进行升级，最好在本机的终端窗口下操作<br>（不要在X windows），或者通过modem的serial口远程登录。<br>（这跟telnet、ssh的远程连接有所区别，cisco等网络设备<br>经常会用到这种方式）</p>
-<h1>3. 检查系统软件包状态</h1>
-<p>系统中如果有软件包处于hold状态，则在升级过程中可能<br>失败，最好手工将他们设为unhold</p>
-<figure class="highlight lang-bash"><pre><span class="comment"># aptitude search "~ahold" | grep "^.h"</span>
-<span class="comment"># aptitude unhold pkg_name</span>
-</pre></figure>
-
-<p>如果sarge系统中使用了非官方的软件包，例如backports，<br>最好先将他们全部卸载，否则升级过程中会引起冲突。<br>{: class=“warning” }</p>
-<h1>4. 更改source.list</h1>
-<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vi</span> <span class="comment">/etc/apt/source</span>.<span class="comment">list</span>
-<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
-<span class="comment">#</span> <span class="comment">deb</span> <span class="comment">http://debian</span>.<span class="comment">cn99</span>.<span class="comment">com/debian</span> <span class="comment">sarge</span> <span class="comment">main</span> <span class="comment">contrib</span> <span class="comment">non</span>-<span class="comment">free</span>
-<span class="comment">deb</span> <span class="comment">http://debian</span>.<span class="comment">cn99</span>.<span class="comment">com/debian</span> <span class="comment">etch</span> <span class="comment">main</span> <span class="comment">contrib</span> <span class="comment">non</span>-<span class="comment">free</span>
-<span class="comment">#</span> <span class="comment">deb</span>-<span class="comment">src</span> <span class="comment">http://debian</span>.<span class="comment">cn99</span>.<span class="comment">com/debian</span> <span class="comment">sarge</span> <span class="comment">main</span> <span class="comment">contrib</span> <span class="comment">non</span>-<span class="comment">free</span>
-<span class="comment">deb</span>-<span class="comment">src</span> <span class="comment">http://debian</span>.<span class="comment">cn99</span>.<span class="comment">com/debian</span> <span class="comment">etch</span> <span class="comment">main</span> <span class="comment">contrib</span> <span class="comment">non</span>-<span class="comment">free</span>
-<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
-</pre></figure>
-
-<p>中国一般用cn99源，速度比较快，只需要将sarge改为etch就可以了。</p>
-<h1>5. 更新软件包列表</h1>
-<pre><code># aptitude <span class="operator"><span class="keyword">update</span></code></pre>
-<h1>6. 确认具有足够的硬盘空间</h1>
-<p>在升级的过程中需要占用一些临时的磁盘空间，所以要确认是否还有足够的剩余空间</p>
-<figure class="highlight"><pre><span class="comment"># aptitude -y -s -f --with-recommends dist-upgrade</span>
-     [ <span class="keyword">...</span> ]
-     XXX upgraded, XXX newly installed, XXX to remove and XXX not upgraded.
-     Need to get xx.xMB/yyyMB of archives. After unpacking AAAMB will be used.
-     Would download/install/remove packages.
-</pre></figure>
-
-<p>如果不能满足请删除一些文件，例如aptitude clean或者删除/var/log</p>
-<h1>7. 升级</h1>
-<p>sarge和etch之间有不少软件包是有冲突的，直接使用<br><code>aptitude dist-upgrade</code>会卸载掉sarge系统里的软件包，而有些软件包是<br>你想保留的，为了尽量避免这种情况发生，需要做阶段性升级，分三个步骤：</p>
-<h2>7.1 最小化升级：</h2>
-<pre><code><span class="preprocessor"># aptitude upgrade</span>
-
-这样就只是更新的软件而不会删除其他东西。
-
-<span class="preprocessor"># aptitude install initrd-tools</span>
-
-这将会自动升级libc6和locale，这个时候会重启某些服务。</code></pre>
-<h2>7.2 升级内核</h2>
-<p>在做下一步操作之前强烈建议手工升级内核，Etch引进的udev技术已经无法支持比2.6.15旧的内核，而Debian Etch的软件仓库中的内核版本则是2.6.18。我们安装它就可以了。</p>
-<p>先确认一下你目前的内核版本</p>
-<pre><code><span class="preprocessor"># uname -r</span></code></pre>
-<figure class="highlight lang-bash"><pre><span class="comment"># aptitude search linux-image-2.6*</span>
-<span class="comment"># aptitude install linux-image-2.6-686</span>
-</pre></figure>
-
-<p>这样就可以安装2.6.18的内核了。</p>
-<h2>7.3 全面升级</h2>
-<pre><code><span class="preprocessor"># aptitude dist-upgrade</span></code></pre>
-<p>这将会对sarge进行完全的更新，时间大约半个小时，比我预料中要快很多。</p>
-<h1>8. 更新软件包的签名信息</h1>
-<p>Etch的软件包关系系统引入了签名功能，简言之，没有经过Debian官方<br>签署的软件包无法在etch系统上安装，你当然也可以通过更改<br><code>/etc/apt/</code>来取消这个限制。</p>
-<pre><code># aptitude <span class="operator"><span class="keyword">update</span></code></pre>
-<p>至此，您的操作系统就更新完毕了，整个过程不需要重启，这对服务器而言无疑是非常贴心的一项设计。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
 
 <nav id="pagination">
   
@@ -664,17 +661,17 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
   
-    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>4</small></li>
   
     <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
   
     <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
   
-    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
-  
     <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
   
-    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+    <li><a href="/categories/debian/">debian</a><small>13</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
   
     <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
   
@@ -688,13 +685,11 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
   
-    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
-  
     <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
   
-    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
-  
     <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
   
     <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
   
@@ -704,9 +699,9 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
   
-    <li><a href="/categories/network/">network</a><small>3</small></li>
-  
     <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
   
     <li><a href="/categories/networking/">networking</a><small>1</small></li>
   
@@ -718,15 +713,23 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
   
-    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+    <li><a href="/categories/openbsd/">openbsd</a><small>7</small></li>
   
     <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
   
-    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+    <li><a href="/categories/openwrt/">openwrt</a><small>2</small></li>
   
     <li><a href="/categories/others/">others</a><small>1</small></li>
   
+    <li><a href="/categories/seafile/">seafile</a><small>1</small></li>
+  
+    <li><a href="/categories/seafile/services/">services</a><small>1</small></li>
+  
     <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/">tech</a><small>1</small></li>
+  
+    <li><a href="/categories/tech/tips/">tips</a><small>1</small></li>
   
     <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
   
@@ -734,13 +737,13 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
-  
     <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
   
-    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>4</small></li>
   
     <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
   
     <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
   
@@ -748,13 +751,11 @@ SUBSYSTEM==<span class="string">"net"</span>, DRIVERS==<span class="string">"?*"
   
     <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
   
+    <li><a href="/categories/xen/">xen</a><small>1</small></li>
+  
     <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
   
-    <li><a href="/categories/xen/">xen</a><small>2</small></li>
-  
     <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
-  
-    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
   
   </ul>
 </div>
