@@ -1,0 +1,897 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Page 5 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-11-21T15:30:00.000Z"><a href="/2011/11/21/link-aggregation-setup-on-nexenta/">2011-11-21</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/11/21/link-aggregation-setup-on-nexenta/">nexenta中的链路聚合设置</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h4>1、确保所有网口没有被启用</h4>
+<pre><code><span class="title">ifconfig</span> e1000g0 unplumb
+<span class="title">ifconfig</span> e1000g1 unplumb</code></pre>
+<h4>2、创建link-aggregation</h4>
+<pre><code><span class="comment">dladm</span> <span class="comment">create</span>-<span class="comment">aggr</span> <span class="literal">-</span><span class="comment">l</span> <span class="comment">e1000g0</span> <span class="literal">-</span><span class="comment">l</span> <span class="comment">e1000g1</span> <span class="comment">interlink0</code></pre>
+<h4>3、启用端口汇聚</h4>
+<pre><code><span class="title">ifconfig</span> plumb interlink0</code></pre>
+<h4>4、配置ip地址</h4>
+<pre><code><span class="title">ifconfig</span> interlink0 <span class="number">192.168.33.11</span>/<span class="number">24</span> broadcast + up</code></pre>
+<h4>5、配置JumboFrame</h4>
+<pre><code>dladm <span class="operator"><span class="keyword">set</span>-linkprop -p mtu=<span class="number">9000</span> aggr0
+dladm <span class="keyword">show</span>-linkprop -p mtu</code></pre>
+<p>假如之前配置了一个网卡，残留：/etc/hostname.e1000g0这样的文件，这时候需要将该文件更名为hostname.aggr0，<code>mv /etc/hostname.e1000g0 /etc/hostname.aggr0</code>，否则系统重启后会出错：<code>network/physical:default无法正常启动，处于maintance状态</code><br>{: class=“info” }</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-11-21T15:30:00.000Z"><a href="/2011/11/21/nexenta-network-setup/">2011-11-21</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/11/21/nexenta-network-setup/">nexenta网络设置</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2>基本配置</h2>
+<h4>1. 配置IP地址</h4>
+<figure class="highlight"><pre><span class="title">svcadm</span> disable network/physical:nwam
+<span class="title">svcadm</span> enable network/physical:default
+
+<span class="title">ifconfig</span> e1000g0 unplumb
+<span class="title">ifconfig</span> e1000g0 plumb
+<span class="title">ifconfig</span> e1000g0 <span class="number">192.168</span><span class="number">.172</span><span class="number">.12</span>/<span class="number">24</span> broadcast + up
+</pre></figure>
+
+<h4>2. 配置默认网关</h4>
+<pre><code><span class="title">route</span> -p add default <span class="number">192.168.84.1</span></code></pre>
+<h4>3. 配置DNS</h4>
+<ul>
+<li>修改<code>/etc/nsswith.conf</code></li>
+</ul>
+<figure class="highlight"><pre><span class="title">vim</span> /etc/nsswitch.conf
+<span class="title">ipnodes</span>: files mdns
+<span class="title">hosts</span>:files mdns
+</pre></figure>
+
+<ul>
+<li>修改<code>/etc/resolv.conf</code></li>
+</ul>
+<figure class="highlight"><pre><span class="title">echo</span> <span class="string">"Nameserver 8.8.8.8"</span> &gt; /etc/resolv.conf
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-11-18T13:00:00.000Z"><a href="/2011/11/18/how-to-install-intel-dual-port-nic-on-nexenta/">2011-11-18</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/11/18/how-to-install-intel-dual-port-nic-on-nexenta/">如何在nexenta中安装intel558双口网卡</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在存储服务器中安装一块Intel 558双口网卡后，nexenta 3.0.5无法识别，<code>ifconfig -a</code>看不到任何网卡信息，原因是内核尚未装载驱动，接下来需要做的是：</p>
+<ol>
+<li>识别网卡<code>vendor id</code>和<code>device id</code>；</li>
+<li>查找匹配的驱动；</li>
+<li>装载驱动；</li>
+<li>配置网卡；</li>
+</ol>
+<h2>1. 识别网卡“vendor id”和“device id”</h2>
+<figure class="highlight"><pre># prtconf -pv | less
+   <span class="method">model:</span>  <span class="string">'Ethernet controller'</span>
+   power-<span class="method">consumption:</span>  <span class="number">00000001.00000001</span>
+   fast-back-to-<span class="method">back:</span>
+   devsel-<span class="method">speed:</span>  <span class="number">00000001</span>
+   <span class="method">interrupts:</span>  <span class="number">00000001</span>
+   max-<span class="method">latency:</span>  <span class="number">00000038</span>
+   min-<span class="method">grant:</span>  <span class="number">00000008</span>
+   subsystem-vendor-<span class="method">id:</span>  <span class="number">00008086</span>
+   subsystem-<span class="method">id:</span>  <span class="number">000010</span>f0
+   unit-<span class="method">address:</span>  <span class="string">'4'</span>
+   class-<span class="method">code:</span>  <span class="number">00020000</span>
+   revision-<span class="method">id:</span>  <span class="number">00000005</span>
+   vendor-<span class="method">id:</span>  <span class="number">00008086</span>
+   device-<span class="method">id:</span>  <span class="number">00001229</span>
+   <span class="method">name:</span>  <span class="string">'pci8086,10f0'</span>
+</pre></figure>
+
+<p>找到<code>device-id: 00001229</code>，对应的<code>vendor-id: 00008086</code>。接着再找对应的驱动：</p>
+<h2>2. 查找匹配的驱动</h2>
+<figure class="highlight"><pre><span class="title">root</span>@ncp:/etc# grep <span class="number">1229</span> /boot/solaris/devicedb/master
+<span class="title">pci8086</span>,<span class="number">1229</span> pci8086,<span class="number">1229</span> net pci iprb.bef <span class="string">"Intel Pro100/B Fast Ethernet"</span>
+<span class="title">pci8086</span>,<span class="number">1229.8086</span><span class="number">.1009</span> pci8086,<span class="number">1229</span> net pci iprb.bef <span class="string">"Intel Pro100/B Fast Ethernet"</span>
+<span class="title">pci8086</span>,<span class="number">1229.8086</span><span class="number">.100</span>c pci8086,<span class="number">1229</span> net pci iprb.bef <span class="string">"Intel Pro100/B Fast Ethernet"</span>
+<span class="title">pci8086</span>,<span class="number">1229.8086</span><span class="number">.1012</span> pci8086,<span class="number">1229</span> net pci iprb.bef <span class="string">"Intel Pro100/B Fast Ethernet"</span>
+<span class="title">pci8086</span>,<span class="number">1229.8086</span><span class="number">.1013</span> pci8086,<span class="number">1229</span> net pci iprb.bef <span class="string">"Intel Pro100/B Fast Ethernet"</span>
+<span class="title">pci8086</span>,<span class="number">1229.8086</span><span class="number">.1015</span> pci8086,<span class="number">1229</span> net pci iprb.bef <span class="string">"Intel Pro100/B Fast Ethernet"</span>
+<span class="title">pci8086</span>,<span class="number">1229.8086</span><span class="number">.1016</span> pci8086,<span class="number">1229</span> net pci iprb.bef <span class="string">"Intel Pro100/B Fast Ethernet"</span>
+<span class="title">pci8086</span>,<span class="number">1229.8086</span><span class="number">.1017</span> pci8086,<span class="number">1229</span> net pci iprb.bef <span class="string">"Intel Pro100/B Fast Ethernet"</span>
+</pre></figure>
+
+<p>第一行的结果显示这块网卡用的是<code>iprb</code>驱动，因此</p>
+<h2>3. 装载驱动</h2>
+<figure class="highlight"><pre># mod<span class="operator"><span class="keyword">load</span> /kernel/drv/iprb
+</pre></figure>
+
+<h2>4. 配置网卡</h2>
+<figure class="highlight"><pre><span class="preprocessor"># ifconfig iprb0 plumb</span>
+<span class="preprocessor"># touch /etc/hostname.iprb0</span>
+<span class="preprocessor"># ifconfig iprb1 plumb</span>
+<span class="preprocessor"># touch /etc/hostname.iprb1</span>
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-11-12T15:30:00.000Z"><a href="/2011/11/12/nexenta-notes/">2011-11-12</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/11/12/nexenta-notes/">nexenta/ncp学习笔记</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h4>o 启用网卡</h4>
+<ul>
+<li>手工启动网卡</li>
+</ul>
+<figure class="highlight"><pre>$ su<span class="operator"><span class="keyword">do</span> ifconfig bge0 plumb
+$ sudo ifconfig bge0 dhcp <span class="keyword">start</span>
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2011/11/12/nexenta-notes/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-07-19T13:00:00.000Z"><a href="/2011/07/19/freebsd-notes/">2011-07-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/07/19/freebsd-notes/">FreeBSD学习笔记</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h4>o 禁用sendmail</h4>
+<ul>
+<li>在/etc/hosts中添加域名</li>
+</ul>
+<p>譬如</p>
+<figure class="highlight"><pre><span class="preprocessor"># cat /etc/hosts</span>
+<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> freebsd<span class="variable">.darkblue</span><span class="variable">.com</span>
+</pre></figure>
+
+<ul>
+<li>修改/etc/rc.conf</li>
+</ul>
+<figure class="highlight"><pre><span class="setting">sendmail_submit_enable=<span class="value"><span class="string">"NO"</span>    # Start a localhost-only MTA for mail submission</span></span>
+<span class="setting">sendmail_outbound_enable=<span class="value"><span class="string">"NO"</span>  # Dequeue stuck mail (<span class="keyword">YES</span>/<span class="keyword">NO</span>).</span></span>
+<span class="setting">sendmail_msp_queue_enable=<span class="value"><span class="string">"NO"</span> # Dequeue stuck clientmqueue mail (<span class="keyword">YES</span>/<span class="keyword">NO</span>).</span></span>
+</pre></figure>
+
+<h4>o 安装完vim-lite后，需要freebsd重启才能在root下面打开vim</h4>
+<h4>o 修改网卡IP地址后立即生效的方法</h4>
+<p>通过编辑<code>/etc/rc.conf</code>来修改网卡IP地址，接着执行<code># sh /etc/netstart</code>，新的IP地址立刻生效，不需要重启系统</p>
+<h4>o 如何查看加载到内核中的模块？</h4>
+<pre><code><span class="preprocessor"># kldstat</span></code></pre>
+<h4>o 如何加载模块到内核中？</h4>
+<pre><code># kld<span class="operator"><span class="keyword">load</span> dummynet.ko</code></pre>
+<p>安装freebsd 7.3的时候选择developer，dummynet.ko就已默认安装，不需要重新编译内核。</p>
+<h4>o 如何安装和配置snmpd（net-snmp）</h4>
+<ul>
+<li>先安装和配置snmpd：</li>
+</ul>
+<figure class="highlight"><pre># pkg_add -r net-snmp
+# echo <span class="string">"snmpd_enable="</span><span class="type">YES</span><span class="string">""</span> &gt;&gt; /etc/rc.conf
+;以下是snmpd.conf的简单配置，如果没有就自己创建一个
+# cat /usr/local/share/snmp/snmpd.conf
+;如果没有就创建一个snmpd.conf
+<span class="title">syslocation</span> somewhere
+<span class="title">syscontact</span> admin@example.com
+<span class="title">rocommunity</span> public
+<span class="title">master</span> yes
+<span class="title">disk</span> /
+<span class="title">disk</span> /tmp
+<span class="title">disk</span> /usr
+<span class="title">disk</span> /var
+<span class="title">disk</span> /home
+</pre></figure>
+
+<ul>
+<li>接着启动snmpd：</li>
+</ul>
+<figure class="highlight"><pre># /usr/<span class="keyword">local</span>/etc/rc.d/snmpd start
+;snmpd默认会使用/usr/<span class="keyword">local</span>/share/snmp/snmpd.conf启动
+</pre></figure>
+
+<h4>o 如何在freebsd 7.3中创建filter bridge</h4>
+<ul>
+<li>加载if_bridge.ko模块</li>
+</ul>
+<figure class="highlight"><pre># vim /boot/loader.conf
+<span class="title">if_bridge_load</span>=<span class="string">"YES"</span>
+<span class="title">bridgestp_load</span>=<span class="string">"YES"</span>
+<span class="title">dummynet_load</span>=<span class="string">"YES"</span>
+</pre></figure>
+
+<ul>
+<li>配置桥接</li>
+</ul>
+<figure class="highlight"><pre># vim /etc/rc.conf
+<span class="title">cloned_interfaces</span>=<span class="string">"bridge0"</span>
+<span class="title">ifconfig_bridge0</span>=<span class="string">"addm le1 addm le2 up"</span>
+<span class="title">ifconfig_em0</span>=<span class="string">"up"</span>
+<span class="title">ifconfig_em1</span>=<span class="string">"up"</span>
+
+# vim /etc/sysctl.conf
+<span class="title">net</span>.link.bridge.ipfw=<span class="number">1</span>
+</pre></figure>
+
+<h4>o 如何在freebsd中安装ntop</h4>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add -r ntop</span>
+<span class="preprocessor"># pkg_add -r GeoIP</span>
+<span class="preprocessor"># pkg_add -r rrdtool</span>
+</pre></figure>
+
+<p>随后下载GeoIP所需要的dat文件</p>
+<p>运行：</p>
+<pre><code><span class="preprocessor"># /usr/local/bin/ntop</span></code></pre>
+<p>根据提示输入administrator的账号和密码。</p>
+<p>接着就可以通过浏览器来访问ntop了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-07-19T13:00:00.000Z"><a href="/2011/07/19/openbsd-notes/">2011-07-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/07/19/openbsd-notes/">OpenBSD学习笔记</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h4>o 运行locate时出错</h4>
+<figure class="highlight"><pre><span class="preprocessor"># locate</span>
+locate: database too small: /<span class="keyword">var</span>/db/locate.database
+</pre></figure>
+
+<p>解决办法：<code># /usr/libexec/locate.updatedb</code></p>
+<h4>o 安装bash</h4>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add -i bash</span>
+</pre></figure>
+
+<p>然后调整<code>.bash_profile</code></p>
+<h4>o 安装port tree</h4>
+<figure class="highlight"><pre>$ cd /tmp
+$ ftp ftp://ftp<span class="preprocessor">.openbsd</span><span class="preprocessor">.org</span>/pub/OpenBSD/<span class="number">4.9</span>/ports<span class="preprocessor">.tar</span><span class="preprocessor">.gz</span>
+$ cd /usr
+$ sudo tar xvzf /tmp/ports<span class="preprocessor">.tar</span><span class="preprocessor">.gz</span>
+<span class="comment">;注意，tar一定要带上参数v，因为在openbsd中解压非常慢，v可以即时显示解压进度。</span>
+</pre></figure>
+
+<h4>o 彩色显示目录和文件</h4>
+<p>在openbsd需要安装colorls才能用不同颜色区分不同文件和目录。</p>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add colorls</span>
+<span class="preprocessor"># vim ~/.profile</span>
+export TERM=wsvt25
+alias ls=<span class="string">"colorls -G"</span>
+</pre></figure>
+
+<p>重新登录ls看看吧。</p>
+<p>默认颜色：</p>
+<ol>
+<li>白色 正常文件</li>
+<li>蓝色 目录</li>
+<li>红色 可执行文件</li>
+<li>品红 连接</li>
+</ol>
+<h4>o 如何在openbsd中重启服务？</h4>
+<figure class="highlight"><pre><span class="keyword">kill</span> -HUP <span class="variable">$(</span>cat /var/run/sshd.pid)
+<span class="keyword">kill</span> -HUP <span class="string">`cat /var/run/sshd.pid`</span>
+
+ps aux | <span class="keyword">grep</span> app_name
+<span class="keyword">kill</span> -<span class="number">9</span> id
+</pre></figure>
+
+<h4>o 如何更新时间</h4>
+<figure class="highlight"><pre><span class="preprocessor"># rdate -ncv pool.ntp.org</span>
+<span class="preprocessor"># ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime</span>
+</pre></figure>
+
+<p>这样就可以得到正确的时间了。</p>
+<p>那如何将时间同步到bios中呢？目前还没有找到合适的方法，以下是一种workaround</p>
+<pre><code><span class="comment">#</span> <span class="comment">echo</span> <span class="comment">"/usr/local/bin/ntpd</span> <span class="literal">-</span><span class="comment">A</span> <span class="literal">-</span><span class="comment">c</span> <span class="comment">/etc/ntp</span>.<span class="comment">conf</span> <span class="literal">-</span><span class="comment">l</span> <span class="comment">/var/log/ntp</span>.<span class="comment">log</code></pre>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-06-27T15:30:00.000Z"><a href="/2011/06/27/dhcp-service/">2011-06-27</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/06/27/dhcp-service/">DHCP服务</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在TCP/IP的世界里，每台计算机都必须拥有一个IP地址才能跟其他计算机通信。在DHCP没有诞生之前，计算机的IP地址都必须手工分配，因此也称之为静态IP地址。随着计算机数量的急剧增多，静态IP呈现出以下缺点：<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2011/06/27/dhcp-service/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-04-16T15:30:00.000Z"><a href="/2011/04/16/upgrade-openwrt/">2011-04-16</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/04/16/upgrade-openwrt/">升级OpenWRT</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>去年买了一款linksys wrt54g v4改造版，ROM为8M，RAM则升级到了64M，预装了tomato 1.25版。通过web界面，我把它升级到了kamikaza8.09.2，前段时间官网推出了backfire10.03.1-rc4，采用2.6.32的内核，提供更丰富的软件功能，支持的硬件类型也更多，于是我开始了曲折的升级之旅。</p>
+<p>根据官网的文档，我执行了以下操作：</p>
+<ol>
+<li>下载<a href="http://downloads.openwrt.org/backfire/10.03.1-rc4/brcm47xx/openwrt-wrt54g-squashfs.bin" target="_blank">backfire 10.03.1-rc4</a>镜像文件；</li>
+<li>在kamikaza的“升级界面”upload该镜像文件，出现不支持该镜像文件的错误。</li>
+</ol>
+<p>接着，我尝试将镜像文件上传到ROM中，然后通过命令行进行升级：</p>
+<ol>
+<li>启动SSHd；</li>
+<li>由于kamikaza没有SFTP，因此WinSCP无法通过SFTP将镜像文件上传至OpenWRT，于是我在笔记本上利用hfs这个小工具架设了一个web网站；</li>
+<li>在kamikaza中，通过wget将镜像文件下载至<code>/tmp</code>目录下；</li>
+<li><p><code>mtd -r write openwrt-wrt54g-squashfs.bin linux</code></p>
+<p>提示：</p>
+</li>
+</ol>
+<figure class="highlight"><pre>Could <span class="keyword">not</span> <span class="keyword">open</span> mtd device: linux
+Can<span class="attribute">'t</span> <span class="keyword">open</span> device <span class="keyword">for</span> writing!
+</pre></figure>
+
+<p>  接着</p>
+<figure class="highlight"><pre>mtd unlock linux
+mtd -r <span class="command">write</span> openwrt-wrt54g-squashfs.bin linux
+Bad trx header
+This <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">the</span> correct <span class="type">file</span> format; refusing <span class="keyword">to</span> flash.
+Please specify <span class="keyword">the</span> correct <span class="type">file</span> <span class="keyword">or</span> use -f <span class="keyword">to</span> force.
+Image check failed.
+</pre></figure>
+
+<p>shit，不就是升个级吗？！</p>
+<p>于是又尝试了以下几种操作：</p>
+<p>1.<code>mtd -r write openwrt-wrt54g-squashfs.bin firmware</code></p>
+<p>实际上并没有firmware这个分区，当时找到的文档太老了，也不了解OpenWRT的flash分区情况就病急乱投医。<br>{: class=“info”}</p>
+<p>2.通过sysupgrade升级</p>
+<p>  创建/etc/sysupgrade.conf（复制wiki.openwrt.org中的/etc/sysupgrade.conf）</p>
+<figure class="highlight"><pre>sysupgrade openwrt-wrt54g-squashfs.bin
+Bad trx header
+This <span class="keyword">is</span> <span class="keyword">not</span> the correct <span class="keyword">file</span> format; refusing <span class="keyword">to</span> flash.
+Please specify the correct <span class="keyword">file</span> <span class="keyword">or</span> <span class="keyword">use</span> -f <span class="keyword">to</span> <span class="keyword">force</span>.
+Image check failed.
+</pre></figure>
+
+<p>傻眼了，难不成经过改造后的这款Linksys无法升级？</p>
+<p>后来忽然想到，当时是通过tomato的web页面升级到OpenWRT的，何不先将kamikaza升级至tomato，然后再从tomato升级至backfire？但又有些担心，万一变成砖头怎么办？所以google到一篇文章：Installing Tomato over OpenWRT for Linksys WRT54G，似乎DD-WRT对unbricked有一手，即便出错了还能倒退。<br>于是下载了一个dd-wrt.v24_mini_generic.bin，颤抖的双手终于将kamikaza升级到DD-WRT，接下来就非常顺利了，又从DD-WRT的web升级到了backfire。紧接安装所需的软件包：</p>
+<figure class="highlight"><pre><span class="title">opkg</span> update
+<span class="title">opkg</span> install tcpdump
+<span class="title">opkg</span> install tmux
+<span class="title">opkg</span> install openvpn
+<span class="title">opkg</span> install iftop
+<span class="title">opkg</span> install iperf
+</pre></figure>
+
+<p>至此，Linksys WRT54G又恢复了元气，甚至更为强壮。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-04-14T00:48:00.000Z"><a href="/2011/04/14/how-to-config-vlan-trunk-on-RB450/">2011-04-14</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/04/14/how-to-config-vlan-trunk-on-RB450/">如何在RB450中做vlan trunk</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>RB450是MikroTik公司出品的基于RouterOS的三层路由器，提供了丰富的功能：动态路由协议（OSPF、BGP）、802.1q、QoS（单IP限速）、netflow exporter、NTP、OpenVPN、PPPoE、radius等。今天我主要用它来创建36个vlan，每个vlan都分配一个网关IP，接着通过一个以太口与一台二层交换机的vlan trunk相连，实现了这36个vlan的互访。</p>
+<p>以下是相关配置：</p>
+<figure class="highlight"><pre>/<span class="class"><span class="keyword">interface</span> <span class="title">vlan</span>
+<span class="title">add</span> <span class="title">arp</span>=<span class="title">enabled</span> <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> <span class="title">interface</span>=<span class="title">ether1</span> <span class="title">l2mtu</span>=1522 <span class="title">mtu</span>=1500 \
+    <span class="title">name</span>=<span class="title">vlan5</span> <span class="title">use</span>-<span class="title">service</span>-<span class="title">tag</span>=<span class="title">no</span> <span class="title">vlan</span>-<span class="title">id</span>=5
+<span class="title">add</span> <span class="title">arp</span>=<span class="title">enabled</span> <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> <span class="title">interface</span>=<span class="title">ether1</span> <span class="title">l2mtu</span>=1522 <span class="title">mtu</span>=1500 \
+    <span class="title">name</span>=<span class="title">vlan2</span> <span class="title">use</span>-<span class="title">service</span>-<span class="title">tag</span>=<span class="title">no</span> <span class="title">vlan</span>-<span class="title">id</span>=2
+<span class="title">add</span> <span class="title">arp</span>=<span class="title">enabled</span> <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> <span class="title">interface</span>=<span class="title">ether1</span> <span class="title">l2mtu</span>=1522 <span class="title">mtu</span>=1500 \
+    <span class="title">name</span>=<span class="title">vlan41</span> <span class="title">use</span>-<span class="title">service</span>-<span class="title">tag</span>=<span class="title">no</span> <span class="title">vlan</span>-<span class="title">id</span>=41
+...
+/<span class="title">ip</span> <span class="title">address</span>
+<span class="title">add</span> <span class="title">address</span>=172.16.60.254/24 <span class="title">broadcast</span>=172.16.60.255 <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> \
+    <span class="title">interface</span>=<span class="title">vlan41</span> <span class="title">network</span>=172.16.60.0
+<span class="title">add</span> <span class="title">address</span>=192.168.100.254/24 <span class="title">broadcast</span>=192.168.100.255 <span class="title">comment</span>="" <span class="title">disabled</span>=\
+    <span class="title">no</span> <span class="title">interface</span>=<span class="title">vlan100</span> <span class="title">network</span>=192.168.100.0
+<span class="title">add</span> <span class="title">address</span>=172.16.59.254/24 <span class="title">broadcast</span>=172.16.59.255 <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> \
+    <span class="title">interface</span>=<span class="title">vlan2</span> <span class="title">network</span>=172.16.59.0
+<span class="title">add</span> <span class="title">address</span>=172.16.58.254/24 <span class="title">broadcast</span>=172.16.58.255 <span class="title">comment</span>="" <span class="title">disabled</span>=<span class="title">no</span> \
+    <span class="title">interface</span>=<span class="title">vlan5</span> <span class="title">network</span>=172.16.58.0
+…
+</pre></figure>
+
+<p>这就实现了vlan trunk的功能，非常简单，但是RouterOS毕竟是linux，所以它与实际的交换机还是有一些区别的，譬如不能在一个vlan trunk中支持untag的vlan，亦即native vlan，不知道换了交换芯片atheros8316的RB450G功能会不会更强大一些，详见：<a href="http://wiki.mikrotik.com/wiki/Switch_Chip_Features" target="_blank">http://wiki.mikrotik.com/wiki/Switch_Chip_Features</a></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-04-14T00:48:00.000Z"><a href="/2011/04/14/firewall-on-RouterOS/">2011-04-14</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/04/14/firewall-on-RouterOS/">RouterOS中的防火墙功能</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>routeros(ros)源于Linux，因此ros中的firewall拥有netfilter的影子，譬如ros的firewall含有INPUT、OUTPUT、FORWARD链，还有nat、mangle表，但是又有区别，特别是以下两点值得注意：</p>
+<ol>
+<li>ros的firewall似乎不支持状态检测；</li>
+<li>默认情况下，ros的firewall允许所有数据包通过。</li>
+</ol>
+<p>这两点我实在无法理解。</p>
+<p>关于第一点，在一般的状态防火墙中，假如欲允许内网用户访问外网的web应用，只需要定义一条从内到外的访问规则即可，状态防火墙会自动识别从外至内的“相关（establised/related）”包，但是ros的firewall还需要额外再定义这两条（establised/related）从外至内的规则。</p>
+<p>关于第二点，一般的防火墙的默认规则是drop，这是符合大多数管理员的思维的：凡是未经许可的连接均应丢弃，这种思路有两个好处：一是安全性高，不至于因为管理员的疏忽导致整个网络开放给外网，一是容易扩展，因为管理员永远都无法掌握或预知所有的威胁，因此仅定义允许的数据流才是正确的防火墙策略管理思路。</p>
+<p>需求：</p>
+<ol>
+<li>允许10.10.10.0/29访问192.168.100.0/24</li>
+<li>允许10.10.10.8/29访问172.16.100.0/24</li>
+<li>允许所有(方向)ping</li>
+<li>允许ROS访问所有区域</li>
+</ol>
+<p>脚本：</p>
+<figure class="highlight"><pre><span class="comment"># apr/17/2011 13:16:32 by RouterOS 4.16</span>
+<span class="comment">#</span>
+/ip firewall filter
+<span class="comment">#### INPUT chain ####</span>
+<span class="comment">## 定义返回的"已连接/相关"数据包</span>
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"Allow Established connections"</span> \
+    connection-<span class="keyword">state</span>=established disabled=<span class="keyword">no</span>
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"Allow Related connections"</span> \
+    connection-<span class="keyword">state</span>=related disabled=<span class="keyword">no</span>
+<span class="comment">## 在所有端口上允许ping ros</span>
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"Allow ICMP"</span> disabled=<span class="keyword">no</span> protocol=icmp
+<span class="comment">## 在所有端口上允许通过SSH访问ros</span>
+add action=<span class="keyword">accept</span> chain=input comment=SSH disabled=<span class="keyword">no</span> dst-port=<span class="number">22</span> protocol=\
+    tcp
+<span class="comment">## 在所有端口上允许通过winbox访问ros</span>
+add action=<span class="keyword">accept</span> chain=input comment=winbox disabled=<span class="keyword">no</span> dst-port=<span class="number">8291</span> \
+    protocol=tcp
+add action=<span class="keyword">accept</span> chain=input comment=DHCP disabled=<span class="keyword">no</span> dst-port=<span class="number">67</span>-<span class="number">68</span> \
+    protocol=tcp
+<span class="comment">## 在所有端口上允许访问ros的DNS服务</span>
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"DNS - TCP"</span> disabled=<span class="keyword">no</span> dst-port=<span class="number">53</span> \
+    protocol=tcp
+add action=<span class="keyword">accept</span> chain=input comment=<span class="string">"DNS - UDP"</span> disabled=<span class="keyword">no</span> dst-port=<span class="number">53</span> \
+    protocol=udp
+<span class="comment">### 若INPUT的数据包未符合上述定义则全部丢弃</span>
+add action=drop chain=input comment=<span class="string">"### DROP EVERYTHING ELSE - INPUT ###"</span> \
+    disabled=<span class="keyword">no</span> src-address-list=<span class="string">""</span>
+<span class="comment">####FORWARD</span>
+<span class="comment">##允许返回的"已连接/相关"数据包通过</span>
+add action=<span class="keyword">accept</span> chain=forward comment=\
+    <span class="string">"Allow established connections - FORWARD"</span> connection-<span class="keyword">state</span>=established \
+    disabled=<span class="keyword">no</span>
+add action=<span class="keyword">accept</span> chain=forward comment=<span class="string">"Allow related connections - FORWARD"</span> \
+    connection-<span class="keyword">state</span>=related disabled=<span class="keyword">no</span>
+add action=drop chain=forward comment=<span class="string">"Drop invalid connections - FORWARD"</span> \
+    connection-<span class="keyword">state</span>=invalid disabled=<span class="keyword">no</span>
+<span class="comment">##凡是属于tcp的数据包将跳转至tcp chain进行处理(用户自定义)</span>
+add action=jump chain=forward comment=<span class="string">""</span> disabled=<span class="keyword">no</span> jump-target=tcp \
+    protocol=tcp
+<span class="comment">##凡是属于udp的数据包将跳转至udp chain进行处理(用户自定义)</span>
+add action=jump chain=forward comment=<span class="string">""</span> disabled=<span class="keyword">no</span> jump-target=udp \
+    protocol=udp
+<span class="comment">##允许内网用户ping外网主机</span>
+add action=<span class="keyword">accept</span> chain=forward comment=<span class="string">"Allow ICMP"</span> disabled=<span class="keyword">no</span> protocol=\
+    icmp
+<span class="comment">### tcp chain</span>
+<span class="comment">## 在netfilter防火墙中，数据包会流经所有规则，由最后一条符合的规则处理该数据包。</span>
+<span class="comment">## 为了提高效率，我们将数据包按协议划分成tcp、udp和icmp三类，每一类数据包均由各自的用户自</span>
+<span class="comment">## 定义链处理，从而减少数据包检查的次数。这里将利用jump target和用户自定义链来实现。</span>
+add action=<span class="keyword">accept</span> chain=tcp disabled=<span class="keyword">no</span> src-address=<span class="number">10.10</span>.<span class="number">10.0</span>/<span class="number">29</span> dst-address=<span class="number">192.168</span>.<span class="number">100.0</span>/<span class="number">24</span>
+add action=<span class="keyword">accept</span> chain=tcp disabled=<span class="keyword">no</span> src-address=<span class="number">10.10</span>.<span class="number">10.8</span>/<span class="number">29</span> dst-address=<span class="number">172.16</span>.<span class="number">100.0</span>/<span class="number">24</span>
+<span class="comment">### udp chain</span>
+add action=<span class="keyword">accept</span> chain=udp disabled=<span class="keyword">no</span> src-address=<span class="number">10.10</span>.<span class="number">10.0</span>/<span class="number">29</span> dst-address=<span class="number">192.168</span>.<span class="number">100.0</span>/<span class="number">24</span>
+add action=<span class="keyword">accept</span> chain=udp disabled=<span class="keyword">no</span> src-address=<span class="number">10.10</span>.<span class="number">10.8</span>/<span class="number">29</span> dst-address=<span class="number">172.16</span>.<span class="number">100.0</span>/<span class="number">24</span>
+<span class="comment">### 若FORWARD的数据包未符合上述定义则全部丢弃</span>
+add action=drop chain=forward comment=\
+    <span class="string">"### DROP EVERYTHING ELSE - FORWARD ###"</span> disabled=<span class="keyword">no</span>
+</pre></figure>
+
+<p>这里没有涉及到OUTPUT链，因为根据需求，不需要额外对OUTPUT进行限制。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination">
+  
+    <a href="/page/4/" class="alignleft prev">Prev</a>
+  
+  
+    <a href="/page/6/" class="alignright next">Next</a>
+  
+  <div class="clearfix"></div>
+</nav></div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>如何实现Windows AD的统一认证 - 网络设备部分 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="在企业内实现统一认证是所有系统管理员梦寐以求的事情，先不说情况多变的普通用户，单就网络设备的管理就是一件很麻烦的事情。假设一个企业拥有的网络设备多达100台，它们全部采用传统的本地登录认证方式。那么任何一个系统管理员离职或调动，就需要对所有网络设备的账号进行变更，理想情况下需重复操作100次。实现统一认证之后，只需要在后台的用户数据库操作1次即可，这就是统一认证的魅力。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="如何实现Windows AD的统一认证 - 网络设备部分"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2010-10-10T15:30:00.000Z"><a href="/2010/10/10/centralizing-authentication-with-windows-AD-part-2/">2010-10-10</a></time>
+      
+      
+  
+    <h1 class="title">如何实现Windows AD的统一认证 - 网络设备部分</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在企业内实现统一认证是所有系统管理员梦寐以求的事情，先不说情况多变的普通用户，单就网络设备的管理就是一件很麻烦的事情。假设一个企业拥有的网络设备多达100台，它们全部采用传统的本地登录认证方式。那么任何一个系统管理员离职或调动，就需要对所有网络设备的账号进行变更，理想情况下需重复操作100次。实现统一认证之后，只需要在后台的用户数据库操作1次即可，这就是统一认证的魅力。<br><a id="more"></a></p>
+<p>受限于网络设备这个独特的群体，可供选择的技术并不多，首先网络设备品牌多种多样，一个标准的协议必不可少，目前Radius是绝大部分厂家都支持的，因此选用Radius作为统一认证基础。</p>
+<h1>一、工作原理</h1>
+<ol>
+<li>系统管理员telnet或ssh网络设备时，根据提示输入自己的AD帐号和密码；</li>
+<li>网络设备将这个身份凭证提交到radius服务器进行处理；</li>
+<li>radius服务器将根据配置将该身份凭证转交给用户数据库申请比对；</li>
+<li>接着radius服务器将比对结果返回网络设备；</li>
+<li>网络设备根据返回结果判断是否允许该系统管理员登录系统；</li>
+</ol>
+<p>在统一认证过程中涉及radius客户端、radius服务器和用户数据库三部分，其中绝大部分可网管的网络设备都内嵌的radius客户端，这部分不需要担心；接着选择用户数据库，在企业中，Windows桌面操作系统占据绝对的统治地位，Windows的Active Directory也得到广泛的部署，因此本文将选择Windows AD作为用户数据库。同样地，Radius服务器选择了Windows server自带的IAS。</p>
+<p>IAS最核心的部分就是认证策略。IAS支持多个认证策略，它收到一个请求后将从上到下与策略进行比对，一旦适配则根据策略的配置返回结果给请求者，否则继续比对直至末尾，若最终仍无合适的策略则返回一个错误结果给请求者。</p>
+<p>接下来需要了解一下网络设备的授权机制，网络设备大都支持多权限管理机制，不同的管理员将获得不同的管理权限，譬如：高级管理员将拥有全部命令的执行权限，实习生则只具有查看的权限。</p>
+<p>这个时候IAS的多策略就起作用了，假设现在公司有4个管理员，分别是A、B、C和D，其中A和B隶属高级管理员组，C和D隶属实习生组。我们将针对这两个组分别创建一条IAS认证策略，当A和B登录的时候，认证策略将在返回的RADIUS数据包中携带高级管理权限标识，当C和D登录的时候，认证策略将在返回的RADIUS数据包中携带查看管理权限标识，从而实现不同管理员拥有不同管理权限的目的。</p>
+<h1>二、准备工作</h1>
+<ol>
+<li>Windows AD的安装和部署；</li>
+<li>Windows IAS的安装和部署；</li>
+<li>了解网络设备的配置指令；</li>
+</ol>
+<h1>三、NAS配置</h1>
+<p>在本文中假设企业内有两种不同厂商的网络设备，分别是cisco路由器和H3C交换机。网络管理员分高级和实习生两类，他们对网络设备拥有不同的权限。</p>
+<h2>3.1. 创建RADIUS客户端</h2>
+<ol>
+<li>在IAS的管理页面右键点击左边栏的“新建RADIUS客户端(C)”将开启配置向导，其中：</li>
+<li>客户端-供应商选择默认的“RADIUS Standard”；</li>
+<li>共享的机密可以任意输入一串可打印字符，并记录下来，后面配置网络设备的时需要用到；</li>
+<li>配置完成的客户端属性如下所示：</li>
+</ol>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2010-10-10_property-sw-core.jpg" class="center" title="sw_core属性" alt="sw_core属性">
+
+
+<h2>3.2. 创建认证策略</h2>
+<p>两个不同的厂家设备，两种不同的用户授权，意味着需要创建四条认证策略：</p>
+<p>|—-<br>|编号|策略名称|用户组|作用|<br>|:-|:-|:-|:-|<br>|1|h3c_admin|h3c-admin|当登录用户隶属于h3c-admin组时，赋予该用户全部权限|<br>|2|h3c_viewonly|h3c-trainee|当登录用户隶属于h3c-trainee组时，赋予该用户只读权限|<br>|3|cisco_admin|cisco-admin|当登录用户隶属于cisco-admin组时，赋予该用户全部权限|<br>|4|cisco_viewonly|cisco-trainee|当登录用户隶属于cisco-trainee组时，赋予该用户只读权限|<br>|—-<br>{: class=“datalist” }</p>
+<p>因此，首先在Windows AD域控制器中创建4个组，并将A、B、C和D分别纳入这些组中，接下来以创建h3c_admin策略为例进行说明：</p>
+<ol>
+<li>在IAS管理界面，右键点击左边栏的“远程访问策略”，选择“新建远程访问策略”。</li>
+<li>在“策略配置方法”中，选择“设置自定义策略”，填入“h3c_admin”，点击下一步；</li>
+<li>在“策略情况”中需要添加判断条件：<code>NAS-Port-Type为Ethernet</code>和<code>Windows Groups为h3c-admin</code>；</li>
+<li>在“权限”一步中选择“授予远程访问权限”；</li>
+<li>在“配置文件”一步中点击“编辑配置文件”按钮，激活“身份认证”标签页，取消掉默认的MS-CHAP v2和MS-CHAP，勾选“未加密的身份验证（PAP, SPAP）”,然后激活“高级”标签页：</li>
+<li>将Framed-Protocol属性删除，添加：<code>Login-Service=telnet</code></li>
+<li>接着添加“Vendor-Specific”，在“多值属性信息”中点击“添加”按钮，出现“供应商特有的属性信息”窗口，选择输入供应商代码，输入“2011”，接着选择“符合”并点击“配置属性”按钮。</li>
+</ol>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2010-10-10_policy-h3c-admin.jpg" class="center" title="h3c admin策略" alt="h3c admin策略">
+
+
+<p>  并在“配置VSA（符合RFC的）”对话框中输入以下内容：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2010-10-10_config-VSA.jpg" class="center" title="VSA配置" alt="VSA配置">
+
+
+<p>  添加完毕后的结果如下所示：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2010-10-10_config-dialin.jpg" class="center" title="拨入策略" alt="拨入策略">
+
+
+<p>至此，h3c_admin认证策略创建完毕，h3c_viewonly的配置类似，只是最后一步的Vendor-Specific值应填0。</p>
+<p>cisco的策略跟h3c的又略有不同，主要表现在返回值的配置上，在上面第7步的“供应商特有的属性信息”窗口中，应从下拉框中选择“cisco”，在“配置VSA（符合RFC的）”的对话框中输入：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2010-10-10_config-VSA-cisco.jpg" class="center" title="cisco VSA配置" alt="cisco VSA配置">
+
+
+<p>最终IAS的认证策略如下表所示：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2010-10-10_policy-IAS.jpg" class="center" title="IAS认证策略配置" alt="IAS认证策略配置">
+
+
+<p>h3c和cisco在radius的实现上有差别，譬如cisco就要求返回值须带有其私有属性，因此这部分还需要读者自行参考其它厂商的设备使用文档。<br>{: class=“info” }</p>
+<h1>四、网络设备配置</h1>
+<h2>4.1. CISCO</h2>
+<figure class="highlight"><pre>!-该语句启用AAA
+aaa new-model
+!-该语句定义默认的认证方法，先radius，后本地
+aaa authentication login default group radius local
+!-定义NO_AUTHENT的认证方法，用于console口，none的意思是无须
+!-验证即可登陆路由器，默认权限为1
+aaa authentication login NO_AUTHENT none
+aaa authentication ppp default if-needed group radius local
+!-定义特权模式的授权方法，先radius，后local
+aaa authorization exec default group radius local
+aaa authorization network default group radius local
+!-定义审计
+aaa accounting delay-<span class="operator"><span class="keyword">start</span>
+aaa accounting <span class="keyword">exec</span> <span class="keyword">default</span> <span class="keyword">start</span>-stop <span class="keyword">group</span> radius
+aaa accounting network <span class="keyword">default</span> <span class="keyword">start</span>-stop <span class="keyword">group</span> radius
+aaa <span class="keyword">session</span>-id common
+!-当radius服务器不可用时，使用下列本地的用户名和密码作为
+!-fallback的身份凭证
+!-其中cisco只可获得权限<span class="number">6</span>，而admin可获得权限<span class="number">15</span>。
+username cisco privilege <span class="number">6</span> password <span class="number">0</span> cisco*<span class="number">06</span>
+username admin privilege <span class="number">15</span> password <span class="number">0</span> cisco*<span class="number">15</span>
+!-实习生具有查看权限，同时需使用ping，traceroute辅助排错
+!-但是他们的权限<span class="number">6</span>无法使用<span class="keyword">show</span> running命令，所以需要为
+!-权限<span class="number">6</span>的用户增加以下几条命令
+privilege <span class="keyword">exec</span> <span class="keyword">level</span> <span class="number">6</span> traceroute
+privilege <span class="keyword">exec</span> <span class="keyword">level</span> <span class="number">6</span> ping
+privilege <span class="keyword">exec</span> <span class="keyword">level</span> <span class="number">6</span> <span class="keyword">show</span> startup-config
+privilege <span class="keyword">exec</span> <span class="keyword">level</span> <span class="number">6</span> <span class="keyword">show</span> running-config
+privilege <span class="keyword">exec</span> <span class="keyword">level</span> <span class="number">6</span> <span class="keyword">show</span>
+!-定义radius服务器的IP地址和认证，审计端口
+radius-server host <span class="number">192.168</span><span class="number">.100</span><span class="number">.1</span> auth-port <span class="number">1812</span> acct-port <span class="number">1813</span>
+!-定义本客户端使用的share <span class="keyword">key</span>，这和服务器的设置必须一致
+radius-server <span class="keyword">key</span> hello.kitty
+!-the enable secret <span class="keyword">is</span> the same <span class="keyword">as</span> the password <span class="keyword">of</span> <span class="keyword">local</span> <span class="keyword">user</span> admin
+!-插上console口的电脑，可以直接用远程终端登陆，获得权限<span class="number">1</span>，接着输入
+!-enable secret的密码来获取<span class="number">15</span>的权限。
+line con <span class="number">0</span>
+ logging synchronous
+ login authentication NO_AUTHENT
+<span class="keyword">end</span>
+</pre></figure>
+
+<p>说明：本配置适用于IOS12.1，实际的配置请读者根据实际的IOS版本查阅相应的cisco官方帮助文档。<br>{: class=“info” }</p>
+<h2>4.2. H3C</h2>
+<h3>4.2.1. H3C S5500</h3>
+<figure class="highlight"><pre>local-user local_admin
+ password cipher Y<span class="preprocessor">#S`Q`V3DQP9,2I_=/L2`1!!</span>
+ authorization-attribute level <span class="number">3</span>
+ service-type telnet
+user-<span class="class"><span class="keyword">interface</span> <span class="title">vty</span> 0 4
+ <span class="title">authentication</span>-<span class="title">mode</span> <span class="title">scheme</span>
+<span class="title">radius</span> <span class="title">scheme</span> [<span class="title">scheme_name</span>]
+ <span class="title">server</span>-<span class="title">type</span> <span class="title">extended</span>
+ <span class="title">primary</span> <span class="title">authentication</span> [<span class="title">IAS</span>-1 <span class="title">IP</span>]
+  <span class="title">primary</span> <span class="title">accounting</span> [<span class="title">IAS</span>-1 <span class="title">IP</span>]
+ <span class="title">secondary</span> <span class="title">authentication</span> [<span class="title">IAS</span>-2 <span class="title">IP</span>]
+  <span class="title">secondary</span> <span class="title">accounting</span> [<span class="title">IAS</span>-2 <span class="title">IP</span>]
+  <span class="title">key</span> <span class="title">authentication</span> [共享的机密]
+  <span class="title">key</span> <span class="title">accounting</span> [共享的机密]
+  <span class="title">user</span>-<span class="title">name</span>-<span class="title">format</span> <span class="title">without</span>-<span class="title">domain</span>
+  <span class="title">nas</span>-<span class="title">ip</span> [本设备的<span class="title">IP</span>，建议选择<span class="title">loopback</span>]
+<span class="title">domain</span> [<span class="title">scheme_name</span>]
+  <span class="title">authentication</span> <span class="title">login</span> <span class="title">radius</span>-<span class="title">scheme</span> [<span class="title">scheme_name</span>] <span class="title">local</span>
+  <span class="title">authorization</span> <span class="title">login</span> <span class="title">radius</span>-<span class="title">scheme</span> [<span class="title">scheme_name</span>] <span class="title">local</span>
+  <span class="title">accounting</span> <span class="title">login</span> <span class="title">radius</span>-<span class="title">scheme</span> [<span class="title">scheme_name</span>] <span class="title">local</span>
+  <span class="title">accounting</span> <span class="title">optional</span>
+<span class="title">domain</span> <span class="title">default</span> <span class="title">enable</span> [<span class="title">scheme_name</span>]
+</pre></figure>
+
+<h3>4.2.2. H3C S3600</h3>
+<figure class="highlight"><pre>local-user local_admin
+  password cipher Y<span class="preprocessor">#S`Q`V3DQP9,2I_=/L2`1!!</span>
+  service-type telnet
+  level <span class="number">3</span>
+user-<span class="class"><span class="keyword">interface</span> <span class="title">vty</span> 0 4
+  <span class="title">authentication</span>-<span class="title">mode</span> <span class="title">scheme</span>
+<span class="title">radius</span> <span class="title">scheme</span> [<span class="title">scheme_name</span>]
+  <span class="title">server</span>-<span class="title">type</span> <span class="title">extended</span>
+  <span class="title">primary</span> <span class="title">authentication</span> [<span class="title">IAS</span>-1 <span class="title">IP</span>]
+  <span class="title">primary</span> <span class="title">accounting</span> [<span class="title">IAS</span>-1 <span class="title">IP</span>]
+  <span class="title">secondary</span> <span class="title">authentication</span> [<span class="title">IAS</span>-2 <span class="title">IP</span>]
+  <span class="title">secondary</span> <span class="title">accounting</span> [<span class="title">IAS</span>-2 <span class="title">IP</span>]
+ <span class="title">key</span> <span class="title">authentication</span> [共享的机密]
+  <span class="title">key</span> <span class="title">accounting</span> [共享的机密]
+  <span class="title">user</span>-<span class="title">name</span>-<span class="title">format</span> <span class="title">without</span>-<span class="title">domain</span>
+  <span class="title">nas</span>-<span class="title">ip</span> [本设备的<span class="title">IP</span>，建议选择<span class="title">loopback</span>]
+<span class="title">domain</span> [<span class="title">scheme_name</span>]
+  <span class="title">authentication</span> <span class="title">radius</span>-<span class="title">scheme</span> [<span class="title">scheme_name</span>] <span class="title">local</span>
+  <span class="title">accounting</span> <span class="title">optional</span>
+; 与5500不同，<span class="title">authorization</span>和<span class="title">accounting</span>不需要单独写一条配置
+<span class="title">domain</span> <span class="title">default</span> <span class="title">enable</span> [<span class="title">scheme_name</span>]
+</pre></figure>
+
+<p>配置结束后可用ssh客户端登录测试。</p>
+<p>说明：</p>
+<ul>
+<li>scheme_name是指radius的策略名称</li>
+<li>IAS-1 IP是IAS服务器1的IP地址</li>
+<li>IAS-2 IP是IAS服务器1的IP地址</li>
+<li>共享的机密是指在IAS服务器中创建网络设备时的共享机密</li>
+<li>本设备的IP地址建议选用loopback ip<br>    上述的配置中除了可以做统一认证之外，还可以做本地认证，前提是IAS失效（意思是IAS服务处于停止状态）。系统管理员此时就可以通过本地账号local_admin进行登录。</li>
+</ul>
+<h1>五、参考</h1>
+<ol>
+<li><a href="http://shop.oreilly.com/product/9780596003227.do" target="_blank">O’Reilly RADIUS</a></li>
+<li><a href="http://www.cisco.com/en/US/docs/ios/12_2/security/configuration/guide/scfrad.html" target="_blank">cisco官方文档</a></li>
+<li>H3C S3600系列以太网交换机操作手册</li>
+<li>H3C S5500系列以太网交换机操作手册</li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/network/">network</a>, <a href="/categories/network/ldap/">ldap</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

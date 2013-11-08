@@ -1,0 +1,554 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>openbsd | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title category">openbsd</h2>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2013-08-08T07:00:00.000Z"><a href="/2013/08/08/nginx-on-OpenBSD/">2013-08-8</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2013/08/08/nginx-on-OpenBSD/">nginx on OpenBSD</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <blockquote>
+<p><strong>UPDATE</strong><br>原文针对OpenBSD4.9，现在已经是5.2了，有些内容重新做了修订。</p>
+<p>Nginx(“engine x”)是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/SMTP 代理服务器 。Nginx 是由 Igor Sysoev 为俄罗斯访问量第二的Rambler.ru 站点开发的，它已经在该站点运行超过四年多了。Igor 将源代码以类BSD许可证的形式发布。自Nginx 发布四年来，Nginx已经因为它的稳定性、丰富的功能集、 示例配置文件和低系统资源的消耗而闻名了。目前国内各大门户网站已经部署了Nginx，如新浪、网易、腾讯等；国内几个重要的视频分享网站也部署了Nginx，如六房间、酷6等。</p>
+</blockquote>
+<p>经过几年的发展，nginx的市场占有率稳步上升，截至2013年，市场份额占有率为15.52%（netcraft统计），微软的IIS为16.69%。nginx不日即可超越IIS。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2013/08/08/nginx-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2013-04-03T15:00:00.000Z"><a href="/2013/04/03/OpenVPN-on-OpenBSD/">2013-04-3</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2013/04/03/OpenVPN-on-OpenBSD/">OpenVPN on OpenBSD</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>2013-04-03添加topology subnet和ccd配置。<br>2013-02-14取消whichsslconf依赖。<br>2012-04-12初稿。<br>{: .info}</p>
+<p>OpenVPN是近年来最火的VPN软件，它部署容易，使用简单，跟IPsec相比，它所缺少的只是积累和口碑，不过没关系，已经有越来越多的公司开始在生产环境中用OpenVPN来取代IPsec。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2013/04/03/OpenVPN-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-12-22T04:30:00.000Z"><a href="/2012/12/22/upgrade-openbsd/">2012-12-22</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/12/22/upgrade-openbsd/">升级OpenBSD</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>我目前的两台防火墙是OpenBSD4.9，需要升级到5.2。由于OpenBSD不支持跨版本升级，因此需要采用4.9-&gt;5.0-&gt;5.1-&gt;5.2这种逐步升级的方式。</p>
+<p>下面步骤是官网推荐的upgrade by install kernel。</p>
+<pre><code><span class="number">1.</span> <span class="preprocessor"># mkdir /backup</span>
+<span class="number">2.</span> <span class="preprocessor"># mv /bsd.rd /backup/bsd.rd.50</span>
+<span class="number">3.</span> <span class="preprocessor"># wget http://ftp.jaist.ac.jp/pub/OpenBSD/5.2/i386/bsd.rd</span>
+<span class="number">4.</span> <span class="preprocessor"># shutdown -r now</span>
+<span class="number">5.</span> 在boot的提示符中输入
+&gt;bsd<span class="variable">.rd</span>
+<span class="number">6.</span> 选择(U)pgrade
+然后选择合适的sets，我只选择了
+bsd<span class="variable">.rd</span>
+bsd
+base<span class="variable">.tgz</span>
+comp52<span class="variable">.tgz</span>
+man52<span class="variable">.tgz</span>
+<span class="number">7.</span> <span class="preprocessor"># wget http://ftp.jaist.ac.jp/pub/OpenBSD/5.2/i386/etc52.tgz</span>
+<span class="number">8.</span> <span class="preprocessor"># sysmerge -x /backup/etc52.tgz</span>
+<span class="number">9.</span> <span class="preprocessor"># 最后是确认所有的配置文件是否正确</span>
+<span class="number">10.</span> <span class="preprocessor"># shutdown -r now</span></code></pre>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-16T09:40:00.000Z"><a href="/2012/04/16/netmgmt-on-OpenBSD/">2012-04-16</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/16/netmgmt-on-OpenBSD/">OpenBSD中的网络管理</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>这些天我花了一些时间研究了一下OpenBSD中的系统/网络监控软件，走了不少弯路，在这里跟与诸位分享一些心得体会。</p>
+<p>一开始，我直奔主题，花了不少精力尝试了大量网管软件，考察的对象包括：Munin、Monit、collectd、nagios/icinga和symon。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/16/netmgmt-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-12T05:00:00.000Z"><a href="/2012/04/12/unbound-on-OpenBSD/">2012-04-12</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/12/unbound-on-OpenBSD/">unbound on OpenBSD</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>2013-03-05 更新几条kill的正确用法和客户端排错说明<br>{: class=“info” }</p>
+<p>一提起DNS，大家一般都会想到BIND。2000年的时候，Oreilly的《DNS and BIND》是最著名的也是唯一的一本关于DNS的书籍，现在已经更新到第5版。然而,时光流逝，美人迟暮，BIND的代码越来越臃肿，每向前迈一步都很困难,不少后起之秀都在觊觎BIND的地位，nsd/unbound便是其中之一，目前已有3台根域名服务器跑的就是nsd。</p>
+<p>nsd/unbound是NLnet Labs开发的一套DNS daemon，其中nsd作为authorative DNS，unbound负责recursive和caching，旨在为用户提供一套安全、简洁、高效的DNS解决方案。ubuntu和OpenBSD均计划在下一版本中将unbound作为默认的DNS解释器。<br>今天仅介绍unbound，以后有机会再讲nsd。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/12/unbound-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-11T13:00:00.000Z"><a href="/2012/04/11/fail2ban-on-OpenBSD/">2012-04-11</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/11/fail2ban-on-OpenBSD/">fail2ban on OpenBSD</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>自部署OpenBSD以来，经常发现有script kid使用暴力破解的方式试探SSH的密码，一直以来都不以为然，最近总部下发的通报让我痛下决心，非解决这个问题不可。</p>
+<p>解决方式有两种：</p>
+<ol>
+<li>将密码验证更改为证书认证；</li>
+<li>实时监控<code>/var/log/authlog</code>，一旦发现非法IP，就列入黑名单，使用pf对黑名单进行过滤。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/11/fail2ban-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-07-19T13:00:00.000Z"><a href="/2011/07/19/openbsd-notes/">2011-07-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/07/19/openbsd-notes/">OpenBSD学习笔记</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h4>o 运行locate时出错</h4>
+<figure class="highlight"><pre><span class="preprocessor"># locate</span>
+locate: database too small: /<span class="keyword">var</span>/db/locate.database
+</pre></figure>
+
+<p>解决办法：<code># /usr/libexec/locate.updatedb</code></p>
+<h4>o 安装bash</h4>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add -i bash</span>
+</pre></figure>
+
+<p>然后调整<code>.bash_profile</code></p>
+<h4>o 安装port tree</h4>
+<figure class="highlight"><pre>$ cd /tmp
+$ ftp ftp://ftp<span class="preprocessor">.openbsd</span><span class="preprocessor">.org</span>/pub/OpenBSD/<span class="number">4.9</span>/ports<span class="preprocessor">.tar</span><span class="preprocessor">.gz</span>
+$ cd /usr
+$ sudo tar xvzf /tmp/ports<span class="preprocessor">.tar</span><span class="preprocessor">.gz</span>
+<span class="comment">;注意，tar一定要带上参数v，因为在openbsd中解压非常慢，v可以即时显示解压进度。</span>
+</pre></figure>
+
+<h4>o 彩色显示目录和文件</h4>
+<p>在openbsd需要安装colorls才能用不同颜色区分不同文件和目录。</p>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add colorls</span>
+<span class="preprocessor"># vim ~/.profile</span>
+export TERM=wsvt25
+alias ls=<span class="string">"colorls -G"</span>
+</pre></figure>
+
+<p>重新登录ls看看吧。</p>
+<p>默认颜色：</p>
+<ol>
+<li>白色 正常文件</li>
+<li>蓝色 目录</li>
+<li>红色 可执行文件</li>
+<li>品红 连接</li>
+</ol>
+<h4>o 如何在openbsd中重启服务？</h4>
+<figure class="highlight"><pre><span class="keyword">kill</span> -HUP <span class="variable">$(</span>cat /var/run/sshd.pid)
+<span class="keyword">kill</span> -HUP <span class="string">`cat /var/run/sshd.pid`</span>
+
+ps aux | <span class="keyword">grep</span> app_name
+<span class="keyword">kill</span> -<span class="number">9</span> id
+</pre></figure>
+
+<h4>o 如何更新时间</h4>
+<figure class="highlight"><pre><span class="preprocessor"># rdate -ncv pool.ntp.org</span>
+<span class="preprocessor"># ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime</span>
+</pre></figure>
+
+<p>这样就可以得到正确的时间了。</p>
+<p>那如何将时间同步到bios中呢？目前还没有找到合适的方法，以下是一种workaround</p>
+<pre><code><span class="comment">#</span> <span class="comment">echo</span> <span class="comment">"/usr/local/bin/ntpd</span> <span class="literal">-</span><span class="comment">A</span> <span class="literal">-</span><span class="comment">c</span> <span class="comment">/etc/ntp</span>.<span class="comment">conf</span> <span class="literal">-</span><span class="comment">l</span> <span class="comment">/var/log/ntp</span>.<span class="comment">log</code></pre>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2007-04-25T05:14:00.000Z"><a href="/2007/04/25/how-to-add-persistent-static-route-on-debian/">2007-04-25</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2007/04/25/how-to-add-persistent-static-route-on-debian/">如何在debian中添加永久静态路由</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>可以在<code>/etc/network/interfaces</code>中添加静态路由，关机后不会消失。</p>
+<figure class="highlight"><pre>iface eth0 inet static
+address 192.168.0.1
+netmask 255.255.255.0
+broadcast 192.168.0.255
+up ip add x.x.x.0/24 via <span class="tag">&lt;<span class="title">gw</span>&gt;</span> dev eth0
+up ip add y.y.y.0/24 via <span class="tag">&lt;<span class="title">gw</span>&gt;</span> dev eth0
+;<span class="tag">&lt;<span class="title">gw</span>&gt;</span>是指访问网段所通过的网关。
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

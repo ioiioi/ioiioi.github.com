@@ -1,0 +1,522 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>OpenVPN on OpenBSD | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="2013-04-03添加topology subnet和ccd配置。2013-02-14取消whichsslconf依赖。2012-04-12初稿。{: .info}
+OpenVPN是近年来最火的VPN软件，它部署容易，使用简单，跟IPsec相比，它所缺少的只是积累和口碑，不过没关系，已经有越来越多的公司开始在生产环境中用OpenVPN来取代IPsec。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="OpenVPN on OpenBSD"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2013-04-03T15:00:00.000Z"><a href="/2013/04/03/OpenVPN-on-OpenBSD/">2013-04-3</a></time>
+      
+      
+  
+    <h1 class="title">OpenVPN on OpenBSD</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>2013-04-03添加topology subnet和ccd配置。<br>2013-02-14取消whichsslconf依赖。<br>2012-04-12初稿。<br>{: .info}</p>
+<p>OpenVPN是近年来最火的VPN软件，它部署容易，使用简单，跟IPsec相比，它所缺少的只是积累和口碑，不过没关系，已经有越来越多的公司开始在生产环境中用OpenVPN来取代IPsec。<br><a id="more"></a></p>
+<p>假如真要在生产环境中部署IPsec，建议使用OpenBSD自带的IPsec，它拥有原生的内核级支持，部署和使用也非常简单，而且经过OpenBSD开发人员的精心调教，自然要比Linux要优越得多。<br>{: .info}</p>
+<h2>安装</h2>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add -r openvpn</span>
+<span class="preprocessor"># mkdir -p /etc/openvpn/keys</span>
+<span class="preprocessor"># chmod 700 /etc/openvpn/keys</span>
+<span class="preprocessor"># cp -rf /usr/local/share/example/openvpn/easy-rsa/2.0/ /etc/openvpn/easy-rsa</span>
+</pre></figure>
+
+<h2>创建PKI</h2>
+<ul>
+<li>调整vars</li>
+</ul>
+<figure class="highlight"><pre><span class="comment"># vim /etc/openvpn/easy-rsa/vars</span>
+<span class="keyword">export</span> EASY_RSA=<span class="string">"`pwd`"</span>
+
+<span class="keyword">export</span> OPENSSL=<span class="string">"openssl"</span>
+<span class="keyword">export</span> PKCS11TOOL=<span class="string">"pkcs11-tool"</span>
+<span class="keyword">export</span> GREP=<span class="string">"grep"</span>
+
+<span class="keyword">export</span> KEY_CONFIG=<span class="string">"$EASY_RSA/openssl-1.0.0.cnf"</span>
+<span class="keyword">export</span> KEY_DIR=<span class="string">"$EASY_RSA/keys"</span>
+
+<span class="keyword">export</span> KEY_COUNTRY=<span class="string">"CN"</span>
+<span class="keyword">export</span> KEY_PROVINCE=<span class="string">"HaiNan"</span>
+<span class="keyword">export</span> KEY_CITY=<span class="string">"Haikou"</span>
+<span class="keyword">export</span> KEY_ORG=<span class="string">"linuxabc.net.cn"</span>
+<span class="keyword">export</span> KEY_EMAIL=<span class="string">"admin@linuxabc.net.cn"</span>
+</pre></figure>
+
+<p class="info"><br>在OpenBSD的openvpn ports中，vars默认的KEY_CONFIG为<code>$EASY_RSA/whichopensslcnf $EASY_RSA</code>，需要改成&quot;$EASY_RSA/openssl-1.0.0.cnf&quot;。<br></p>
+
+<ul>
+<li>创建证书</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># cd /etc/openvpn/easy-rsa</span>
+<span class="preprocessor"># . ./vars</span>
+<span class="preprocessor"># ./clean-all</span>
+<span class="preprocessor"># ./build-ca</span>
+<span class="preprocessor"># ./build-dh</span>
+<span class="preprocessor"># ./build-key-server openbsd-2.linuxabc.net.cn</span>
+<span class="preprocessor"># ./build-key admin.linuxabc.net.cn</span>
+</pre></figure>
+
+<ul>
+<li><p>分发证书</p>
+</li>
+<li><p>服务器</p>
+</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># cp openbsd-2.linuxabc.net.cn.crt openbsd-2.linuxabc.net.cn.key /etc/openvpn/keys</span>
+<span class="preprocessor"># cp ca.crt dh1024.pem /etc/openvpn/keys</span>
+</pre></figure>
+
+<ul>
+<li>客户端</li>
+</ul>
+<p>假如客户端是windows操作系统，推荐使用WinSCP这个软件来分发客户端证书</p>
+<h2>配置</h2>
+<p>由于log日志对于排错非常重要，因此需要特别对待</p>
+<figure class="highlight"><pre><span class="preprocessor"># mkdir /var/log/openvpn</span>
+<span class="preprocessor"># touch /var/log/openvpn/openvpn.log</span>
+<span class="preprocessor"># touch /var/log/openvpn/openvpn-status.log</span>
+<span class="preprocessor"># chown -R _openvpn:_openvpn /var/log/openvpn</span>
+</pre></figure>
+
+<h3>基于证书认证方式</h3>
+<ul>
+<li>服务器配置</li>
+</ul>
+<figure class="highlight"><pre># cat /etc/openvpn/server-cert.conf
+<span class="title">proto</span> udp
+<span class="title">port</span> <span class="number">1194</span>
+<span class="title">dev</span> tun0
+;切记，tun后面还有<span class="number">0</span>，要与后面的/etc/hostname.tun0相吻合。
+<span class="title">ca</span> /etc/openvpn/keys/ca.crt
+<span class="title">cert</span> /etc/openvpn/keys/openbsd-<span class="number">1.</span>linuxabc.net.cn.crt
+<span class="title">key</span> /etc/openvpn/keys/openbsd-<span class="number">1.</span>linuxabc.net.cn.key
+<span class="title">dh</span> /etc/openvpn/keys/dh1024.pem
+;上面的路径建议用全路径，否则openvpn启动的时候可能会提示无法打开dh1024.pem
+<span class="title">server</span> <span class="number">10.5</span><span class="number">.1</span><span class="number">.0</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+
+<span class="title">keepalive</span> <span class="number">10</span> <span class="number">120</span>
+<span class="title">comp</span>-lzo
+
+<span class="title">user</span> _openvpn
+<span class="title">group</span> _openvpn
+
+<span class="title">persist</span>-key
+<span class="title">persist</span>-tun
+<span class="title">push</span> <span class="string">"route 192.168.33.0 255.255.255.0"</span>
+<span class="title">push</span> <span class="string">"route 192.168.55.0 255.255.255.0"</span>
+<span class="title">push</span> <span class="string">"route 192.168.66.0 255.255.255.0"</span>
+<span class="title">push</span> <span class="string">"route 192.168.88.0 255.255.255.0"</span>
+
+<span class="title">route</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.0</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="title">route</span> <span class="number">192.168</span><span class="number">.1</span><span class="number">.0</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+#client-config-dir /etc/openvpn/ccd
+<span class="title">status</span> /var/log/openvpn/openvpn-status.log
+<span class="title">log</span> /var/log/openvpn/openvpn.log
+<span class="title">log</span>-append /var/log/openvpn/openvpn.log
+
+<span class="title">verb</span> <span class="number">4</span>
+</pre></figure>
+
+<ul>
+<li>客户端配置</li>
+</ul>
+<figure class="highlight"><pre><span class="title">client</span>
+<span class="title">dev</span> tun
+<span class="title">proto</span> udp
+<span class="title">remote</span> <span class="number">212.232</span><span class="number">.254</span><span class="number">.190</span> <span class="number">1194</span>
+
+<span class="title">resolv</span>-retry infinite
+<span class="title">nobind</span>
+<span class="title">persist</span>-key
+<span class="title">persist</span>-tun
+
+<span class="title">ca</span> ./keys/ca.crt
+<span class="title">cert</span> ./keys/username.dslab.qmcc.crt
+<span class="title">key</span>  ./keys/username.dslab.qmcc.key
+;tls-auth ./keys/ta.key <span class="number">1</span>
+<span class="title">dh</span> ./keys/dh1024.pem
+
+;auth-user-pass
+<span class="title">ns</span>-cert-<span class="typedef"><span class="keyword">type</span> server</span>
+
+<span class="title">comp</span>-lzo
+<span class="title">verb</span> <span class="number">7</span>
+<span class="title">mute</span> <span class="number">10</span>
+</pre></figure>
+
+<ul>
+<li>启动脚本</li>
+</ul>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">cat</span> <span class="comment">/etc/hostname</span>.<span class="comment">tun0</span>
+<span class="comment">up</span>
+<span class="comment">!/usr/local/sbin/openvpn</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">daemon</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">config</span> <span class="comment">/etc/openvpn/server</span>.<span class="comment">conf
+</pre></figure>
+
+<h3>基于用户名/密码认证方式</h3>
+<ul>
+<li>服务端配置</li>
+</ul>
+<figure class="highlight"><pre># cat /etc/openvpn/server-user.conf
+<span class="title">proto</span> udp
+<span class="title">port</span> <span class="number">1194</span>
+<span class="title">dev</span> tun0
+;切记，tun后面还有<span class="number">0</span>，要与后面的/etc/hostname.tun0相吻合。
+<span class="title">ca</span> /etc/openvpn/keys/ca.crt
+<span class="title">cert</span> /etc/openvpn/keys/openbsd-<span class="number">1.</span>linuxabc.net.cn.crt
+<span class="title">key</span> /etc/openvpn/keys/openbsd-<span class="number">1.</span>linuxabc.net.cn.key
+<span class="title">dh</span> /etc/openvpn/keys/dh1024.pem
+;上面的路径建议用全路径，否则openvpn启动的时候可能会提示无法打开dh1024.pem
+<span class="title">server</span> <span class="number">10.11</span><span class="number">.0</span><span class="number">.0</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="title">topology</span> subnet
+; <span class="type">OpenVPN</span> <span class="number">2.1</span>之前不支持subnet模式，仅支持net30，每个客户端的
+; <span class="type">IP</span>地址是<span class="number">30</span>子网掩码，比较浪费<span class="type">IP</span>资源，<span class="type">OpenVPN2</span><span class="number">.1</span>之后开始
+; 支持subnet模式，分配给客户端的<span class="type">IP</span>地址是连续的。
+
+<span class="title">keepalive</span> <span class="number">10</span> <span class="number">120</span>
+<span class="title">comp</span>-lzo
+
+<span class="title">user</span> _openvpn
+<span class="title">group</span> _openvpn
+<span class="title">persist</span>-key
+<span class="title">persist</span>-tun
+
+<span class="title">auth</span>-user-pass-verify /usr/local/libexec/openvpn_bsdauth via-env
+<span class="title">client</span>-to-client
+
+; ccd需要跟client-cert-<span class="keyword">not</span>-required和username-<span class="keyword">as</span>-common-name一起使用方能生效，
+; openvpn会将接入的用户名跟ccd的文件名进行比对，对于采用证书认证方式的用户，
+; 用户名就是certificate的common name，此处采用<span class="type">OpenBSD</span>系统帐号作为认证方式，
+; 因此openvpn需要通过username-<span class="keyword">as</span>-common-name这条指令将<span class="type">OpenBSD</span>系统帐号转变成
+; certificate的common name来看待。从而实现与ccd的文件名适配。
+
+<span class="title">client</span>-config-dir /etc/openvpn/ccd ; 此处要求绝对路径
+<span class="title">client</span>-cert-<span class="keyword">not</span>-required
+<span class="title">username</span>-<span class="keyword">as</span>-common-name
+
+<span class="title">status</span> /var/log/openvpn/openvpn-status.log
+<span class="title">log</span> /var/log/openvpn/openvpn.log
+<span class="title">log</span>-append /var/log/openvpn/openvpn.log
+
+<span class="title">verb</span> <span class="number">4</span>
+<span class="title">mute</span> <span class="number">20</span>
+</pre></figure>
+
+<ul>
+<li>ccd用户文件</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># cat /etc/openvpn/ccd/user1</span>
+ifconfig-<span class="keyword">push</span> <span class="number">10.11</span><span class="number">.0</span><span class="number">.2</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="comment">; topology subnet时，IP地址格式为10.11.0.2 255.255.255.0</span>
+<span class="comment">; topology net30，IP地址格式为10.11.0.2 10.11.0.1</span>
+<span class="keyword">push</span> <span class="string">"route 192.168.33.0 255.255.255.0"</span>
+<span class="keyword">push</span> <span class="string">"route 192.168.55.0 255.255.255.0"</span>
+<span class="keyword">push</span> <span class="string">"route 192.168.66.0 255.255.255.0"</span>
+<span class="keyword">push</span> <span class="string">"route 192.168.88.0 255.255.255.0"</span>
+</pre></figure>
+
+<ul>
+<li>创建openvpn用户</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># echo "/usr/bin/false" &gt;&gt; /etc/shells</span>
+<span class="comment">; openvpn用户不需要登录OpenBSD，所以不必提供shell，但必须在/etc/shells备案，否则无法通过认证。</span>
+
+<span class="preprocessor"># encrypt -p -b 6</span>
+<span class="comment">; 明文密码转密文字符串</span>
+
+<span class="preprocessor"># user add -p '$2a$06$hYBI8r5ylrjtNRXRCCFxweyTNMnLnmTtT2ksXFNQxC.7sjNHnqaM2' -s /usr/bin/false -c "openvpn User" -d /dev/null -g _openvpnusers &lt;vpnuser&gt;</span>
+<span class="comment">;-p 参数后面是用''包裹的密文字符串。</span>
+<span class="comment">;openvpn用户不需要home目录，因此统一指定了一个/dev/null空设备。</span>
+<span class="comment">;openvpn用户必须在`_openvpnusers`这个组中，否则无法通过认证。该组是安装openvpn_bsdauth时自动创建的。</span>
+</pre></figure>
+
+<ul>
+<li>启动脚本</li>
+</ul>
+<figure class="highlight"><pre><span class="comment">/etc/hostname</span>.<span class="comment">tun0</span>
+<span class="comment">up</span>
+<span class="comment">!/usr/local/sbin/openvpn</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">script</span>-<span class="comment">security</span> <span class="comment">3</span> <span class="comment">system</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">daemon</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">config</span> <span class="comment">/etc/openvpn/server</span>.<span class="comment">conf
+</pre></figure>
+
+<p>关于<code>--script-security 3</code>，详见openvpn_bsdauth.8.html[<a href="http://www.wormhole.hu/~ice/openvpn_bsdauth/openvpn_bsdauth.8.html" target="_blank">http://www.wormhole.hu/~ice/openvpn_bsdauth/openvpn_bsdauth.8.html</a>]</p>
+<blockquote>
+<p>For OpenVPN versions 2.1 and up, the ‘script-security‘ directive must be set to (at least) ‘3’ in order for openvpn_bsdauth to receive the password from OpenVPN.</p>
+</blockquote>
+<ul>
+<li>客户端配置</li>
+</ul>
+<figure class="highlight"><pre><span class="title">client</span>
+<span class="title">dev</span> tun
+<span class="title">proto</span> udp
+<span class="title">remote</span> <span class="number">212.238</span><span class="number">.170</span><span class="number">.34</span> <span class="number">1194</span>
+
+<span class="title">resolv</span>-retry infinite
+<span class="title">nobind</span>
+<span class="title">persist</span>-key
+<span class="title">persist</span>-tun
+
+<span class="title">ca</span> ./keys/ca.crt
+
+<span class="title">auth</span>-user-pass
+<span class="title">ns</span>-cert-<span class="typedef"><span class="keyword">type</span> server</span>
+
+<span class="title">comp</span>-lzo
+<span class="title">verb</span> <span class="number">7</span>
+<span class="title">mute</span> <span class="number">10</span>
+</pre></figure>
+
+<h2>进程管理</h2>
+<ul>
+<li>启动</li>
+</ul>
+<figure class="highlight"><pre># sh /etc/net<span class="operator"><span class="keyword">start</span> tun0
+</pre></figure>
+
+<ul>
+<li>停止</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># kill -9 `cat /var/run/openvpn.pid`</span>
+</pre></figure>
+
+<h2>pf设置</h2>
+<p>openbsd的精髓在pf，所以网络服务均需要跟它打交道：</p>
+<figure class="highlight"><pre><span class="xml"></span><span class="variable">$ext_if</span><span class="xml"> = "fxp2"
+table <span class="tag">&lt;<span class="title">vpn_net</span>&gt;</span> const { </span><span class="number">10.5</span><span class="xml"></span><span class="number">.1</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml"> }
+table <span class="tag">&lt;<span class="title">lan_net</span>&gt;</span> const { </span><span class="number">192.168</span><span class="xml"></span><span class="number">.33</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml">, </span><span class="number">192.168</span><span class="xml"></span><span class="number">.55</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml">, \
+						</span><span class="number">192.168</span><span class="xml"></span><span class="number">.66</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml">, </span><span class="number">192.168</span><span class="xml"></span><span class="number">.88</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml">}
+pass in inet proto udp to </span><span class="variable">$ext_if</span><span class="xml"> port </span><span class="number">1194</span><span class="xml">
+pass inet proto { tcp, udp } from <span class="tag">&lt;<span class="title">vpn_net</span>&gt;</span> to <span class="tag">&lt;<span class="title">lan_net</span>&gt;</span></span>
+</pre></figure>
+
+<h2>排错</h2>
+<ul>
+<li>TLS_ERROR: BIO read tls_read_plaintext error</li>
+</ul>
+<p>出现这种错误提示时，一般是由于服务器和客户机之间的时间差距过大所致，建议使用OpenNTPd定时更新。此外，假如OpenBSD创建ca.crt等证书的时候时间就已经不对，需要将所创建的证书全部删除，更新时间后再重新创建。</p>
+<ul>
+<li>VERIFY ERROR:<br>depth=0, error=unsupported certificate purpose:</li>
+</ul>
+<p>该错误的原因是在创建CA证书的时候，使用了错误的脚本，譬如服务器端证书应该用./build-key-server创建，结果用./build-key创建了。因此会出错。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/openbsd/">openbsd</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

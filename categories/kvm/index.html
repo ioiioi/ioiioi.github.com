@@ -1,0 +1,367 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>kvm | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title category">kvm</h2>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2013-11-08T07:00:00.000Z"><a href="/2013/11/08/KVM-installation/">2013-11-8</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2013/11/08/KVM-installation/">在CentOS6.3中安装KVM</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>产品实验室服务器之前安装的是xen，kvm作为后起之秀也值得测试一下，于是将其中一台服务器格了，重装CentOS6和kvm。</p>
+<p>服务器硬件：</p>
+<ul>
+<li>2 * Intel Xeon（支持虚拟化）</li>
+<li>4 * broadcom千兆网卡</li>
+<li>2 * SAS 300G硬盘</li>
+</ul>
+<h2>安装</h2>
+<figure class="highlight"><pre><span class="preprocessor"># yum -y groupinstall Virtualization "Virtualization Client" \</span>
+                      <span class="string">"Virtualization Platform"</span> \
+                      <span class="string">"Virtualization Tools"</span>
+<span class="preprocessor"># yum -y install libguestfs-tools</span>
+</pre></figure>
+
+<p>这种安装方式还是不够简洁，可以尝试以下方式：</p>
+<figure class="highlight"><pre><span class="preprocessor"># yum -y install qemu-kvm libvirt python-virtinst bridge-utils</span>
+<span class="preprocessor"># modprobe kvm</span>
+<span class="preprocessor"># modprobe kvm_intel # if AMD, "kvm_amd"</span>
+<span class="preprocessor"># /etc/init.d/libvirtd start</span>
+</pre></figure>
+
+<p>安装完之后需重启相关服务：</p>
+<p><code># service libvirtd status</code></p>
+<p>如果libvirtd没有启动，需要先启动messagebus和avahi-daemon</p>
+<figure class="highlight"><pre><span class="preprocessor"># service messagebus start</span>
+<span class="preprocessor"># service avahi-daemon start</span>
+<span class="preprocessor"># service libvirtd start</span>
+</pre></figure>
+
+<p>至此，KVM的安装就结束了，非常简单。不过在生产环境中还需要考虑网络和存储，相对复杂一些，网络拓扑环境如下：</p>
+<h2>网络</h2>
+<ul>
+<li>eth0/eth1做成bond0，通过br0与业务交换机（huawei S5328-1）相连</li>
+<li>eth2/eth3做成bond1，通过br1与存储交换机（huawei S5328-2）相连</li>
+</ul>
+<p>以下是网络配置</p>
+<h3>配置网卡</h3>
+<figure class="highlight"><pre><span class="preprocessor"># cat ifcfg-eth2</span>
+DEVICE=<span class="string">"eth2"</span>
+TYPE=<span class="string">"Ethernet"</span>
+BOOTPROTO=<span class="string">"none"</span>
+ONBOOT=<span class="string">"yes"</span>
+USERCTL=<span class="string">"no"</span>
+MASTER=<span class="string">"bond1"</span>
+SLAVE=<span class="string">"yes"</span>
+NM_CONTROLLED=<span class="string">"no"</span>
+</pre></figure>
+
+<figure class="highlight"><pre><span class="preprocessor"># cat ifcfg-eth3</span>
+DEVICE=<span class="string">"eth3"</span>
+TYPE=<span class="string">"Ethernet"</span>
+BOOTPROTO=<span class="string">"none"</span>
+ONBOOT=<span class="string">"yes"</span>
+USERCTL=<span class="string">"no"</span>
+MASTER=<span class="string">"bond1"</span>
+SLAVE=<span class="string">"yes"</span>
+NM_CONTROLLED=<span class="string">"no"</span>
+</pre></figure>
+
+<h3>配置bonding</h3>
+<figure class="highlight"><pre><span class="comment"># cat /etc/modprobe.d/bonding.conf </span>
+<span class="title">alias</span> bond1 bonding
+</pre></figure>
+
+<p>假如没有/etc/modprobe.d/bonding.conf，就自己创建一个。</p>
+<figure class="highlight"><pre><span class="comment"># lsmod | grep bonding</span>
+<span class="title">bonding</span>               <span class="number">127060</span>  <span class="number">0</span> 
+8021q                  <span class="number">25058</span>  <span class="number">1</span> bonding
+ipv6                  <span class="number">322541</span>  <span class="number">78</span> bonding,ip6t_REJECT,nf_conntrack_ipv6,nf_defrag_ipv6
+</pre></figure>
+
+<p>假如bonding还没有加载，那就手工加载。</p>
+<figure class="highlight"><pre><span class="comment"># modprobe bonding</span>
+
+[root<span class="property">@RH2285</span>-<span class="number">4</span> network-scripts]<span class="comment"># cat ifcfg-bond1</span>
+DEVICE=bond1
+BRIDGE=br1
+USERCTL=<span class="literal">no</span>
+BOOTPROTO=none
+ONBOOT=<span class="literal">yes</span>
+NM_CONTROLLED=<span class="literal">no</span>
+BONDING_OPTS=<span class="string">"mode=4 miimon=80"</span>
+</pre></figure>
+
+<h3>配置bridge</h3>
+<figure class="highlight"><pre><span class="preprocessor"># cat ifcfg-br1</span>
+DEVICE=<span class="string">"br1"</span>
+TYPE=Bridge
+ONBOOT=yes
+BOOTPROTO=<span class="keyword">static</span>
+IPADDR=<span class="number">192.168</span><span class="number">.55</span><span class="number">.232</span>
+NETMASK=<span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+NETWORK=<span class="number">192.168</span><span class="number">.55</span><span class="number">.0</span>
+NM_CONTROLLED=<span class="string">"no"</span>
+</pre></figure>
+
+<p>最后重启网络：</p>
+<p><code># service network restart</code></p>
+<h3>检查</h3>
+<figure class="highlight"><pre># cat /proc/net/bonding/bond1
+<span class="class">Ethernet</span> <span class="class">Channel</span> <span class="class">Bonding</span> <span class="class">Driver</span>: v3<span class="number">.6</span><span class="number">.0</span> (<span class="class">September</span> <span class="number">26</span>, <span class="number">2009</span>)
+
+<span class="class">Bonding</span> <span class="class">Mode</span>: <span class="class">IEEE</span> <span class="number">802.3</span>ad <span class="class">Dynamic</span> link aggregation
+<span class="class">Transmit</span> <span class="class">Hash</span> <span class="class">Policy</span>: layer2 (<span class="number">0</span>)
+<span class="class">MII</span> <span class="class">Status</span>: up
+<span class="class">MII</span> <span class="class">Polling</span> <span class="class">Interval</span> (ms): <span class="number">80</span>
+<span class="class">Up</span> <span class="class">Delay</span> (ms): <span class="number">0</span>
+<span class="class">Down</span> <span class="class">Delay</span> (ms): <span class="number">0</span>
+
+<span class="number">802.3</span>ad info
+<span class="class">LACP</span> <span class="method">rate:</span> slow
+<span class="class">Aggregator</span> selection policy (ad_select): stable
+<span class="class">Active</span> <span class="class">Aggregator</span> <span class="class">Info</span>:
+        <span class="class">Aggregator</span> <span class="class">ID</span>: <span class="number">3</span>
+        <span class="class">Number</span> of <span class="method">ports:</span> <span class="number">2</span>
+        <span class="class">Actor</span> <span class="class">Key</span>: <span class="number">17</span>
+        <span class="class">Partner</span> <span class="class">Key</span>: <span class="number">305</span>
+        <span class="class">Partner</span> <span class="class">Mac</span> <span class="class">Address</span>: <span class="number">54</span>:<span class="number">89</span>:<span class="number">98</span>:<span class="number">73</span>:<span class="method">bb:</span><span class="number">07</span>
+
+<span class="class">Slave</span> <span class="class">Interface</span>: eth2
+<span class="class">MII</span> <span class="class">Status</span>: up
+<span class="class">Speed</span>: <span class="number">1000</span> <span class="class">Mbps</span>
+<span class="class">Duplex</span>: full
+<span class="class">Link</span> <span class="class">Failure</span> <span class="class">Count</span>: <span class="number">0</span>
+<span class="class">Permanent</span> <span class="class">HW</span> <span class="method">addr:</span> <span class="number">3</span><span class="method">c:</span><span class="method">d9:</span><span class="number">2</span><span class="method">b:</span><span class="method">fd:</span><span class="number">39</span>:f0
+<span class="class">Aggregator</span> <span class="class">ID</span>: <span class="number">3</span>
+<span class="class">Slave</span> queue <span class="class">ID</span>: <span class="number">0</span>
+
+<span class="class">Slave</span> <span class="class">Interface</span>: eth3
+<span class="class">MII</span> <span class="class">Status</span>: up
+<span class="class">Speed</span>: <span class="number">1000</span> <span class="class">Mbps</span>
+<span class="class">Duplex</span>: full
+<span class="class">Link</span> <span class="class">Failure</span> <span class="class">Count</span>: <span class="number">0</span>
+<span class="class">Permanent</span> <span class="class">HW</span> <span class="method">addr:</span> <span class="number">3</span><span class="method">c:</span><span class="method">d9:</span><span class="number">2</span><span class="method">b:</span><span class="method">fd:</span><span class="number">39</span>:f2
+<span class="class">Aggregator</span> <span class="class">ID</span>: <span class="number">3</span>
+<span class="class">Slave</span> queue <span class="class">ID</span>: <span class="number">0</span>
+</pre></figure>
+
+<figure class="highlight"><pre><span class="preprocessor"># ifconfig br1</span>
+<span class="preprocessor"># brctl show</span>
+</pre></figure>
+
+<p>网络配置完成之后，可从其它机器ssh登录br1的ip地址，测试网络是否可正常工作。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

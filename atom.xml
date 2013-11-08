@@ -1,0 +1,1562 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title><![CDATA[linuxabc]]></title>
+  <subtitle><![CDATA[focus on security, network management and embeded OS]]></subtitle>
+  <link href="http://ioiioi.github.io/atom.xml" rel="self"/>
+  <link href="http://ioiioi.github.io"/>
+  <updated>2013-11-08T07:37:30.963Z</updated>
+  <id>http://ioiioi.github.io/</id>
+  <author>
+    <name><![CDATA[alfie chan]]></name>
+  </author>
+  <generator uri="http://zespia.tw/hexo">Hexo</generator>
+  <entry>
+    <title type="html"><![CDATA[在CentOS6.3中安装KVM]]></title>
+    <link href="http://ioiioi.github.io/2013/11/08/KVM-installation/"/>
+    <id>http://ioiioi.github.io/2013/11/08/KVM-installation/</id>
+    <published>2013-11-08T07:00:00.000Z</published>
+    <updated>2013-11-08T07:34:51.000Z</updated>
+    <content type="html"><![CDATA[<p>产品实验室服务器之前安装的是xen，kvm作为后起之秀也值得测试一下，于是将其中一台服务器格了，重装CentOS6和kvm。</p>
+<p>服务器硬件：</p>
+<ul>
+<li>2 * Intel Xeon（支持虚拟化）</li>
+<li>4 * broadcom千兆网卡</li>
+<li>2 * SAS 300G硬盘</li>
+</ul>
+<h2>安装</h2>
+<figure class="highlight"><pre><span class="preprocessor"># yum -y groupinstall Virtualization "Virtualization Client" \</span>
+                      <span class="string">"Virtualization Platform"</span> \
+                      <span class="string">"Virtualization Tools"</span>
+<span class="preprocessor"># yum -y install libguestfs-tools</span>
+</pre></figure>
+
+<p>这种安装方式还是不够简洁，可以尝试以下方式：</p>
+<figure class="highlight"><pre><span class="preprocessor"># yum -y install qemu-kvm libvirt python-virtinst bridge-utils</span>
+<span class="preprocessor"># modprobe kvm</span>
+<span class="preprocessor"># modprobe kvm_intel # if AMD, "kvm_amd"</span>
+<span class="preprocessor"># /etc/init.d/libvirtd start</span>
+</pre></figure>
+
+<p>安装完之后需重启相关服务：</p>
+<p><code># service libvirtd status</code></p>
+<p>如果libvirtd没有启动，需要先启动messagebus和avahi-daemon</p>
+<figure class="highlight"><pre><span class="preprocessor"># service messagebus start</span>
+<span class="preprocessor"># service avahi-daemon start</span>
+<span class="preprocessor"># service libvirtd start</span>
+</pre></figure>
+
+<p>至此，KVM的安装就结束了，非常简单。不过在生产环境中还需要考虑网络和存储，相对复杂一些，网络拓扑环境如下：</p>
+<h2>网络</h2>
+<ul>
+<li>eth0/eth1做成bond0，通过br0与业务交换机（huawei S5328-1）相连</li>
+<li>eth2/eth3做成bond1，通过br1与存储交换机（huawei S5328-2）相连</li>
+</ul>
+<p>以下是网络配置</p>
+<h3>配置网卡</h3>
+<figure class="highlight"><pre><span class="preprocessor"># cat ifcfg-eth2</span>
+DEVICE=<span class="string">"eth2"</span>
+TYPE=<span class="string">"Ethernet"</span>
+BOOTPROTO=<span class="string">"none"</span>
+ONBOOT=<span class="string">"yes"</span>
+USERCTL=<span class="string">"no"</span>
+MASTER=<span class="string">"bond1"</span>
+SLAVE=<span class="string">"yes"</span>
+NM_CONTROLLED=<span class="string">"no"</span>
+</pre></figure>
+
+<figure class="highlight"><pre><span class="preprocessor"># cat ifcfg-eth3</span>
+DEVICE=<span class="string">"eth3"</span>
+TYPE=<span class="string">"Ethernet"</span>
+BOOTPROTO=<span class="string">"none"</span>
+ONBOOT=<span class="string">"yes"</span>
+USERCTL=<span class="string">"no"</span>
+MASTER=<span class="string">"bond1"</span>
+SLAVE=<span class="string">"yes"</span>
+NM_CONTROLLED=<span class="string">"no"</span>
+</pre></figure>
+
+<h3>配置bonding</h3>
+<figure class="highlight"><pre><span class="comment"># cat /etc/modprobe.d/bonding.conf </span>
+<span class="title">alias</span> bond1 bonding
+</pre></figure>
+
+<p>假如没有/etc/modprobe.d/bonding.conf，就自己创建一个。</p>
+<figure class="highlight"><pre><span class="comment"># lsmod | grep bonding</span>
+<span class="title">bonding</span>               <span class="number">127060</span>  <span class="number">0</span> 
+8021q                  <span class="number">25058</span>  <span class="number">1</span> bonding
+ipv6                  <span class="number">322541</span>  <span class="number">78</span> bonding,ip6t_REJECT,nf_conntrack_ipv6,nf_defrag_ipv6
+</pre></figure>
+
+<p>假如bonding还没有加载，那就手工加载。</p>
+<figure class="highlight"><pre><span class="comment"># modprobe bonding</span>
+
+[root<span class="property">@RH2285</span>-<span class="number">4</span> network-scripts]<span class="comment"># cat ifcfg-bond1</span>
+DEVICE=bond1
+BRIDGE=br1
+USERCTL=<span class="literal">no</span>
+BOOTPROTO=none
+ONBOOT=<span class="literal">yes</span>
+NM_CONTROLLED=<span class="literal">no</span>
+BONDING_OPTS=<span class="string">"mode=4 miimon=80"</span>
+</pre></figure>
+
+<h3>配置bridge</h3>
+<figure class="highlight"><pre><span class="preprocessor"># cat ifcfg-br1</span>
+DEVICE=<span class="string">"br1"</span>
+TYPE=Bridge
+ONBOOT=yes
+BOOTPROTO=<span class="keyword">static</span>
+IPADDR=<span class="number">192.168</span><span class="number">.55</span><span class="number">.232</span>
+NETMASK=<span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+NETWORK=<span class="number">192.168</span><span class="number">.55</span><span class="number">.0</span>
+NM_CONTROLLED=<span class="string">"no"</span>
+</pre></figure>
+
+<p>最后重启网络：</p>
+<p><code># service network restart</code></p>
+<h3>检查</h3>
+<figure class="highlight"><pre># cat /proc/net/bonding/bond1
+<span class="class">Ethernet</span> <span class="class">Channel</span> <span class="class">Bonding</span> <span class="class">Driver</span>: v3<span class="number">.6</span><span class="number">.0</span> (<span class="class">September</span> <span class="number">26</span>, <span class="number">2009</span>)
+
+<span class="class">Bonding</span> <span class="class">Mode</span>: <span class="class">IEEE</span> <span class="number">802.3</span>ad <span class="class">Dynamic</span> link aggregation
+<span class="class">Transmit</span> <span class="class">Hash</span> <span class="class">Policy</span>: layer2 (<span class="number">0</span>)
+<span class="class">MII</span> <span class="class">Status</span>: up
+<span class="class">MII</span> <span class="class">Polling</span> <span class="class">Interval</span> (ms): <span class="number">80</span>
+<span class="class">Up</span> <span class="class">Delay</span> (ms): <span class="number">0</span>
+<span class="class">Down</span> <span class="class">Delay</span> (ms): <span class="number">0</span>
+
+<span class="number">802.3</span>ad info
+<span class="class">LACP</span> <span class="method">rate:</span> slow
+<span class="class">Aggregator</span> selection policy (ad_select): stable
+<span class="class">Active</span> <span class="class">Aggregator</span> <span class="class">Info</span>:
+        <span class="class">Aggregator</span> <span class="class">ID</span>: <span class="number">3</span>
+        <span class="class">Number</span> of <span class="method">ports:</span> <span class="number">2</span>
+        <span class="class">Actor</span> <span class="class">Key</span>: <span class="number">17</span>
+        <span class="class">Partner</span> <span class="class">Key</span>: <span class="number">305</span>
+        <span class="class">Partner</span> <span class="class">Mac</span> <span class="class">Address</span>: <span class="number">54</span>:<span class="number">89</span>:<span class="number">98</span>:<span class="number">73</span>:<span class="method">bb:</span><span class="number">07</span>
+
+<span class="class">Slave</span> <span class="class">Interface</span>: eth2
+<span class="class">MII</span> <span class="class">Status</span>: up
+<span class="class">Speed</span>: <span class="number">1000</span> <span class="class">Mbps</span>
+<span class="class">Duplex</span>: full
+<span class="class">Link</span> <span class="class">Failure</span> <span class="class">Count</span>: <span class="number">0</span>
+<span class="class">Permanent</span> <span class="class">HW</span> <span class="method">addr:</span> <span class="number">3</span><span class="method">c:</span><span class="method">d9:</span><span class="number">2</span><span class="method">b:</span><span class="method">fd:</span><span class="number">39</span>:f0
+<span class="class">Aggregator</span> <span class="class">ID</span>: <span class="number">3</span>
+<span class="class">Slave</span> queue <span class="class">ID</span>: <span class="number">0</span>
+
+<span class="class">Slave</span> <span class="class">Interface</span>: eth3
+<span class="class">MII</span> <span class="class">Status</span>: up
+<span class="class">Speed</span>: <span class="number">1000</span> <span class="class">Mbps</span>
+<span class="class">Duplex</span>: full
+<span class="class">Link</span> <span class="class">Failure</span> <span class="class">Count</span>: <span class="number">0</span>
+<span class="class">Permanent</span> <span class="class">HW</span> <span class="method">addr:</span> <span class="number">3</span><span class="method">c:</span><span class="method">d9:</span><span class="number">2</span><span class="method">b:</span><span class="method">fd:</span><span class="number">39</span>:f2
+<span class="class">Aggregator</span> <span class="class">ID</span>: <span class="number">3</span>
+<span class="class">Slave</span> queue <span class="class">ID</span>: <span class="number">0</span>
+</pre></figure>
+
+<figure class="highlight"><pre><span class="preprocessor"># ifconfig br1</span>
+<span class="preprocessor"># brctl show</span>
+</pre></figure>
+
+<p>网络配置完成之后，可从其它机器ssh登录br1的ip地址，测试网络是否可正常工作。</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/kvm/" term="kvm"/>
+    <category scheme="http://ioiioi.github.io/categories/kvm/virtualization/" term="virtualization"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[nginx on OpenBSD]]></title>
+    <link href="http://ioiioi.github.io/2013/08/08/nginx-on-OpenBSD/"/>
+    <id>http://ioiioi.github.io/2013/08/08/nginx-on-OpenBSD/</id>
+    <published>2013-08-08T07:00:00.000Z</published>
+    <updated>2013-11-08T02:04:45.000Z</updated>
+    <content type="html"><![CDATA[<blockquote>
+<p><strong>UPDATE</strong><br>原文针对OpenBSD4.9，现在已经是5.2了，有些内容重新做了修订。</p>
+<p>Nginx(“engine x”)是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/SMTP 代理服务器 。Nginx 是由 Igor Sysoev 为俄罗斯访问量第二的Rambler.ru 站点开发的，它已经在该站点运行超过四年多了。Igor 将源代码以类BSD许可证的形式发布。自Nginx 发布四年来，Nginx已经因为它的稳定性、丰富的功能集、 示例配置文件和低系统资源的消耗而闻名了。目前国内各大门户网站已经部署了Nginx，如新浪、网易、腾讯等；国内几个重要的视频分享网站也部署了Nginx，如六房间、酷6等。</p>
+</blockquote>
+<p>经过几年的发展，nginx的市场占有率稳步上升，截至2013年，市场份额占有率为15.52%（netcraft统计），微软的IIS为16.69%。nginx不日即可超越IIS。</p>
+<a id="more"></a>
+
+<h2>反向代理</h2>
+<p>nginx的优势在于处理静态页面，其速度非常恐怖，apache根本不是对手，IIS之流就更别提了。现在，nginx+apache这套组合非常流行，其中nginx放在前端做反向代理，后台使用apache处理动态请求。</p>
+<p>为什么要反向代理？反向代理的作用主要是：</p>
+<ol>
+<li>缓存静态内容，减轻后端动态处理压力；</li>
+<li>减速上传；</li>
+<li>规范请求，减少攻击。</li>
+</ol>
+<p>然而，我之所以应用反向代理的理由很简单，公网IP太少，但是公司内对外发布的网页很多，需要通过域名+后缀的方式来区分不同的互联网应用，所以要用到反向代理。</p>
+<h2>编译</h2>
+<figure class="highlight"><pre><span class="preprocessor"># cd /usr/src</span>
+<span class="preprocessor"># wget http://nginx.org/download/nginx-1.2.2.tar.gz</span>
+</pre></figure>
+
+<p>编译nginx时需用到pcre这个软件包。若尚未安装，<code># pkg_add -i pcre</code>轻松搞定。</p>
+<figure class="highlight"><pre><span class="preprocessor"># tar -xzvf nginx-1.2.2.tar.gz</span>
+<span class="preprocessor"># cd nginx-1.2.2</span>
+</pre></figure>
+
+<figure class="highlight"><pre><span class="comment">#</span> <span class="string">.</span><span class="comment">/configure</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">prefix=/var/www</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">conf</span>-<span class="comment">path=/etc/nginx/nginx</span>.<span class="comment">conf</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">sbin</span>-<span class="comment">path=/usr/sbin/nginx</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">pid</span>-<span class="comment">path=/var/run/nginx</span>.<span class="comment">pid</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">lock</span>-<span class="comment">path=/var/run/nginx</span>.<span class="comment">lock</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">log</span>-<span class="comment">path=logs/access</span>.<span class="comment">log</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">error</span>-<span class="comment">log</span>-<span class="comment">path=logs/error</span>.<span class="comment">log</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">client</span>-<span class="comment">body</span>-<span class="comment">temp</span>-<span class="comment">path=/var/www/cache/client_body_temp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">proxy</span>-<span class="comment">temp</span>-<span class="comment">path=/var/www/cache/proxy_temp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">fastcgi</span>-<span class="comment">temp</span>-<span class="comment">path=/var/www/cache/fastcgi_temp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">scgi</span>-<span class="comment">temp</span>-<span class="comment">path=/var/www/cache/scgi_temp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">uwsgi</span>-<span class="comment">temp</span>-<span class="comment">path=/var/www/cache/uwsgi_temp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">user=www</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">group=www</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_gzip_static_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_ssl_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_stub_status_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">ipv6</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">without</span>-<span class="comment">mail_pop3_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">without</span>-<span class="comment">mail_imap_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">without</span>-<span class="comment">mail_smtp_module</span>
+
+<span class="comment">#</span> <span class="comment">make</span> <span class="comment">&&</span> <span class="comment">make</span> <span class="comment">install
+</pre></figure>
+
+<h2>配置</h2>
+<p>本文仅涉及到反向代理</p>
+<figure class="highlight"><pre><span class="xml"></span><span class="comment"># vim /etc/nginx/nginx.conf</span><span class="xml">
+user  www www;
+worker_processes  </span><span class="number">1</span><span class="xml">;
+error_log  logs/error.log;
+pid        /var/run/nginx.pid;
+events {
+    worker_connections  </span><span class="number">64</span><span class="xml">;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    log_format   main '</span><span class="variable">$request_time</span><span class="xml"> </span><span class="variable">$remote_addr</span><span class="xml"> </span><span class="variable">$cookie_SUV</span><span class="xml"> [</span><span class="variable">$time_local</span><span class="xml">]  </span><span class="variable">$status</span><span class="xml"> '
+                      '"</span><span class="variable">$request</span><span class="xml">" </span><span class="variable">$body_bytes_sent</span><span class="xml"> "</span><span class="variable">$http_referer</span><span class="xml">"';
+    access_log  logs/access.log  main buffer=</span><span class="number">32</span><span class="xml">k;
+    error_log  logs/error.log;
+    sendfile        on;
+    keepalive_timeout  </span><span class="number">65</span><span class="xml">;
+    upstream cmk_syjk {
+      server </span><span class="number">10.8</span><span class="xml"></span><span class="number">.0</span><span class="xml"></span><span class="number">.97</span><span class="xml">;
+    }
+    server {
+        listen </span><span class="number">80</span><span class="xml">;
+        server_name monitor.linuxabc.net.cn;
+        location /syjk {
+            proxy_pass http://cmk_syjk;
+            proxy_redirect off;
+            proxy_set_header Host </span><span class="variable">$host</span><span class="xml">;
+            proxy_set_header X-Real-IP </span><span class="variable">$remote_addr</span><span class="xml">;
+            proxy_set_header X-Forwarded-For </span><span class="variable">$proxy_add_x_forwarded_for</span><span class="xml">;
+            client_max_body_size </span><span class="number">10</span><span class="xml">m;
+            client_body_buffer_size </span><span class="number">128</span><span class="xml">k;
+            proxy_connect_timeout </span><span class="number">90</span><span class="xml">;
+            proxy_send_timeout </span><span class="number">90</span><span class="xml">;
+            proxy_read_timeout </span><span class="number">90</span><span class="xml">;
+            proxy_buffer_size </span><span class="number">4</span><span class="xml">k;
+            proxy_buffers </span><span class="number">4</span><span class="xml"> </span><span class="number">32</span><span class="xml">k;
+            proxy_busy_buffers_size </span><span class="number">64</span><span class="xml">k;
+            proxy_temp_file_write_size </span><span class="number">64</span><span class="xml">k;
+        }
+    }
+｝</span>
+</pre></figure>
+
+<p>用户通过<code>http://monitor.linxuabc.net.cn/syjk/check_mk</code>这个url来访问一个check_mk的网站。</p>
+<p>配置完毕后检查一下配置是否正确：</p>
+<pre><code><span class="preprocessor"># nginx -t</span></code></pre>
+<h2>常用操作</h2>
+<ul>
+<li>测试配置</li>
+</ul>
+<p><code># nginx -t</code></p>
+<ul>
+<li>启动</li>
+</ul>
+<p><code>nginx</code>或<code>/etc/rc.d/nginx start</code></p>
+<ul>
+<li>刷新配置</li>
+</ul>
+<p><code>nginx -s reload</code>或<code>/etc/rc.d/nginx reload</code></p>
+<ul>
+<li>重启</li>
+</ul>
+<figure class="highlight"><pre><span class="keyword">kill</span> -HUP <span class="string">`cat /var/run/nginx.pid`</span>
+</pre></figure>
+
+<ul>
+<li>停止</li>
+</ul>
+<p><code># nginx -s stop</code>或<code>/etc/rc.d/nginx stop</code></p>
+<h2>配置pf</h2>
+<figure class="highlight"><pre>/etc/pf.conf
+$ext_if = <span class="string">"fxp0"</span>
+$ext_if = <span class="string">"fxp1"</span>
+public_ip = <span class="string">"your.public.ip"</span>
+server_1 = <span class="string">"192.168.0.1"</span>
+server_2 = <span class="string">"192.168.0.2"</span>
+<span class="keyword">...</span>
+pass <span class="keyword">in</span> on $ext_if inet proto tcp to $public_ip port <span class="number">80</span> \
+     rdr-to $proxy port <span class="number">80</span>
+pass quick on $lan_if inet proto tcp to $server_1 port <span class="number">80</span>
+pass quick on $lan_if inet proto tcp to $server_2 port <span class="number">80</span>
+<span class="keyword">...</span>
+</pre></figure>
+
+<p>在该配置中，server_1跑的是blog服务，server_2跑的是wiki服务。</p>
+<ul>
+<li><p>当外网用户访问<code>http://wiki.linuxabc.net.cn</code>的时候，nginx捕获到这一请求，由nginx向位于内网的server_1:80发起request，并将内容反馈给用户；</p>
+</li>
+<li><p>当外网用户访问<code>http://blog.linuxabc.net.cn</code>的时候，nginx捕获到这一请求，由nginx向位于内网的server_2:80发起request，并将内容反馈给用户；</p>
+</li>
+</ul>
+<h2>FAQ</h2>
+<ol>
+<li>安装后，如何查看编译时的参数？</li>
+</ol>
+<p><code>nginx -V</code></p>
+<ol>
+<li>出现<code>bad privsep dir permissions on /web_cache (17: File exists)</code>或<code>stat(/nonexistent) failed (2: No such file or directory)</code>是什么意思？</li>
+</ol>
+<p>多半是因为nginx.conf文件中的user option设置错误。</p>
+<h2>参考</h2>
+<ul>
+<li><a href="https://calomel.org/nginx.html" target="_blank">calomel</a></li>
+</ul>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/openbsd/" term="openbsd"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[OpenVPN on OpenBSD]]></title>
+    <link href="http://ioiioi.github.io/2013/04/03/OpenVPN-on-OpenBSD/"/>
+    <id>http://ioiioi.github.io/2013/04/03/OpenVPN-on-OpenBSD/</id>
+    <published>2013-04-03T15:00:00.000Z</published>
+    <updated>2013-04-04T09:21:47.000Z</updated>
+    <content type="html"><![CDATA[<p>2013-04-03添加topology subnet和ccd配置。<br>2013-02-14取消whichsslconf依赖。<br>2012-04-12初稿。<br>{: .info}</p>
+<p>OpenVPN是近年来最火的VPN软件，它部署容易，使用简单，跟IPsec相比，它所缺少的只是积累和口碑，不过没关系，已经有越来越多的公司开始在生产环境中用OpenVPN来取代IPsec。<br><a id="more"></a></p>
+<p>假如真要在生产环境中部署IPsec，建议使用OpenBSD自带的IPsec，它拥有原生的内核级支持，部署和使用也非常简单，而且经过OpenBSD开发人员的精心调教，自然要比Linux要优越得多。<br>{: .info}</p>
+<h2>安装</h2>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add -r openvpn</span>
+<span class="preprocessor"># mkdir -p /etc/openvpn/keys</span>
+<span class="preprocessor"># chmod 700 /etc/openvpn/keys</span>
+<span class="preprocessor"># cp -rf /usr/local/share/example/openvpn/easy-rsa/2.0/ /etc/openvpn/easy-rsa</span>
+</pre></figure>
+
+<h2>创建PKI</h2>
+<ul>
+<li>调整vars</li>
+</ul>
+<figure class="highlight"><pre><span class="comment"># vim /etc/openvpn/easy-rsa/vars</span>
+<span class="keyword">export</span> EASY_RSA=<span class="string">"`pwd`"</span>
+
+<span class="keyword">export</span> OPENSSL=<span class="string">"openssl"</span>
+<span class="keyword">export</span> PKCS11TOOL=<span class="string">"pkcs11-tool"</span>
+<span class="keyword">export</span> GREP=<span class="string">"grep"</span>
+
+<span class="keyword">export</span> KEY_CONFIG=<span class="string">"$EASY_RSA/openssl-1.0.0.cnf"</span>
+<span class="keyword">export</span> KEY_DIR=<span class="string">"$EASY_RSA/keys"</span>
+
+<span class="keyword">export</span> KEY_COUNTRY=<span class="string">"CN"</span>
+<span class="keyword">export</span> KEY_PROVINCE=<span class="string">"HaiNan"</span>
+<span class="keyword">export</span> KEY_CITY=<span class="string">"Haikou"</span>
+<span class="keyword">export</span> KEY_ORG=<span class="string">"linuxabc.net.cn"</span>
+<span class="keyword">export</span> KEY_EMAIL=<span class="string">"admin@linuxabc.net.cn"</span>
+</pre></figure>
+
+<p class="info"><br>在OpenBSD的openvpn ports中，vars默认的KEY_CONFIG为<code>$EASY_RSA/whichopensslcnf $EASY_RSA</code>，需要改成&quot;$EASY_RSA/openssl-1.0.0.cnf&quot;。<br></p>
+
+<ul>
+<li>创建证书</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># cd /etc/openvpn/easy-rsa</span>
+<span class="preprocessor"># . ./vars</span>
+<span class="preprocessor"># ./clean-all</span>
+<span class="preprocessor"># ./build-ca</span>
+<span class="preprocessor"># ./build-dh</span>
+<span class="preprocessor"># ./build-key-server openbsd-2.linuxabc.net.cn</span>
+<span class="preprocessor"># ./build-key admin.linuxabc.net.cn</span>
+</pre></figure>
+
+<ul>
+<li><p>分发证书</p>
+</li>
+<li><p>服务器</p>
+</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># cp openbsd-2.linuxabc.net.cn.crt openbsd-2.linuxabc.net.cn.key /etc/openvpn/keys</span>
+<span class="preprocessor"># cp ca.crt dh1024.pem /etc/openvpn/keys</span>
+</pre></figure>
+
+<ul>
+<li>客户端</li>
+</ul>
+<p>假如客户端是windows操作系统，推荐使用WinSCP这个软件来分发客户端证书</p>
+<h2>配置</h2>
+<p>由于log日志对于排错非常重要，因此需要特别对待</p>
+<figure class="highlight"><pre><span class="preprocessor"># mkdir /var/log/openvpn</span>
+<span class="preprocessor"># touch /var/log/openvpn/openvpn.log</span>
+<span class="preprocessor"># touch /var/log/openvpn/openvpn-status.log</span>
+<span class="preprocessor"># chown -R _openvpn:_openvpn /var/log/openvpn</span>
+</pre></figure>
+
+<h3>基于证书认证方式</h3>
+<ul>
+<li>服务器配置</li>
+</ul>
+<figure class="highlight"><pre># cat /etc/openvpn/server-cert.conf
+<span class="title">proto</span> udp
+<span class="title">port</span> <span class="number">1194</span>
+<span class="title">dev</span> tun0
+;切记，tun后面还有<span class="number">0</span>，要与后面的/etc/hostname.tun0相吻合。
+<span class="title">ca</span> /etc/openvpn/keys/ca.crt
+<span class="title">cert</span> /etc/openvpn/keys/openbsd-<span class="number">1.</span>linuxabc.net.cn.crt
+<span class="title">key</span> /etc/openvpn/keys/openbsd-<span class="number">1.</span>linuxabc.net.cn.key
+<span class="title">dh</span> /etc/openvpn/keys/dh1024.pem
+;上面的路径建议用全路径，否则openvpn启动的时候可能会提示无法打开dh1024.pem
+<span class="title">server</span> <span class="number">10.5</span><span class="number">.1</span><span class="number">.0</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+
+<span class="title">keepalive</span> <span class="number">10</span> <span class="number">120</span>
+<span class="title">comp</span>-lzo
+
+<span class="title">user</span> _openvpn
+<span class="title">group</span> _openvpn
+
+<span class="title">persist</span>-key
+<span class="title">persist</span>-tun
+<span class="title">push</span> <span class="string">"route 192.168.33.0 255.255.255.0"</span>
+<span class="title">push</span> <span class="string">"route 192.168.55.0 255.255.255.0"</span>
+<span class="title">push</span> <span class="string">"route 192.168.66.0 255.255.255.0"</span>
+<span class="title">push</span> <span class="string">"route 192.168.88.0 255.255.255.0"</span>
+
+<span class="title">route</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.0</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="title">route</span> <span class="number">192.168</span><span class="number">.1</span><span class="number">.0</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+#client-config-dir /etc/openvpn/ccd
+<span class="title">status</span> /var/log/openvpn/openvpn-status.log
+<span class="title">log</span> /var/log/openvpn/openvpn.log
+<span class="title">log</span>-append /var/log/openvpn/openvpn.log
+
+<span class="title">verb</span> <span class="number">4</span>
+</pre></figure>
+
+<ul>
+<li>客户端配置</li>
+</ul>
+<figure class="highlight"><pre><span class="title">client</span>
+<span class="title">dev</span> tun
+<span class="title">proto</span> udp
+<span class="title">remote</span> <span class="number">212.232</span><span class="number">.254</span><span class="number">.190</span> <span class="number">1194</span>
+
+<span class="title">resolv</span>-retry infinite
+<span class="title">nobind</span>
+<span class="title">persist</span>-key
+<span class="title">persist</span>-tun
+
+<span class="title">ca</span> ./keys/ca.crt
+<span class="title">cert</span> ./keys/username.dslab.qmcc.crt
+<span class="title">key</span>  ./keys/username.dslab.qmcc.key
+;tls-auth ./keys/ta.key <span class="number">1</span>
+<span class="title">dh</span> ./keys/dh1024.pem
+
+;auth-user-pass
+<span class="title">ns</span>-cert-<span class="typedef"><span class="keyword">type</span> server</span>
+
+<span class="title">comp</span>-lzo
+<span class="title">verb</span> <span class="number">7</span>
+<span class="title">mute</span> <span class="number">10</span>
+</pre></figure>
+
+<ul>
+<li>启动脚本</li>
+</ul>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">cat</span> <span class="comment">/etc/hostname</span>.<span class="comment">tun0</span>
+<span class="comment">up</span>
+<span class="comment">!/usr/local/sbin/openvpn</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">daemon</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">config</span> <span class="comment">/etc/openvpn/server</span>.<span class="comment">conf
+</pre></figure>
+
+<h3>基于用户名/密码认证方式</h3>
+<ul>
+<li>服务端配置</li>
+</ul>
+<figure class="highlight"><pre># cat /etc/openvpn/server-user.conf
+<span class="title">proto</span> udp
+<span class="title">port</span> <span class="number">1194</span>
+<span class="title">dev</span> tun0
+;切记，tun后面还有<span class="number">0</span>，要与后面的/etc/hostname.tun0相吻合。
+<span class="title">ca</span> /etc/openvpn/keys/ca.crt
+<span class="title">cert</span> /etc/openvpn/keys/openbsd-<span class="number">1.</span>linuxabc.net.cn.crt
+<span class="title">key</span> /etc/openvpn/keys/openbsd-<span class="number">1.</span>linuxabc.net.cn.key
+<span class="title">dh</span> /etc/openvpn/keys/dh1024.pem
+;上面的路径建议用全路径，否则openvpn启动的时候可能会提示无法打开dh1024.pem
+<span class="title">server</span> <span class="number">10.11</span><span class="number">.0</span><span class="number">.0</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="title">topology</span> subnet
+; <span class="type">OpenVPN</span> <span class="number">2.1</span>之前不支持subnet模式，仅支持net30，每个客户端的
+; <span class="type">IP</span>地址是<span class="number">30</span>子网掩码，比较浪费<span class="type">IP</span>资源，<span class="type">OpenVPN2</span><span class="number">.1</span>之后开始
+; 支持subnet模式，分配给客户端的<span class="type">IP</span>地址是连续的。
+
+<span class="title">keepalive</span> <span class="number">10</span> <span class="number">120</span>
+<span class="title">comp</span>-lzo
+
+<span class="title">user</span> _openvpn
+<span class="title">group</span> _openvpn
+<span class="title">persist</span>-key
+<span class="title">persist</span>-tun
+
+<span class="title">auth</span>-user-pass-verify /usr/local/libexec/openvpn_bsdauth via-env
+<span class="title">client</span>-to-client
+
+; ccd需要跟client-cert-<span class="keyword">not</span>-required和username-<span class="keyword">as</span>-common-name一起使用方能生效，
+; openvpn会将接入的用户名跟ccd的文件名进行比对，对于采用证书认证方式的用户，
+; 用户名就是certificate的common name，此处采用<span class="type">OpenBSD</span>系统帐号作为认证方式，
+; 因此openvpn需要通过username-<span class="keyword">as</span>-common-name这条指令将<span class="type">OpenBSD</span>系统帐号转变成
+; certificate的common name来看待。从而实现与ccd的文件名适配。
+
+<span class="title">client</span>-config-dir /etc/openvpn/ccd ; 此处要求绝对路径
+<span class="title">client</span>-cert-<span class="keyword">not</span>-required
+<span class="title">username</span>-<span class="keyword">as</span>-common-name
+
+<span class="title">status</span> /var/log/openvpn/openvpn-status.log
+<span class="title">log</span> /var/log/openvpn/openvpn.log
+<span class="title">log</span>-append /var/log/openvpn/openvpn.log
+
+<span class="title">verb</span> <span class="number">4</span>
+<span class="title">mute</span> <span class="number">20</span>
+</pre></figure>
+
+<ul>
+<li>ccd用户文件</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># cat /etc/openvpn/ccd/user1</span>
+ifconfig-<span class="keyword">push</span> <span class="number">10.11</span><span class="number">.0</span><span class="number">.2</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="comment">; topology subnet时，IP地址格式为10.11.0.2 255.255.255.0</span>
+<span class="comment">; topology net30，IP地址格式为10.11.0.2 10.11.0.1</span>
+<span class="keyword">push</span> <span class="string">"route 192.168.33.0 255.255.255.0"</span>
+<span class="keyword">push</span> <span class="string">"route 192.168.55.0 255.255.255.0"</span>
+<span class="keyword">push</span> <span class="string">"route 192.168.66.0 255.255.255.0"</span>
+<span class="keyword">push</span> <span class="string">"route 192.168.88.0 255.255.255.0"</span>
+</pre></figure>
+
+<ul>
+<li>创建openvpn用户</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># echo "/usr/bin/false" &gt;&gt; /etc/shells</span>
+<span class="comment">; openvpn用户不需要登录OpenBSD，所以不必提供shell，但必须在/etc/shells备案，否则无法通过认证。</span>
+
+<span class="preprocessor"># encrypt -p -b 6</span>
+<span class="comment">; 明文密码转密文字符串</span>
+
+<span class="preprocessor"># user add -p '$2a$06$hYBI8r5ylrjtNRXRCCFxweyTNMnLnmTtT2ksXFNQxC.7sjNHnqaM2' -s /usr/bin/false -c "openvpn User" -d /dev/null -g _openvpnusers &lt;vpnuser&gt;</span>
+<span class="comment">;-p 参数后面是用''包裹的密文字符串。</span>
+<span class="comment">;openvpn用户不需要home目录，因此统一指定了一个/dev/null空设备。</span>
+<span class="comment">;openvpn用户必须在`_openvpnusers`这个组中，否则无法通过认证。该组是安装openvpn_bsdauth时自动创建的。</span>
+</pre></figure>
+
+<ul>
+<li>启动脚本</li>
+</ul>
+<figure class="highlight"><pre><span class="comment">/etc/hostname</span>.<span class="comment">tun0</span>
+<span class="comment">up</span>
+<span class="comment">!/usr/local/sbin/openvpn</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">script</span>-<span class="comment">security</span> <span class="comment">3</span> <span class="comment">system</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">daemon</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">config</span> <span class="comment">/etc/openvpn/server</span>.<span class="comment">conf
+</pre></figure>
+
+<p>关于<code>--script-security 3</code>，详见openvpn_bsdauth.8.html[<a href="http://www.wormhole.hu/~ice/openvpn_bsdauth/openvpn_bsdauth.8.html" target="_blank">http://www.wormhole.hu/~ice/openvpn_bsdauth/openvpn_bsdauth.8.html</a>]</p>
+<blockquote>
+<p>For OpenVPN versions 2.1 and up, the ‘script-security‘ directive must be set to (at least) ‘3’ in order for openvpn_bsdauth to receive the password from OpenVPN.</p>
+</blockquote>
+<ul>
+<li>客户端配置</li>
+</ul>
+<figure class="highlight"><pre><span class="title">client</span>
+<span class="title">dev</span> tun
+<span class="title">proto</span> udp
+<span class="title">remote</span> <span class="number">212.238</span><span class="number">.170</span><span class="number">.34</span> <span class="number">1194</span>
+
+<span class="title">resolv</span>-retry infinite
+<span class="title">nobind</span>
+<span class="title">persist</span>-key
+<span class="title">persist</span>-tun
+
+<span class="title">ca</span> ./keys/ca.crt
+
+<span class="title">auth</span>-user-pass
+<span class="title">ns</span>-cert-<span class="typedef"><span class="keyword">type</span> server</span>
+
+<span class="title">comp</span>-lzo
+<span class="title">verb</span> <span class="number">7</span>
+<span class="title">mute</span> <span class="number">10</span>
+</pre></figure>
+
+<h2>进程管理</h2>
+<ul>
+<li>启动</li>
+</ul>
+<figure class="highlight"><pre># sh /etc/net<span class="operator"><span class="keyword">start</span> tun0
+</pre></figure>
+
+<ul>
+<li>停止</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># kill -9 `cat /var/run/openvpn.pid`</span>
+</pre></figure>
+
+<h2>pf设置</h2>
+<p>openbsd的精髓在pf，所以网络服务均需要跟它打交道：</p>
+<figure class="highlight"><pre><span class="xml"></span><span class="variable">$ext_if</span><span class="xml"> = "fxp2"
+table <span class="tag">&lt;<span class="title">vpn_net</span>&gt;</span> const { </span><span class="number">10.5</span><span class="xml"></span><span class="number">.1</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml"> }
+table <span class="tag">&lt;<span class="title">lan_net</span>&gt;</span> const { </span><span class="number">192.168</span><span class="xml"></span><span class="number">.33</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml">, </span><span class="number">192.168</span><span class="xml"></span><span class="number">.55</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml">, \
+						</span><span class="number">192.168</span><span class="xml"></span><span class="number">.66</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml">, </span><span class="number">192.168</span><span class="xml"></span><span class="number">.88</span><span class="xml"></span><span class="number">.0</span><span class="xml">/</span><span class="number">24</span><span class="xml">}
+pass in inet proto udp to </span><span class="variable">$ext_if</span><span class="xml"> port </span><span class="number">1194</span><span class="xml">
+pass inet proto { tcp, udp } from <span class="tag">&lt;<span class="title">vpn_net</span>&gt;</span> to <span class="tag">&lt;<span class="title">lan_net</span>&gt;</span></span>
+</pre></figure>
+
+<h2>排错</h2>
+<ul>
+<li>TLS_ERROR: BIO read tls_read_plaintext error</li>
+</ul>
+<p>出现这种错误提示时，一般是由于服务器和客户机之间的时间差距过大所致，建议使用OpenNTPd定时更新。此外，假如OpenBSD创建ca.crt等证书的时候时间就已经不对，需要将所创建的证书全部删除，更新时间后再重新创建。</p>
+<ul>
+<li>VERIFY ERROR:<br>depth=0, error=unsupported certificate purpose:</li>
+</ul>
+<p>该错误的原因是在创建CA证书的时候，使用了错误的脚本，譬如服务器端证书应该用./build-key-server创建，结果用./build-key创建了。因此会出错。</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/openbsd/" term="openbsd"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[升级OpenBSD]]></title>
+    <link href="http://ioiioi.github.io/2012/12/22/upgrade-openbsd/"/>
+    <id>http://ioiioi.github.io/2012/12/22/upgrade-openbsd/</id>
+    <published>2012-12-22T04:30:00.000Z</published>
+    <updated>2013-02-16T01:56:57.000Z</updated>
+    <content type="html"><![CDATA[<p>我目前的两台防火墙是OpenBSD4.9，需要升级到5.2。由于OpenBSD不支持跨版本升级，因此需要采用4.9-&gt;5.0-&gt;5.1-&gt;5.2这种逐步升级的方式。</p>
+<p>下面步骤是官网推荐的upgrade by install kernel。</p>
+<pre><code><span class="number">1.</span> <span class="preprocessor"># mkdir /backup</span>
+<span class="number">2.</span> <span class="preprocessor"># mv /bsd.rd /backup/bsd.rd.50</span>
+<span class="number">3.</span> <span class="preprocessor"># wget http://ftp.jaist.ac.jp/pub/OpenBSD/5.2/i386/bsd.rd</span>
+<span class="number">4.</span> <span class="preprocessor"># shutdown -r now</span>
+<span class="number">5.</span> 在boot的提示符中输入
+&gt;bsd<span class="variable">.rd</span>
+<span class="number">6.</span> 选择(U)pgrade
+然后选择合适的sets，我只选择了
+bsd<span class="variable">.rd</span>
+bsd
+base<span class="variable">.tgz</span>
+comp52<span class="variable">.tgz</span>
+man52<span class="variable">.tgz</span>
+<span class="number">7.</span> <span class="preprocessor"># wget http://ftp.jaist.ac.jp/pub/OpenBSD/5.2/i386/etc52.tgz</span>
+<span class="number">8.</span> <span class="preprocessor"># sysmerge -x /backup/etc52.tgz</span>
+<span class="number">9.</span> <span class="preprocessor"># 最后是确认所有的配置文件是否正确</span>
+<span class="number">10.</span> <span class="preprocessor"># shutdown -r now</span></code></pre>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/openbsd/" term="openbsd"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[使用iSCSI作为VM的storage backend]]></title>
+    <link href="http://ioiioi.github.io/2012/10/03/use-iscsi-as-vm-storage-backend/"/>
+    <id>http://ioiioi.github.io/2012/10/03/use-iscsi-as-vm-storage-backend/</id>
+    <published>2012-10-03T15:00:00.000Z</published>
+    <updated>2013-02-26T09:37:47.000Z</updated>
+    <content type="html"><![CDATA[<p>iSCSI作为VM的storage backend也很流行，原因是iSCSI协议非常适合于小文件的读写，而且其对硬件设备几乎没有什么要求，只要IP可达即可。</p>
+<p>在本文中，我们仍然以solaris11作为外置存储，不得不说，solaris11实在是太强悍了，ZFS，comstar，nfs都是存储必备的组件模块。</p>
+<h1>iSCSI server</h1>
+<p>iSCSI server安装在solaris11上，solaris11</p>
+<h1>iSCSI client</h1>
+<p>iSCSI client将安装在hypervisor上，本文以CentOS为例。</p>
+<h2>安装iSCSI client</h2>
+<p>[root@DL165-1 ~]# yum install iscsi-initiator-utils</p>
+<h2>配置iSCSI client</h2>
+<figure class="highlight"><pre>[root@DL165-<span class="number">1</span> ~]<span class="comment"># vim /etc/iscsi/iscsid.conf</span>
+<span class="keyword">...</span>
+node.session.auth.username = linuxabc
+node.session.auth.password = <span class="number">123456</span>
+discovery.sendtargets.auth.username = linuxabc
+discovery.sendtargets.auth.password = <span class="number">123456</span>
+<span class="keyword">...</span>
+</pre></figure>
+
+<h2>启动iSCSI服务</h2>
+<figure class="highlight"><pre>[root<span class="variable">@DL165</span>-<span class="number">1</span> ~]<span class="comment"># /etc/init.d/iscsi start</span>
+</pre></figure>
+
+<h2>连接到iSCSI server</h2>
+<figure class="highlight"><pre><span class="title">[</span><span class="comment">root@DL165</span>-<span class="comment">1</span> <span class="comment">~</span>]<span class="comment">#</span> <span class="comment">iscsiadm</span> <span class="literal">-</span><span class="comment">m</span> <span class="comment">discovery</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">sendtargets</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">55</span>.<span class="comment">120</span>
+<span class="title">[</span><span class="comment">root@DL165</span>-<span class="comment">1</span> <span class="comment">~</span>]<span class="comment">#</span> <span class="comment">iscsiadm</span> <span class="literal">-</span><span class="comment">m</span> <span class="comment">node</span> <span class="literal">-</span><span class="comment">T</span> <span class="comment">iqn</span>.<span class="comment">2010</span>-<span class="comment">06</span>.<span class="comment">xen</span>-<span class="comment">sanhead:xen</span>-<span class="comment">alfie</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">login</span>
+<span class="title">[</span><span class="comment">root@DL165</span>-<span class="comment">1</span> <span class="comment">~</span>]<span class="comment">#</span> <span class="comment">/etc/init</span>.<span class="comment">d/iscsi</span> <span class="comment">restart
+</pre></figure>
+
+<p>在xen dom0中执行<code>fdisk -l</code>就会看到系统中多出了一个块设备/dev/sdc，那正是ZFS storage上的iSCSI target。</p>
+<figure class="highlight"><pre>[root@DL165-<span class="number">1</span> ~]<span class="comment"># fdisk -l</span>
+<span class="keyword">...</span>
+Disk /dev/sdc: <span class="number">8589</span> MB, <span class="number">8589934592</span> bytes
+<span class="number">64</span> heads, <span class="number">32</span> sectors/track, <span class="number">8192</span> cylinders
+Units = cylinders of <span class="number">2048</span> * <span class="number">512</span> = <span class="number">1048576</span> bytes
+
+Disk /dev/sdc doesn<span class="string">'t contain a valid partition table
+</pre></figure>
+
+<p>最后在xen dom0机器上把domU配置文件的disk一行改成：</p>
+<figure class="highlight"><pre><span class="setting">disk = <span class="value">[ <span class="string">"phy:/dev/sdc,xvda,w"</span> ]</span></span>
+</pre></figure>
+
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/virtualization/" term="virtualization"/>
+    <category scheme="http://ioiioi.github.io/categories/virtualization/iscsi/" term="iscsi"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[CentOS5.6+xen3.4.3升级至CentOS5.8+xen3.4.4]]></title>
+    <link href="http://ioiioi.github.io/2012/10/02/upgrade-xen-and-centos/"/>
+    <id>http://ioiioi.github.io/2012/10/02/upgrade-xen-and-centos/</id>
+    <published>2012-10-02T15:00:00.000Z</published>
+    <updated>2013-10-30T09:40:42.000Z</updated>
+    <content type="html"><![CDATA[<p>去年使用gitco repos成功地在CentOS5.6上安装了xen 3.4.3，已经稳定地运行了一年。前段时间CentOS和xen都升级了，于是便有了下文。</p>
+<h2>升级CentOS</h2>
+<p>在升级之前为了稳妥起见，先备份相关的配置文件。</p>
+<p>CentOS的升级很简单，就是<code>yum update</code>，然后重启，唯一需要注意的就是重启前需要调整<code>/boot/grub/menu.lst</code>中的启动顺序，因为升级后，CentOS默认的内核启动顺序是新版的kernel。</p>
+<p>验证一下</p>
+<figure class="highlight"><pre>[root<span class="variable">@DL165</span>-<span class="number">2</span> ~]<span class="comment"># cat /etc/redhat-release </span>
+<span class="constant">CentOS</span> release <span class="number">5.8</span> (<span class="constant">Final</span>)
+</pre></figure>
+
+<h2>升级xen</h2>
+<figure class="highlight"><pre>[root<span class="variable">@DL165</span>-<span class="number">2</span> ~]<span class="comment"># mv /etc/yum.repos.d/GITCO-xen3.4.3 backup</span>
+[root<span class="variable">@DL165</span>-<span class="number">2</span> ~]<span class="comment"># wget http://www.gitco.de/xen3.4.4</span>
+[root<span class="variable">@DL165</span>-<span class="number">2</span> ~]<span class="comment"># yum update xen</span>
+</pre></figure>
+
+<p>将从xen3.4.3升级至xen3.4.4，验证一下：</p>
+<figure class="highlight"><pre>[root@<span class="type">DL165</span>-<span class="number">2</span> ~]# xm info
+<span class="title">host</span>                   : <span class="type">DL165</span>-<span class="number">2</span>
+<span class="title">release</span>                : <span class="number">2.6</span><span class="number">.18</span>-<span class="number">308.13</span><span class="number">.1</span>.el5xen
+<span class="title">version</span>                : #<span class="number">1</span> <span class="type">SMP</span> <span class="type">Tue</span> <span class="type">Aug</span> <span class="number">21</span> <span class="number">17</span>:<span class="number">51</span>:<span class="number">21</span> <span class="type">EDT</span> <span class="number">2012</span>
+<span class="title">machine</span>                : x86_64
+<span class="title">nr_cpus</span>                : <span class="number">8</span>
+<span class="title">nr_nodes</span>               : <span class="number">1</span>
+<span class="title">cores_per_socket</span>       : <span class="number">4</span>
+<span class="title">threads_per_core</span>       : <span class="number">1</span>
+<span class="title">cpu_mhz</span>                : <span class="number">2693</span>
+<span class="title">hw_caps</span>                : <span class="number">178</span>bf3ff:efd3fbff:<span class="number">00000000</span>:<span class="number">00000310</span>:<span class="number">00802001</span>:<span class="number">00000000</span>:<span class="number">000037</span>ff:<span class="number">00000000</span>
+<span class="title">virt_caps</span>              : hvm
+<span class="title">total_memory</span>           : <span class="number">8191</span>
+<span class="title">free_memory</span>            : <span class="number">7579</span>
+<span class="title">node_to_cpu</span>            : node0:<span class="number">0</span>-<span class="number">7</span>
+<span class="title">node_to_memory</span>         : node0:<span class="number">7579</span>
+<span class="title">xen_major</span>              : <span class="number">3</span>
+<span class="title">xen_minor</span>              : <span class="number">4</span>
+<span class="title">xen_extra</span>              : <span class="number">.4</span>
+<span class="title">xen_caps</span>               : xen-<span class="number">3.0</span>-x86_64 xen-<span class="number">3.0</span>-x86_32p hvm-<span class="number">3.0</span>-x86_32 hvm-<span class="number">3.0</span>-x86_32p hvm-<span class="number">3.0</span>-x86_64 
+<span class="title">xen_scheduler</span>          : credit
+<span class="title">xen_pagesize</span>           : <span class="number">4096</span>
+<span class="title">platform_params</span>        : virt_start=<span class="number">0xffff800000000000</span>
+<span class="title">xen_changeset</span>          : unavailable
+<span class="title">cc_compiler</span>            : gcc version <span class="number">4.1</span><span class="number">.2</span> <span class="number">20080704</span> (<span class="type">Red</span> <span class="type">Hat</span> <span class="number">4.1</span><span class="number">.2</span>-<span class="number">52</span>)
+<span class="title">cc_compile_by</span>          : root
+<span class="title">cc_compile_domain</span>      : gitco.tld
+<span class="title">cc_compile_date</span>        : <span class="type">Mon</span> <span class="type">Jun</span> <span class="number">25</span> <span class="number">11</span>:<span class="number">29</span>:<span class="number">36</span> <span class="type">CEST</span> <span class="number">2012</span>
+
+<span class="title">xend_config_format</span>     : <span class="number">4</span>
+</pre></figure>
+
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/virtualization/" term="virtualization"/>
+    <category scheme="http://ioiioi.github.io/categories/virtualization/xen/" term="xen"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[深信服M5100S tips]]></title>
+    <link href="http://ioiioi.github.io/2012/07/23/sinfor-tips/"/>
+    <id>http://ioiioi.github.io/2012/07/23/sinfor-tips/</id>
+    <published>2012-07-23T04:30:00.000Z</published>
+    <updated>2013-02-15T14:37:23.000Z</updated>
+    <content type="html"><![CDATA[<p>在某个项目中用到了深信服的M5100-S SSL VPN设备，而网上关于深信服设备的资料非常匮乏，因此我根据平时的积累，整理了一些资料和tips，以飨读者。</p>
+<h2>SNMP</h2>
+<p><strong>community</strong><br>在深信服的设备使用文档中从未提及SNMP，然而实际上是有SNMP这个功能的，只是community不是传统的<code>public</code>，而是<code>sinfors</code>。</p>
+<p><strong>oid</strong></p>
+<figure class="highlight"><pre><span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.3</span><span class="number">.0</span>    <span class="preprocessor"># 设备运行时间（UPTIME），以1/100秒为单位。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.1</span><span class="number">.0</span>    <span class="preprocessor"># 系统描述</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.5</span><span class="number">.0</span>    <span class="preprocessor"># 设备型号</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.4</span><span class="number">.0</span>    <span class="preprocessor"># 联系方式</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.6</span><span class="number">.0</span>    <span class="preprocessor"># 位置</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.0</span>    <span class="preprocessor"># 接口数量</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="variable">.x</span>     <span class="preprocessor"># 接口描述信息（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.10</span><span class="variable">.x</span>    <span class="preprocessor"># 接口接收总流量，以Byte为单位（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.11</span><span class="variable">.x</span>    <span class="preprocessor"># 接口发送总流量，以Byte为单位（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.8</span><span class="variable">.x</span>     <span class="preprocessor"># 接口接口状态（1-up，2-down）（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.5</span><span class="variable">.x</span>     <span class="preprocessor"># 接口速率，以10bps为单位（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.1</span><span class="number">.1</span><span class="number">.0</span>     <span class="preprocessor"># CPU占用率，以百分比为单位。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.1</span><span class="number">.2</span><span class="number">.0</span>     <span class="preprocessor"># 设备类型(如M5000)</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.1</span><span class="number">.3</span><span class="number">.0</span>     <span class="preprocessor"># 剩余内存，free+buffers，以KB为单位。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.0</span>     <span class="preprocessor"># VPN状态("vpn's status. 0 is stopped, 1 is normal, 2 is error" ) DLAN4.x版本因为lmdlan没有跟snmpagent程序通信，因此取不到正确的运行状态，会一直显示为1。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.0</span>     <span class="preprocessor"># VPN连接数，DLAN4.x版本因为lmdlan没有跟snmpagent程序通信，因此取不到正确的连接数，会一直显示为0。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.2</span><span class="number">.3</span><span class="number">.0</span>     <span class="preprocessor"># 软件版本(如M5000-Q-4.0-R1)</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.3</span><span class="number">.1</span><span class="number">.0</span>     <span class="preprocessor"># SSL VPN状态（"ssl's status. 0 is stopped, 1 is normal, 2 is error"）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.3</span><span class="number">.2</span><span class="number">.0</span>     <span class="preprocessor"># SSL VPN连接数（即接入的用户数目）</span>
+</pre></figure>
+
+<p>实际上，在PRTG中，可以通过auto discovery扫描到端口带宽和uptime，至于CPU利用率、MEM剩余量则可以通过手工添加sensor。</p>
+<h2>CLI</h2>
+<p>M5100-S不支持命令行，但是作为一个网络工程师，对非CLI的设备心存反感，想ping一下互联设备，抓个包啥的都不行，好在深信服提供了一个update的工具，勉强可以使用。</p>
+<p>按F10将弹出如下窗口，支持的命令包括</p>
+<ol>
+<li>ifconfig</li>
+<li>netstat -rn</li>
+<li>ping</li>
+</ol>
+<p>从显示结果来看，sinfor的OS应该是在linux上进行裁剪的，因为假如是BSD，网卡名称就应该是fxp或xx等以驱动来命名。<br>既然如此，根据GPL协议，sinfor是否应该开放源代码呢？</p>
+<h2>dlan</h2>
+<p>只要有这个工具，是否意味着任何一台sinfor设备，只要用户不修改原始密码，就可以从公网任意访问xx了呢？那安全性从何谈起。</p>
+<h2>默认端口映射问题</h2>
+<p>M5100-S通过一条互联网专线访问外网，运营商分配给该客户的是112.180.254.33/29网段的IP地址，其中112.180.254.34是M5100-S的接口IP地址。默认情况下，这几个IP地址的443端口全部映射到该接口IP的443端口，也就是说，当客户分别访问这几个IP的443端口时，全部重定向至<a href="https://112.180.254.34。" target="_blank">https://112.180.254.34。</a></p>
+<p>难道，作为一个安全网络设备，不应该将：“非明确通过的即禁止”当作设计的首要原则吗？</p>
+<p>解决的办法：</p>
+<p>除了112.180.254.34这个IP外，明确禁止剩余IP的443端口映射。</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/networking/" term="networking"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[zabbix tips]]></title>
+    <link href="http://ioiioi.github.io/2012/07/15/zabbix-tips/"/>
+    <id>http://ioiioi.github.io/2012/07/15/zabbix-tips/</id>
+    <published>2012-07-15T04:30:00.000Z</published>
+    <updated>2012-07-15T03:39:36.000Z</updated>
+    <content type="html"><![CDATA[<p>graph时间问题</p>
+<p>graph的时间显示比系统时间快了8个小时，可通过以下操作修复：</p>
+<ol>
+<li>调整系统时区</li>
+<li>hwclock —systohc</li>
+<li>调整php.ini时区</li>
+</ol>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[在CentOS中使用Serial console]]></title>
+    <link href="http://ioiioi.github.io/2012/07/15/serial-console-on-centos/"/>
+    <id>http://ioiioi.github.io/2012/07/15/serial-console-on-centos/</id>
+    <published>2012-07-15T04:30:00.000Z</published>
+    <updated>2013-02-15T15:30:09.000Z</updated>
+    <content type="html"><![CDATA[<p>手头上有一台HP ML110服务器，准备拿来当流控设备，安装完CentOS后发现机柜里面没有显示器，还得配置serial console，方便日后维护。</p>
+<p>在网上搜了很多文档，都说国外的文档质量高，可是就serial console这个问题也折腾了我大半天，因此记下来以免忘记。<br><a id="more"></a></p>
+<h2>准备</h2>
+<h3>检查serial口</h3>
+<figure class="highlight"><pre>$ su<span class="operator"><span class="keyword">do</span> dmesg | grep tty
+</pre></figure>
+
+<p>说明服务器仅有一个serial口，其标识符是ttyS0</p>
+<h3>检查CentOS所支持的tty</h3>
+<figure class="highlight"><pre>$ su<span class="operator"><span class="keyword">do</span> ps -ef | grep tty
+</pre></figure>
+
+<h2>配置</h2>
+<p><strong>1. /boot/grub/grub.conf</strong></p>
+<figure class="highlight"><pre><span class="comment">serial</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">speed=115200</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">unit=0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">word=8</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">parity=no</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">stop=1</span>
+<span class="comment">terminal</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">timeout=10</span> <span class="comment">console</span> <span class="comment">serial</span>
+
+<span class="comment">title</span> <span class="comment">CentOS</span> <span class="comment">(2</span>.<span class="comment">6</span>.<span class="comment">18</span>-<span class="comment">128</span>.<span class="comment">1</span>.<span class="comment">10</span>.<span class="comment">el5)</span>
+<span class="comment">	root</span> <span class="comment">(hd0</span>,<span class="comment">0)</span>
+<span class="comment">	kernel</span> <span class="comment">/boot/vmlinuz</span>-<span class="comment">2</span>.<span class="comment">6</span>.<span class="comment">18</span>-<span class="comment">128</span>.<span class="comment">1</span>.<span class="comment">10</span>.<span class="comment">el5</span> <span class="comment">ro</span> <span class="comment">root=LABEL=/</span> <span class="comment">console=</span> <span class="comment">tty1</span> <span class="comment">console=ttyS0</span>,<span class="comment">115200</span>
+<span class="comment">	initrd</span> <span class="comment">/boot/initrd</span>-<span class="comment">2</span>.<span class="comment">6</span>.<span class="comment">18</span>-<span class="comment">128</span>.<span class="comment">1</span>.<span class="comment">10</span>.<span class="comment">el5</span>.<span class="comment">img
+</pre></figure>
+
+<p>—unit=0表示使用COM1。服务器第一个COM口的标识符为COM1，第二为COM2，以此类推。由于HP ML110只有一个COM口，所以选择—unit=0</p>
+<p><strong>2. /etc/inittab</strong></p>
+<p>在末尾加上：</p>
+<figure class="highlight"><pre><span class="symbol">s0:</span><span class="number">2345</span><span class="symbol">:respawn</span><span class="symbol">:/sbin/agetty</span> ttyS<span class="number">0</span> <span class="number">115200</span> linux
+</pre></figure>
+
+<p><strong>3. /etc/securetty</strong></p>
+<p>添加ttyS0</p>
+<figure class="highlight"><pre><span class="variable">$ </span>sudo echo <span class="string">"ttyS0"</span> &gt;&gt; <span class="regexp">/etc/inittab</span>
+</pre></figure>
+
+<p>配置完后需要重启服务器。</p>
+<h2>SecuCRT</h2>
+<p>需要注意的是，Flow Control要选择XON/XOFF，否则在登录界面中，无法在<code>Login：</code>提示符下输入帐号和密码。这是大多数网络文档没有说清楚的。</p>
+<h2>附录：什么是tty</h2>
+<p>pts</p>
+<p>譬如说在screen或tmux中，创建了3个窗口，则每个窗口对应一个pts</p>
+<p>$ sudo ps -ef | grep pts</p>
+<p>echo “hello world” &gt; /etc/pts/3</p>
+<p>会出现press any key xx<br>当在console中press any key时，就在console中<br>当在serial中xx时，…</p>
+]]></content>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[将VMware server迁移到VirtualBox]]></title>
+    <link href="http://ioiioi.github.io/2012/07/04/migrate-from-vmware-server-to-virtualbox/"/>
+    <id>http://ioiioi.github.io/2012/07/04/migrate-from-vmware-server-to-virtualbox/</id>
+    <published>2012-07-04T04:30:00.000Z</published>
+    <updated>2013-02-17T02:29:07.000Z</updated>
+    <content type="html"><![CDATA[<p>VMware GSX是VMware公司于200x年推出的一款企业级虚拟化产品，后来迫于VirtualBox的压力，VMware公司决定将其改名为VMware server，并免费提供给用户使用。2010年，VMware公司发布了臃肿迟缓的2.0版本，用户怨声载道，随后不久VMware公司便宣布终止更新该产品，并劝说用户迁移到VMware player。但是明眼人都知道，VMware公司并不愿意看到这个免费而优秀的产品，继续分流他们的客户，我甚至认为，VMware公司之所以推出错误百出的2.0版本是为了找一个冠冕堂皇的理由，将VMware server给埋了，这样对广大用户也有个交代，这一招实在是太狠了。<br><a id="more"></a></p>
+<p>所以我一直坚守VMware server 1.0.10版本。</p>
+<p>然而时光荏苒，虚拟化技术不断推陈出新，VMware server 1.0已跟不上时代的步伐，特别是VirtualBox被Oracle收购后，得到突飞猛进的发展，版本更新极快，新增了很多企业级特性：</p>
+<ul>
+<li>完全支持命令行管理</li>
+<li>HOST支持多操作系统：windows、Linux、Mac OS X、solaris</li>
+<li>支持iSCSI</li>
+<li>Guest支持SMP</li>
+<li>支持headless模式</li>
+</ul>
+<p>这些都是VMware server所缺乏的，所以，我心动了。于是便有了下面一系列的VirtualBox之旅。</p>
+<ol>
+<li><a href="../blog/how-to-install-virtualbox-on-opensuse">如何在openSUSE中安装最新版VirtualBox</a></li>
+<li><a href="../blog/debian-template-on-virtualbox">如何在virtualbox中安装和克隆Debian VM</a></li>
+<li><a href="../blog/windows-template-on-virtualbox">如何在virtualbox中安装和克隆Windows VM</a></li>
+<li><a href="../blog/how-to-run-virtualbox-with-non-root-user">如何以non root帐号运行VirtualBox</a></li>
+<li><a href="../blog/virtualbox-tips">VirtualBox使用技巧</a></li>
+</ol>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[VirtualBox Host中drop packet错误]]></title>
+    <link href="http://ioiioi.github.io/2012/07/04/drop-packet-error-on-virtualbox-host/"/>
+    <id>http://ioiioi.github.io/2012/07/04/drop-packet-error-on-virtualbox-host/</id>
+    <published>2012-07-04T04:30:00.000Z</published>
+    <updated>2013-09-22T00:38:51.000Z</updated>
+    <content type="html"><![CDATA[<p>前两天，我在VirtualBox的VM中安装了最新版的PRTG，结果发现SNMP traffic sensor的图像有断断续续的现象，同时伴随着异常返回值，这令我非常焦虑，因为cacti就是因为图像经常无缘无故出现异常而被我抛弃的，而PRTG这两年来一直位列我的十大兵器谱头名，可不能辜负了我对它的信任呀。<br><a id="more"></a></p>
+<p>我首先怀疑的是PRTG版本问题，于是将版本降到v9，情况依旧；于是怀疑是HOST的问题，因为VMware server就不能很好地在linux下运行，会不会是VirtualBox对linux也水土不服呢？于是在一台windows server上安装virtualbox，并将VM从linux host迁移过去，情况依旧；傻眼了，最后怀疑是VM的内存不够，于是将VM的内存从512M调整至1024M，情况依旧；就这个问题折腾了整整一个星期，我都快绝望了，难道真的要用VMware player吗？一个只能启动2个VM的玩具。</p>
+<p>我不甘心，偶然间执行了一下dmesg命令，发现以下信息：</p>
+<figure class="highlight"><pre>[<span class="number">36532.020529</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">18098</span> packets
+[<span class="number">46574.932027</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">1311</span> packets
+[<span class="number">110529.489764</span>] vboxnetflt: dropped <span class="number">29</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">232556</span> packets
+[<span class="number">113359.681781</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">541</span> packets
+[<span class="number">114843.976278</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">3242</span> packets
+[<span class="number">115112.476536</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">240</span> packets
+[<span class="number">115961.929767</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">1903</span> packets
+[<span class="number">141494.265267</span>] vboxnetflt: dropped <span class="number">7</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">37227</span> packets
+[<span class="number">190108.804266</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">14733</span> packets
+[<span class="number">447086.452265</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">758971</span> packets
+[<span class="number">2206821.132266</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">7</span> packets
+[<span class="number">2210774.196266</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">55</span> packets
+[<span class="number">2215028.025517</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">0</span> packets
+[<span class="number">2215765.269020</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">33</span> packets
+[<span class="number">2217500.461020</span>] vboxnetflt: dropped <span class="number">0</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">60</span> packets
+[<span class="number">2275024.176770</span>] vboxnetflt: dropped <span class="number">4263077</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">34835798</span> packets
+[<span class="number">2301640.425011</span>] vboxnetflt: dropped <span class="number">38249</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">1232800</span> packets
+[<span class="number">2338510.892516</span>] vboxnetflt: dropped <span class="number">29</span> <span class="keyword">out</span> <span class="keyword">of</span> <span class="number">5852</span> packets
+</pre></figure>
+
+<p>dropped packet可能是导致图像blank的原因，于是拜访google大神，无果，不过我坚信这个信息肯定不是什么好事，应该跟HOST的网络有关。后来我想到这个服务器除了跑VirtualBox之外，还负责netflow export的职责，如下图所示：</p>
+<p>在sw_CORE交换机上做端口镜像，将互联网流量镜像到MOA服务器的eth1。flowexport监听eth1，生成flow record并发送到VM中进行处理。</p>
+<p>也许，这项应用就是罪魁祸首，于是我停用了mirror功能，接着<code>ifconfig eth1 down</code>，故障排除！</p>
+<p>我终于舒了一口气，消除了PRTG的嫌疑，PRTG重回我的十大兵器谱头名。</p>
+<p>2012-10，实际上该修改未能解决问题，virtualbox on linux的网络还是有问题，所以最后还是放弃了virtualbox。<br>{: class=“info” }</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[在CentOS5.6 64bit(VPS)中安装confluence standalone(4.1.5)]]></title>
+    <link href="http://ioiioi.github.io/2012/06/27/how-to-install-confluence-on-centos/"/>
+    <id>http://ioiioi.github.io/2012/06/27/how-to-install-confluence-on-centos/</id>
+    <published>2012-06-27T13:53:00.000Z</published>
+    <updated>2012-06-30T16:51:45.000Z</updated>
+    <content type="html"><![CDATA[<h1>1. 硬件需求</h1>
+<p>20个并发用户的时候，需要2G内存和双CPU</p>
+<h1>2. 软件需求</h1>
+<p><strong>OS</strong></p>
+<ul>
+<li>Linux</li>
+<li>windows</li>
+<li>solaris<a id="more"></a>
+
+</li>
+</ul>
+<p><strong>数据库</strong></p>
+<ul>
+<li>MySQL</li>
+<li>Oracle</li>
+<li>DB2</li>
+<li>postgresql</li>
+<li>Oracle Java development kit</li>
+</ul>
+<h1>3. 安装confluence</h1>
+<h2>3.1、下载 &amp; 解压</h2>
+<figure class="highlight"><pre><span class="preprocessor"># cd /tmp</span>
+<span class="preprocessor"># wget http://www.atlassian.com/software/confluence/downloads/binary/atlassian-confluence-4.1.5.tar.gz</span>
+<span class="preprocessor"># tar -C /usr/local/ -xvzf /tmp/atlassian-confluence-4.1.5.tar.gz</span>
+<span class="preprocessor"># mv atlassian-confluence-4.1.5.tar.gz/ confluence/</span>
+<span class="preprocessor"># chown -R confluence:confluence /usr/local/confluence</span>
+</pre></figure>
+
+<h2>3.2、配置</h2>
+<h3>3.2.1 创建数据文件目录</h3>
+<figure class="highlight"><pre># mkdir /usr/local/confluence-<span class="typedef"><span class="keyword">data</span></span>
+</pre></figure>
+
+<h3>3.2.2 添加confluence帐号</h3>
+<figure class="highlight"><pre><span class="preprocessor"># groupadd confluence</span>
+<span class="preprocessor"># useradd confluence -c "Confluence role account"  -g confluence -d /usr/local/confluence-data</span>
+</pre></figure>
+
+<h3>3.2.2 配置confluence-init.properties</h3>
+<p>路径：<code>/usr/local/confluence/confluence/confluence/WEB-INF/classes/confluence-init.properties</code></p>
+<p>confluence.home=/usr/local/confluence-data</p>
+<pre><code># export JAVA_HOME=<span class="regexp">/usr/</span>java/<span class="keyword">default</span></code></pre>
+<h1>4. 安装MySQL</h1>
+<figure class="highlight"><pre><span class="preprocessor"># yum install mysql-server</span>
+<span class="preprocessor"># /etc/init.d/mysqld start</span>
+<span class="preprocessor"># chkconfig mysqld on</span>
+</pre></figure>
+
+<p>添加MySQL帐号：</p>
+<figure class="highlight"><pre>&gt; <span class="operator"><span class="keyword">create</span> database confluence <span class="keyword">character</span> <span class="keyword">set</span> utf8;</span>
+&gt; <span class="operator"><span class="keyword">grant</span> <span class="keyword">all</span> <span class="keyword">privileges</span> <span class="keyword">on</span> confluence.* <span class="keyword">to</span> confluenceuser@localhost identified <span class="keyword">by</span> <span class="string">'confluenceuser'</span> <span class="keyword">with</span> <span class="keyword">grant</span> <span class="keyword">option</span>;</span>
+&gt; flush privileges;
+&gt; quit
+</pre></figure>
+
+<p>postgresql数据库请参考：<a href="http://library.linode.com/web-applications/wikis/confluence/centos-5" target="_blank">http://library.linode.com/web-applications/wikis/confluence/centos-5</a></p>
+<h1>5. 安装Java Developmentkit</h1>
+<p>访问Oracle Java download center，获取java 6 JDK for linux（rpm.bin版本）的链接</p>
+<figure class="highlight"><pre><span class="preprocessor"># wget [download link]</span>
+<span class="preprocessor"># rpm -ivh jdk-6.rpm</span>
+</pre></figure>
+
+<h1>6. 启动</h1>
+<figure class="highlight"><pre><span class="preprocessor"># cd /usr/local/confluence/confluence/bin</span>
+<span class="preprocessor"># ./start-confluence.sh</span>
+</pre></figure>
+
+<h1>7. 检测</h1>
+<figure class="highlight"><pre><span class="comment"># netstat -an | grep 8090</span>
+<span class="title">tcp</span>        <span class="number">0</span>      <span class="number">0</span> <span class="number">0.0.0.0:8090</span>                <span class="number">0.0.0.0</span>:*                   LISTEN
+<span class="comment"># lsof -i | grep 8090</span>
+java       <span class="number">9306</span> confluence   27u  IPv4  <span class="number">26469</span>       TCP *:<span class="number">8090</span> (LISTEN)
+</pre></figure>
+
+<p>最后就可以用浏览器登录<code>http://your.ip:8090</code>进行配置了。</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/confluence/" term="confluence"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[在H3C S5500中抓包]]></title>
+    <link href="http://ioiioi.github.io/2012/06/27/packet-capture-on-h3c-devices/"/>
+    <id>http://ioiioi.github.io/2012/06/27/packet-capture-on-h3c-devices/</id>
+    <published>2012-06-27T13:30:00.000Z</published>
+    <updated>2012-07-01T03:32:17.000Z</updated>
+    <content type="html"><![CDATA[<p>网络设备大多没有提供正儿八经的抓包工具，一般都建议通过端口镜像方式，将可疑端口的流量倾泻到监控端口，由PC来完成抓包动作。</p>
+<p>然而，这种方式并不适用于远程维护的情况，网络工程师更倾向于能在交换机上看见流经的数据包。那如何在H3C S5500上抓包呢，可以采用曲线救国的办法：利用ACL的统计功能。<br><a id="more"></a></p>
+<figure class="highlight"><pre>[sw_SERVER]dis acl <span class="number">3001</span>
+Advanced ACL  <span class="number">3001</span>, named DebugACL, <span class="number">3</span> rules,
+<span class="string">"debugging acl"</span>
+Statistics <span class="keyword">is</span> enabled
+ACL<span class="attribute">'s</span> step <span class="keyword">is</span> <span class="number">5</span>
+ rule <span class="number">10</span> permit icmp source <span class="number">10.0</span><span class="number">.1</span><span class="number">.0</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.255</span> destination <span class="number">10.168</span><span class="number">.2</span><span class="number">.0</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.255</span>
+ rule <span class="number">20</span> permit tcp destination <span class="number">10.168</span><span class="number">.2</span><span class="number">.0</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.255</span> destination-<span class="keyword">port</span> eq www (<span class="number">5</span> times matched)
+ rule <span class="number">100</span> permit ip (<span class="number">35</span> times matched)
+</pre></figure>
+
+<p>rule20和rule100末尾包含了命中改rule的次数。每一个数据包经过ACL的时候，假如命中某一条rule，该rule的matched time就会+1，所以只要rule写得足够精确、并应用到恰当的端口上，就可以被用来当作抓包工具。</p>
+<p>这里有个小技巧：<br><code>rule 100 permit ip</code>，该rule允许所有的数据包通过，这是为了避免影响正常的业务。</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/network/" term="network"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[VirtualBox的使用技巧]]></title>
+    <link href="http://ioiioi.github.io/2012/06/10/virtualbox-tips/"/>
+    <id>http://ioiioi.github.io/2012/06/10/virtualbox-tips/</id>
+    <published>2012-06-10T04:30:00.000Z</published>
+    <updated>2012-07-15T05:28:33.000Z</updated>
+    <content type="html"><![CDATA[<p>VirtualBox命令行用起来很方便，下面是一些常用的功能，记录下来以免忘记。</p>
+<h2>1. sharedfolder</h2>
+<p>随着VMs的增多，迫切需要一个“共享文件夹”</p>
+<p><strong>HOST</strong></p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">mkdir</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">/home/sharedfolder/linux</span>
+<span class="comment">#</span> <span class="comment">mkdir</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">/home/sharedfolder/windows</span>
+<span class="comment">#</span> <span class="comment">chown</span> <span class="literal">-</span><span class="comment">R</span> <span class="comment">nobody:nogroup</span> <span class="comment">/home/sharedfolder</span>
+<span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">sharedfolder</span> <span class="comment">add</span> &lt;<span class="comment">vm1</span>&gt; <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"sharedfolder"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">hostpath</span> <span class="comment">"/home/sharedfolder"</span>
+<span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">sharedfolder</span> <span class="comment">add</span> &lt;<span class="comment">vm2</span>&gt; <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"sharedfolder"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">hostpath</span> <span class="comment">"/home/sharedfolder"
+</pre></figure>
+
+<a id="more"></a>
+
+<p>最后接着将公共文件放到sharedfolder中。<br><a id="more"></a></p>
+<p><strong>Linux Guest</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># mkdir /mnt/sharedfolder</span>
+<span class="preprocessor"># mount -t vboxsf sharedfolder /mnt/sharedfolder</span>
+</pre></figure>
+
+<p>注意，文件类型是vboxsf，不是vboxfs，而且需要root帐号才能mount。<br>{: class=“warning”}</p>
+<p><strong>Windows Guest</strong></p>
+<figure class="highlight"><pre>C:<span class="command">\net</span> use s: <span class="command">\\</span>vboxsvr<span class="command">\sharedfolder</span>
+</pre></figure>
+
+<p>该命令将HOST中的“共享文件夹”映射成本地的“驱动器s”。</p>
+<p><strong>TroubleShooting</strong></p>
+<ul>
+<li>错误1：</li>
+</ul>
+<p>现象：The machine &#39;<vm name>&#39; is already locked for a session (or being unlocked)</p>
+<p>原因：vm处于运行状态，需先将该vm关机后再执行该操作。</p>
+<h2>2. 自启动VM</h2>
+<p>待续</p>
+<h2>3. memory balloon</h2>
+<p>待续</p>
+<h2>4. VM管理</h2>
+<p><strong>4.1 正确的查看VBox进程</strong></p>
+<p>在root中，<code>vboxmanage list runningvms</code>并不能看到non root帐号所运行的VMs，所以不要贸然地对VMs进行操作，应该用</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">ps</span> <span class="comment">aux</span> <span class="comment">|</span> <span class="comment">grep</span> <span class="comment">VBox</span>
+<span class="comment">chenr</span>    <span class="comment">13605</span>  <span class="comment">0</span>.<span class="comment">6</span>  <span class="comment">3</span>.<span class="comment">8</span> <span class="comment">193768</span> <span class="comment">157236</span> <span class="comment">pts/5</span>   <span class="comment">Sl</span>   <span class="comment">12:31</span>   <span class="comment">1:14</span> <span class="comment">/usr/lib/virtualbox/VBoxHeadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">netmgmt</span>-<span class="comment">deb6</span> <span class="literal">-</span><span class="comment">vrde=off</span>
+<span class="comment">chenr</span>    <span class="comment">13618</span>  <span class="comment">0</span>.<span class="comment">0</span>  <span class="comment">0</span>.<span class="comment">0</span>  <span class="comment">12848</span>  <span class="comment">3864</span> <span class="comment">?</span>        <span class="comment">S</span>    <span class="comment">12:31</span>   <span class="comment">0:01</span> <span class="comment">/usr/lib/virtualbox/VBoxXPCOMIPCD</span>
+<span class="comment">chenr</span>    <span class="comment">13623</span>  <span class="comment">0</span>.<span class="comment">0</span>  <span class="comment">0</span>.<span class="comment">1</span>  <span class="comment">26416</span>  <span class="comment">8112</span> <span class="comment">?</span>        <span class="comment">Sl</span>   <span class="comment">12:31</span>   <span class="comment">0:03</span> <span class="comment">/usr/lib/virtualbox/VBoxSVC</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">auto</span>-<span class="comment">shutdown</span>
+<span class="comment">chenr</span>    <span class="comment">15770</span>  <span class="comment">1</span>.<span class="comment">9</span>  <span class="comment">3</span>.<span class="comment">7</span> <span class="comment">606472</span> <span class="comment">152532</span> <span class="comment">pts/5</span>   <span class="comment">Sl</span>   <span class="comment">15:24</span>   <span class="comment">0:35</span> <span class="comment">/usr/lib/virtualbox/VBoxHeadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">win2k3</span>-<span class="comment">template</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">vrde=off
+</pre></figure>
+
+<p>进行确认</p>
+<p>当一个VM关机后，vboxheadless进程也会自动终止。<br>{: class=“info” }</p>
+<h2>5. snapshot</h2>
+<p><strong>5.1 创建快照</strong></p>
+<p>在4.1版本中，online snapshot有bug，解决办法是先“暂停”VM，再创快照。</p>
+<p>1、暂停虚拟机</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> controlvm <span class="string">"centos_5.6_64"</span> pause</code></pre>
+<p>2、快照</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> snapshot <span class="string">"centos_5.6_64"</span> take <span class="string">"after_install_office2011"</span></code></pre>
+<p>3、继续使用虚拟机</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> controlvm <span class="string">"centos_5.6_64"</span> resume</code></pre>
+<p><strong>5.2 恢复快照</strong></p>
+<p>1、列出所有snapshot</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> showvminfo <span class="string">"centos_5.6_64"</span></code></pre>
+<p>2、中止虚拟机</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> controlvm <span class="string">"centos_5.6_64"</span> poweroff</code></pre>
+<p>3、恢复到某个snapshot</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> snapshot <span class="string">"centos_5.6_64"</span> restore ee927385-<span class="number">5306</span>-<span class="number">4</span>efe-<span class="number">92</span>bb-<span class="number">92</span>b8279a6f37</code></pre>
+<h2>6. vmdk to vdi</h2>
+<p>qemu-img convert /path/to/original.vmdk converted.bin<br>VBoxManage convertdd converted.bin converted.vdi</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[ROS中的几个调试工具]]></title>
+    <link href="http://ioiioi.github.io/2012/06/09/some-troubleshooting-tools-on-ros/"/>
+    <id>http://ioiioi.github.io/2012/06/09/some-troubleshooting-tools-on-ros/</id>
+    <published>2012-06-09T03:30:00.000Z</published>
+    <updated>2013-09-22T00:38:49.000Z</updated>
+    <content type="html"><![CDATA[<p>ROS的几个有用的测试工具</p>
+<p>1、ping</p>
+<ul>
+<li>语法：ping <address> option</li>
+<li>例子：ping 8.8.8.8 src-address=10.10.10.254</li>
+<li>说明：src-address这个选项有bug，icmp request包头的源地址仍然使用接口地址，而非10.10.10.254</li>
+</ul>
+<p>2、telnet</p>
+<ul>
+<li>语法：telnet <address> port</li>
+<li>例子：telnet 10.168.1.9 80</li>
+</ul>
+<p>3、tcpdump</p>
+<p>没有找到tcpdump，用什么来捕获数据包呢？原来ROS提供了一个<a href="http://wiki.mikrotik.com/wiki/Manual:Tools/Packet_Sniffer" target="_blank">packet sniffer</a>的工具，只是用起来没有tcpdump那么方便，搞不懂源于linux的ROS为何不用tcpdump这个正统的排错工具。</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/RouterOS/" term="RouterOS"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[网络设备管理 - rancid]]></title>
+    <link href="http://ioiioi.github.io/2012/06/09/how-to-setup-rancid-on-debian/"/>
+    <id>http://ioiioi.github.io/2012/06/09/how-to-setup-rancid-on-debian/</id>
+    <published>2012-06-09T03:30:00.000Z</published>
+    <updated>2013-09-22T00:38:33.000Z</updated>
+    <content type="html"><![CDATA[<p>Rancid的全称是Really Awesome New Cisco ConfIg Differ，顾名思义，该软件的初衷是为了管理cisco设备，然而由于它非常实用，目前已经被扩展到支持多达xx种网络设备，诸如常见的dell，hp，juniper,foundry,redback等，当然，国内常见的h3c也不在话下。<br>It‘s not that the name is not being recognized, it’s that the scripts it&#39;s running have errors in the first line which produce &quot;</p>
+<p>“No such file or directory”<br>Lookup list of groups</p>
+<p>For each device in each list of groups<br>• Connect to the equipment (telnet, ssh, …)<br>• Run ”show” commands – config, inventory, …<br>• Collect, filter/format data<br>• Retrieve the resulting config files<br>• CVS check-in the changes<br>• Generate a diff from the previous version<br>• E-mail the diff to a mail address (individual or group)</p>
+<h1>rancid</h1>
+<p>rancid的工作原理</p>
+<h2>安装</h2>
+<pre><code><span class="preprocessor"># aptitude install rancid-core rancid rancid-utils</span></code></pre>
+<h2>Rancid配置</h2>
+<p>/etc/rancid/rancid.conf</p>
+<figure class="highlight"><pre><span class="setting">CVSROOT=<span class="value">$BASEDIR/SVN; export CVSROOT</span></span>
+<span class="setting">RCSSYS=<span class="value">svn; export RCSSYS</span></span>
+<span class="setting">LIST_OF_GROUPS=<span class="value">”access dist core”</span></span>
+</pre></figure>
+
+<ol>
+<li>rancid支持CVS和SVN这两种版本管理工具，本文选择了SVN，因为CVS太古老了。</li>
+<li>根据cisco的定义，一个大型的网络规划应该分成三层，分别是access、distribution和core，因此我们也创建三个组：access、dist、core</li>
+</ol>
+<p>配置设备</p>
+<p>cd /var/lib/rancid/<br>mkdir access<br>mkdir dist<br>mkdir core<br>touch access/router.db<br>touch dist/router.db<br>touch core/router.db</p>
+<p>接着往router.db里面填内容：</p>
+<figure class="highlight"><pre><span class="comment"># vim access/router.db</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">1</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_A</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">2</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_B</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">3</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_C</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">4</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_D</span>
+...
+</pre></figure>
+
+<p>依次创建dist/router.db和core/router.db</p>
+<figure class="highlight"><pre># vim .cloginrc
+add user * <span class="xml"><span class="tag">&lt;<span class="title">username</span>&gt;</span>
+add password * <span class="tag">&lt;<span class="title">password</span>&gt;</span>
+add method * telnet</span>
+</pre></figure>
+
+<h2>H3C脚本</h2>
+<p>H3C并不在rancid的官方支持之列，不过好在有热心的网友Jethro Binks制作了<a href="http://sites.google.com/site/jrbinks/code/rancid/h3c" target="_blank">h3c的脚本</a></p>
+<p>H3C的OS叫Comware，有3和5这两个系列，常见的S3100，S3600，S5600，S5800等均能正常使用。以下是经过测试的型号列表：</p>
+<ol>
+<li>H3C S3100 (Comware 3)</li>
+<li>H3C S5600 (Comware 3)</li>
+<li>H3C S7506 (Comware 5)</li>
+<li>H3C S7906E (Comware 5)</li>
+<li>H3C S5820X (Comware 5)</li>
+<li>H3C S5800 (Comware 5)</li>
+<li>H3C S3610 (Comware 5)</li>
+<li>H3C MSR30-60 (Comware 5)</li>
+</ol>
+<p>Jethro Binks的脚本并不适合于Debian,需要做一点小修改：</p>
+<p><strong>h3clogin:</strong></p>
+<p>将</p>
+<pre><code><span class="shebang">#! /usr/local/bin/expect --</span></code></pre>
+<p>改成</p>
+<pre><code><span class="shebang">#! /usr/bin/expect --</span></code></pre>
+<p><strong>h3crancid:</strong></p>
+<p>将</p>
+<pre><code><span class="shebang">#! /usr/bin/perl5</span></code></pre>
+<p>改成</p>
+<pre><code><span class="shebang">#! /usr/bin/perl</span></code></pre>
+<p>接着将它们拷贝到<code>/usr/lib/rancid/bin</code>中，同时赋予<code>+x</code>的属性。</p>
+<pre><code><span class="preprocessor"># cp h3clogin h3crancid /usr/lib/rancid/bin</span>
+<span class="preprocessor"># chmod +x h3crancid h3clogin</span></code></pre>
+<h2>H3C设备配置</h2>
+<p>rancid的脚本将使用perl+expect来登录H3C设备，并执行一些display命令来获取设备信息，虽然然而所以安全性需要着重考虑，直接给完整的特权账号肯定不合适，最好创建一个单独的ranciduser，并且仅分配level1权限：</p>
+<p>local-user ranciduser<br>authorization-attribute level 1</p>
+<p>看到这，有些读者不禁倒吸一口凉气：糟糕，手头上管理着几十台设备，难不成我要逐台登录和创建几十个相同的帐号？别急，我们完全可以利用clogin/h3clogin来自动完成这个任务。</p>
+<figure class="highlight"><pre># vim <span class="operator"><span class="keyword">create</span>.rancid.account
+sys
+<span class="keyword">local</span>-<span class="keyword">user</span> rancid
+<span class="keyword">authorization</span>-attribute <span class="keyword">level</span> <span class="number">1</span>
+quit
+save
+</pre></figure>
+
+<p>h3clogin -x /path/to/commands.file <device-ip></p>
+<p>最后测试一下</p>
+<pre><code># sudo -u rancid -H /usr/lib/rancid/h3clogin <span class="tag">&lt;<span class="title">H3C-device-ip</span>&gt;</span> FIXME</code></pre>
+<h2>配置变更</h2>
+<h3>硬件配置变更</h3>
+<h3>软件配置变更</h3>
+<h1>版本管理工具</h1>
+<p>rancid利用版本管理工具对配置变更进行管理，这是一个聪明而省力的做法，unix哲学就是帅。rancid支持CVS和SVN这两个版本管理工具，本文选择的是SVN，因为CVS太古老了。</p>
+<h2>安装svn</h2>
+<pre><code><span class="preprocessor"># aptitude install svn</span></code></pre>
+<h2>整合svn</h2>
+<p>cd /var/lib/rancid/<br>svnadmin create configs<br>svn mkdir file:///var/lib/rancid/configs/access -m “created folder”<br>svn mkdir file:///var/lib/rancid/configs/dist -m “created folder”<br>svn mkdir file:///var/lib/rancid/configs/core -m “created folder”<br>svn co file:///var/lib/rancid/configs/access ./access/<br>svn co file:///var/lib/rancid/configs/dist ./dist/<br>svn co file:///var/lib/rancid/configs/core ./core/</p>
+<p>chown -R rancid:rancid /var/lib/rancid/<br>chmod 0600 /var/lib/rancid/.cloginrc</p>
+<h1>sudo -u rancid -H /usr/lib/rancid/bin/rancid-run</h1>
+<p>svn mkdir access/configs<br>svn mkdir dist/configs<br>svn mkdir core/configs<br>svn add access/<em><br>svn add dist/</em><br>svn add core/*<br>svn commit -m “added files” access/<br>svn commit -m “added files” dist/<br>svn commit -m “added files” core/</p>
+<h1>配置变更提醒</h1>
+<p>当rancid检测到变更时，<code>control_rancid</code>组件利用sendmail将变更信息通过邮件发送给管理员。对于debian来说，我们将使用默认的MTA exim4来完成这项工作。</p>
+<h2>exim4的安装和配置</h2>
+<p>详见《<a href="">如何利用exim4通过gmail发送邮件</a>》</p>
+<h2>/etc/aliases</h2>
+<figure class="highlight"><pre><span class="comment"># vim /etc/aliases</span>
+<span class="keyword">...</span>
+rancid-&lt;group-name&gt; : mail-address@domain.name
+rancid-adimin-&lt;group-name&gt; : mail-address@domain.name
+<span class="keyword">...</span>
+<span class="comment"># newaliases</span>
+<span class="comment"># /etc/init.d/exim4 restart</span>
+</pre></figure>
+
+<p>当配置变更时，邮件将发送给rancid-<group-name>，当有错误信息时，邮件将发送给rancid-admin-<group-name>。</p>
+<p>至此完成了配置变更的邮件提醒功能。</p>
+<h1>查看变更历史记录</h1>
+<h2>viewvc安装</h2>
+<h2>viewvc配置</h2>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/debian/" term="debian"/>
+    <category scheme="http://ioiioi.github.io/categories/debian/network/" term="network"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[如何在debian中安装和配置tftpd]]></title>
+    <link href="http://ioiioi.github.io/2012/06/07/how-to-setup-tftpd-on-debian/"/>
+    <id>http://ioiioi.github.io/2012/06/07/how-to-setup-tftpd-on-debian/</id>
+    <published>2012-06-07T15:30:00.000Z</published>
+    <updated>2012-06-30T12:20:07.000Z</updated>
+    <content type="html"><![CDATA[<p>tftp服务类似FTP服务，但它短小精干，仅适合于小文件的传输，所以大多数网络设备都选择tftp作为配置文件备份、firmware升级等操作的默认传输方式。<br><a id="more"></a></p>
+<p>tftp采用的是C/S架构，由服务端和客户端组成，其中网络设备就是客户端。</p>
+<h1>1. tftp服务端</h1>
+<p>tftp服务端有多个选择，debian的官方文档推荐的是tftpd-hpa，那我们就用它吧。</p>
+<pre><code><span class="preprocessor"># aptitude install tftpd-hpa</span></code></pre>
+<h2>1.1 启动方式</h2>
+<p>有两种启动方式：</p>
+<ol>
+<li><p>daemon</p>
+<p> 这种方式适用于使用频率高的场景，不论是否有tftp客户端连接，tftpd进程都将常驻内存，一直监听<code>69</code>端口，这种方式的优点是响应迅速；</p>
+</li>
+<li><p>xinetd</p>
+<p> 该方式适用于偶尔使用的场景，由xinetd监听<code>69</code>端口，tftpd进程处于休眠状态，只有当tftp客户端尝试连接<code>69</code>端口的时候，才由xinetd唤醒tftpd进程，这种方式比较节省资源，并且安全性高，当然响应速度就稍慢一些；当一段时间内没有tftp客户端活动，xinetd便会终止tftpd进程。</p>
+</li>
+</ol>
+<p>下面是xinetd方式的一个完整历程：</p>
+<p>xinetd监听<code>69</code>端口</p>
+<figure class="highlight"><pre>root<span class="variable">@netmgmt</span>-deb6:<span class="regexp">/etc/xinetd</span>.d<span class="comment"># lsof -i -P | grep 69</span>
+xinetd  <span class="number">1720</span>  root    <span class="number">5</span>u  IPv4   <span class="number">7516</span>      0t<span class="number">0</span>  UDP <span class="variable">*:</span><span class="number">69</span>
+</pre></figure>
+
+<p>当tftp客户端发起一个连接，准备上传文件时，xinet会激活tftpd进程进行监听</p>
+<figure class="highlight"><pre>root<span class="variable">@netmgmt</span>-deb6:<span class="regexp">/etc/xinetd</span>.d<span class="comment"># lsof -i -P | grep 69</span>
+xinetd   <span class="number">1720</span>  root    <span class="number">5</span>u  IPv4   <span class="number">7516</span>      0t<span class="number">0</span>  UDP <span class="variable">*:</span><span class="number">69</span>
+in.tftpd <span class="number">1747</span>  root    0u  IPv4   <span class="number">7516</span>      0t<span class="number">0</span>  UDP <span class="variable">*:</span><span class="number">69</span>
+</pre></figure>
+
+<p>过一段时间后，xinetd发现没有tftp客户端的活动，则终止tftpd进程</p>
+<figure class="highlight"><pre>root<span class="variable">@netmgmt</span>-deb6:<span class="regexp">/etc/xinetd</span>.d<span class="comment"># lsof -i -P | grep 69</span>
+xinetd  <span class="number">1720</span>  root    <span class="number">5</span>u  IPv4   <span class="number">7516</span>      0t<span class="number">0</span>  UDP <span class="variable">*:</span><span class="number">69</span>
+</pre></figure>
+
+<p>建议选择使用xinetd方式启用tftpd。</p>
+<h2>1.2 配置（xinetd方式）</h2>
+<p>在Debian中，tftpd-hpa默认以daemon方式启动，所以需要先禁用该特性：</p>
+<figure class="highlight"><pre><span class="comment"># vim /etc/default/tftp-hpa</span>
+<span class="keyword">...</span>
+RUN_DAEMON=<span class="string">"no"</span>
+<span class="keyword">...</span>
+</pre></figure>
+
+<p>接着添加/etc/xinetd.d/tftpd</p>
+<figure class="highlight"><pre># vim /etc/xinetd.d/tftpd
+<span class="title">service</span> tftp
+{
+<span class="title">protocol</span>        = udp
+<span class="title">socket_type</span>     = dgram
+<span class="title">wait</span>            = yes
+<span class="title">user</span>            = root
+<span class="title">server</span>          = /usr/sbin/<span class="keyword">in</span>.tftpd
+<span class="title">server_args</span>     = -c -s /srv/tftp
+<span class="title">disable</span>         = no
+}
+</pre></figure>
+
+<p>然后修改/srv/tftp的属性</p>
+<figure class="highlight"><pre><span class="preprocessor"># chown nobody:nogroup /srv/tftp</span>
+<span class="preprocessor"># chmod 755 /srv/tftp</span>
+</pre></figure>
+
+<p>/srv/tftp是tftp-hpa默认目录，为了方便起见，我放大了该目录的读写权限，读者可以根据自己的情况自行修改</p>
+<p>最后重启xinetd：<code>/etc/init.d/xinetd restart</code></p>
+<p>至此，完成了tftpd服务端的安装和配置。有了服务端，接下来安装客户端方便调试。</p>
+<h1>2. tftp客户端</h1>
+<pre><code><span class="preprocessor"># aptitude install tftp</span></code></pre>
+<p>测试一下：</p>
+<figure class="highlight"><pre>netmgmt-deb6:/home<span class="comment"># touch foo</span>
+netmgmt-deb6:/home<span class="comment"># touch /srv/tftp/bar</span>
+netmgmt-deb6:/home<span class="comment"># tftp localhost</span>
+tftp&gt; <span class="keyword">put</span> foo <span class="comment"># 上传</span>
+tftp&gt; <span class="keyword">get</span> bar <span class="comment"># 下载</span>
+</pre></figure>
+
+<h1>3. troubleshooting</h1>
+<p>1、H3C 3600上传文件失败</p>
+<figure class="highlight"><pre>sw_CORE&gt;tftp config xx xx
+
+  <span class="keyword">File</span> will be transferred <span class="keyword">in</span> binary mode.
+  Sending <span class="keyword">file</span> <span class="keyword">to</span> remote tftp server. Please <span class="keyword">wait</span>...
+  Can<span class="attribute">'t</span> find source <span class="keyword">file</span> .
+</pre></figure>
+
+<p>原因：tftpd进程尚未启动。</p>
+<p>2、tftp客户端上传文件时出现<code>Transfer timed out</code></p>
+<p>原因：tftpd进程尚未启动。</p>
+<p>3、tftpd服务起不来</p>
+<p>原因：/etc/xinetd.d/tftpd中的语法有误</p>
+<figure class="highlight"><pre><span class="comment"># cat /etc/xinetd.d/tftpd</span>
+service tftpd
+{
+<span class="keyword">...</span>
+}
+</pre></figure>
+
+<p>将<code>service tftp</code>误写成<code>service tftpd</code>，导致in.tftpd无法正常启动</p>
+<h1>4. TIPS</h1>
+<p>1、当xinetd停掉的时候，in.tftpd进程不会自动停止，还需要<code>/etc/init.d/tftpd stop</code></p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/debian/" term="debian"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[如何以non root帐号运行VirtualBox]]></title>
+    <link href="http://ioiioi.github.io/2012/06/07/how-to-run-virtualbox-with-non-root-user/"/>
+    <id>http://ioiioi.github.io/2012/06/07/how-to-run-virtualbox-with-non-root-user/</id>
+    <published>2012-06-07T15:30:00.000Z</published>
+    <updated>2012-06-30T12:39:10.000Z</updated>
+    <content type="html"><![CDATA[<p>在openSUSE 11.3中，root帐号可以正常地创建、注册、启动、停止和注销VM，然而non-root帐号就不行，使用<code>vboxmanage</code>的时候提示：</p>
+<pre><code><span class="attribute">ERROR</span>: <span class="string">failed to initialize COM!</span></code></pre>
+<p>请教了google大神，该问题得以解决：<br><a id="more"></a></p>
+<p>1、修改<code>/etc/udev/rules.d/10-vboxdrv.rules</code></p>
+<pre><code><span class="setting">KERNEL=<span class="value">=<span class="string">"vboxdrv"</span>, NAME=<span class="string">"vboxdrv"</span>, OWNER=<span class="string">"root"</span>, GROUP=<span class="string">"vboxusers"</span>, MODE=<span class="string">"0600"</span></span></span></code></pre>
+<p>2、将<non-root>加入vboxusers组</p>
+<pre><code># usermod -G vboxuser <span class="tag">&lt;<span class="title">non-root</span>&gt;</span></code></pre>
+<p>3、将<code>/vbox.images</code>目录属主更改为<non-root></p>
+<pre><code># chown -R <span class="tag">&lt;<span class="title">non-root</span>&gt;</span>:vboxusers /vbox.images/</code></pre>
+<p>在前面的章节中，我将VirtualBox默认目录更改为<code>/vbox.images/</code><br>{: class=“info”}</p>
+<p>4、将non-root的<code>machinefolder</code>更换为<code>/vbox.images/</code></p>
+<pre><code><span class="variable">$ </span>vboxmanage setproperty machinefolder /vbox.images/</code></pre>
+<p>5、重新注册VM</p>
+<pre><code>$ vboxmanage registervm /vbox<span class="variable">.images</span>/netmgmt-deb6/netmgmt-deb6<span class="variable">.vbox</span></code></pre>
+<p>6、启动VM</p>
+<pre><code><span class="comment">$</span> <span class="comment">vboxheadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">netmgmt</span>-<span class="comment">deb6</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">vrde=off</span> <span class="comment">&amp;</code></pre>
+<p>打完，收工。</p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/virtualbox/" term="virtualbox"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[如何在VirtualBox中安装和克隆Debian VM]]></title>
+    <link href="http://ioiioi.github.io/2012/06/06/debian-template-on-virtualbox/"/>
+    <id>http://ioiioi.github.io/2012/06/06/debian-template-on-virtualbox/</id>
+    <published>2012-06-06T15:30:00.000Z</published>
+    <updated>2012-06-30T16:51:02.000Z</updated>
+    <content type="html"><![CDATA[<p>上一回中讲了<a href="../how-to-install-virtualbox-on-opensuse">如何在openSUSE中安装最新版VirtualBox</a>，本回将讲如何安装和克隆Debian VM。</p>
+<h1>1. 环境：</h1>
+<ol>
+<li>HOST  OS : openSUSE11.3</li>
+<li>Guest OS : Debian 6.0.5 netinstall</li>
+<li>VirtualBox : 4.1.16</li>
+</ol>
+<a id="more"></a>
+
+<h1>2. 创建虚拟机</h1>
+<p><strong>2.1 创建vm模版</strong></p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createvm</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">modifyvm</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">memory</span> <span class="comment">512</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">acpi</span> <span class="comment">on</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">boot1</span> <span class="comment">dvd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nic1</span> <span class="comment">bridged</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nictype1</span> <span class="comment">virtio</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">bridgeadapter1</span> <span class="comment">eth0</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createhd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">filename</span> <span class="comment">/vbox</span>.<span class="comment">images/deb6</span>-<span class="comment">template/deb6</span>-<span class="comment">template</span>.<span class="comment">vdi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">size</span> <span class="comment">8000</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storagectl</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">sata</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">controller</span> <span class="comment">IntelAhci</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">hdd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/vbox</span>.<span class="comment">images/deb6</span>-<span class="comment">template/deb6</span>-<span class="comment">template</span>.<span class="comment">vdi</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/home/software/debian</span>-<span class="comment">6</span>.<span class="comment">0</span>.<span class="comment">5</span>-<span class="comment">i386</span>-<span class="comment">netinst</span>.<span class="comment">iso
+</pre></figure>
+
+<p>有四种硬盘接口选择：IDE、SATA、SCSI和SAS，从性能上来说，IDE最弱，SATA、SCSI和SAS相差无几，从兼容性来讲IDE最好，不过实际上现在的操作系统基本都已内置了SATA驱动，因此兼容性已经不是问题。<br>网卡类型有多种选择：AMD系列、intel系列和virtio，其中AMD系列对OS的兼容性最佳，而virtio的性能则最好的，不过对操作系统有一定的要求。</p>
+<blockquote>
+<p>Starting with version 3.1, VirtualBox provides support for the industry-standard “virtio” networking drivers, which are part of the open-source KVM project. The “virtio” networking drivers are available for the following guest operating systems:</p>
+<ol>
+<li>Linux kernels version 2.6.25 or later can be configured to provide virtio support; some distributions also back-ported virtio to older kernels.</li>
+<li>For Windows 2000, XP and Vista, virtio drivers can be downloaded and installed from the KVM project web page.</li>
+</ol>
+</blockquote>
+<p><strong>2.2 安装vm</strong></p>
+<p>启动vm：</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vboxheadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">"deb6</span>-<span class="comment">template"
+</pre></figure>
+
+<p>然后通过RDP客户端（windows中是“远程连接”，linux中可用“rdesktop”）连接该vm，并按照正常的步骤完成Debian 6.0.5的安装。</p>
+<h1>3. 安装常用工具</h1>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude install tmux nmap tcpdump lsof htop git-core less iftop net-snmp</span>
+<span class="preprocessor"># aptitude purge vim-tiny && aptitude install vim</span>
+</pre></figure>
+
+<h1>4. 升级VBoxGuestAddition</h1>
+<p>Debian6.0.5自带的VBoxGuestAddition为3.2.0版本，版本比较老，因此需要升级至4.1.16。</p>
+<p>4.1 确保安装相关软件包</p>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude install bzip2 dkms gcc make linux-header-2.6.32-5-686</span>
+</pre></figure>
+
+<p>4.2 插入VBoxGuestAddition光盘</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/usr/share/virtualbox/VBoxGuestAdditions</span>.<span class="comment">iso
+</pre></figure>
+
+<p>在openSUSE中安装完VirtualBox之后，VBoxGuestAddition光盘以iso文件方式保存在<code>/usr/share/virtualbox/VBoxGuestAddition.iso</code><br>{: class=“info” }</p>
+<p>4.3 升级</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">mkdir</span> <span class="comment">/mnt/cdrom</span>
+<span class="comment">#</span> <span class="comment">mount</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">iso9660</span> <span class="comment">/mnt/cdrom</span> <span class="comment">/dev/sr0</span>
+<span class="comment">#</span> <span class="comment">sh</span> <span class="string">.</span><span class="comment">/VBoxLinuxAdditions</span>.<span class="comment">run</span>
+<span class="comment">Verifying</span> <span class="comment">archive</span> <span class="comment">integrity</span>.<span class="string">.</span><span class="string">.</span> <span class="comment">All</span> <span class="comment">good</span>.
+<span class="comment">Uncompressing</span> <span class="comment">VirtualBox</span> <span class="comment">4</span>.<span class="comment">1</span>.<span class="comment">16</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">for</span> <span class="comment">Linux</span>.<span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span>
+<span class="comment">VirtualBox</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">installer</span>
+<span class="comment">Removing</span> <span class="comment">existing</span> <span class="comment">VirtualBox</span> <span class="comment">DKMS</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">Removing</span> <span class="comment">existing</span> <span class="comment">VirtualBox</span> <span class="comment">non</span>-<span class="comment">DKMS</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">Building</span> <span class="comment">the</span> <span class="comment">VirtualBox</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">Doing</span> <span class="comment">non</span>-<span class="comment">kernel</span> <span class="comment">setup</span> <span class="comment">of</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">You</span> <span class="comment">should</span> <span class="comment">restart</span> <span class="comment">your</span> <span class="comment">guest</span> <span class="comment">to</span> <span class="comment">make</span> <span class="comment">sure</span> <span class="comment">the</span> <span class="comment">new</span> <span class="comment">modules</span> <span class="comment">are</span> <span class="comment">actually</span> <span class="comment">used</span>
+
+<span class="comment">Installing</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">drivers</span>
+<span class="comment">Installing</span> <span class="comment">X</span>.<span class="comment">Org</span> <span class="comment">Server</span> <span class="comment">1</span>.<span class="comment">7</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">Setting</span> <span class="comment">up</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">to</span> <span class="comment">use</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">You</span> <span class="comment">may</span> <span class="comment">need</span> <span class="comment">to</span> <span class="comment">restart</span> <span class="comment">the</span> <span class="comment">hal</span> <span class="comment">service</span> <span class="comment">and</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">(or</span> <span class="comment">just</span> <span class="comment">restart</span>
+<span class="comment">the</span> <span class="comment">guest</span> <span class="comment">system)</span> <span class="comment">to</span> <span class="comment">enable</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span>.
+
+<span class="comment">Installing</span> <span class="comment">graphics</span> <span class="comment">libraries</span> <span class="comment">and</span> <span class="comment">desktop</span> <span class="comment">services</span> <span class="comment">components</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+</pre></figure>
+
+<p>4.4 检查版本</p>
+<p>最后重启guest并检查VBoxGuestAddition版本</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">showvminfo</span> <span class="comment">"deb6</span>-<span class="comment">template"</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span>
+<span class="comment">Guest:</span>
+
+<span class="comment">Configured</span> <span class="comment">memory</span> <span class="comment">balloon</span> <span class="comment">size:</span>      <span class="comment">0</span> <span class="comment">MB</span>
+<span class="comment">OS</span> <span class="comment">type:</span>                             <span class="comment">Linux26</span>
+<span class="comment">Additions</span> <span class="comment">run</span> <span class="comment">level:</span>                 <span class="comment">1</span>
+<span class="comment">Additions</span> <span class="comment">version:</span>                   <span class="comment">4</span>.<span class="comment">1</span>.<span class="comment">16r78094</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</pre></figure>
+
+<p>说明VBoxGuestAddition已经升级为4.1.16了。</p>
+<h1>5. 收尾</h1>
+<p>5.1 弹出安装光盘</p>
+<pre><code><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">emptydrive</code></pre>
+<p>下次启动的时候，就不会从光盘启动了。</p>
+<p>5.2 解决eth1的问题</p>
+<p>linux利用udev对硬件设备进行识别，当udev检测到新网卡时（新mac地址），将在<code>/etc/udev/rules.d/70-persistent-net.rules</code>文件中生成新的记录，为新网卡分配一个ethX这样的网卡id，X从0开始，依次是1，2…</p>
+<p>克隆的时候，VirtualBox会为目标vm的网卡生成新的mac地址，而<code>70-persistent-net.rules</code>文件中已经含有源vm网卡的记录：eth0，因此，udev为目标vm的网卡重新分配网卡id：eth1，这导致IP地址失效，网卡id怪异等问题。</p>
+<p>解决该问题的方法是删掉源vm中的<code>/etc/udev/rules.d/70-persistent-net.rules</code>这个文件，目标vm启动后找不到该文件就会自行创建一个，永远都不会有eth0占用的问题。</p>
+<p>5.3 清空IP地址配置</p>
+<p>修改<code>/etc/network/interfaces</code>，注释掉eth0的配置信息，避免与目标vm的IP冲突。</p>
+<p>5.4 调整系统时间</p>
+<p>请参考“<a href="../ntp-service">NTP服务</a>”</p>
+<p>至此，完成一个Debian VM模版的安装和配置。</p>
+<h1>6. 克隆</h1>
+<pre><code><span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">clonevm</span> <span class="comment">"</span>&lt;<span class="comment">source</span> <span class="comment">vm</span>&gt;<span class="comment">"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name="</span>&lt;<span class="comment">destination</span> <span class="comment">vm</span>&gt;<span class="comment">"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">mode</span> <span class="comment">machine</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</code></pre>
+<p>源vm的config和vdi文件在同一个目录下，克隆后，目标vm的config和vdi文件也在同一个目录下。</p>
+<p>6.1 更改主机名</p>
+<pre><code><span class="preprocessor"># echo "&lt;destination vm&gt;" &gt; /etc/hostname</span>
+<span class="preprocessor"># hostname -F /etc/hostname</span></code></pre>
+<p>6.2 更改IP地址</p>
+<pre><code><span class="preprocessor"># vim /etc/network/interface</span></code></pre>
+<p>6.3 重启</p>
+<pre><code><span class="preprocessor"># shutdown -r now</span></code></pre>
+<p>本回说的是Debian VM，那Windows VM呢，且听<a href="../windows-template-on-virtualbox">下回分解</a></p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/debian/" term="debian"/>
+    <category scheme="http://ioiioi.github.io/categories/debian/virtualbox/" term="virtualbox"/>
+  </entry>
+  <entry>
+    <title type="html"><![CDATA[如何在VirtualBox中安装和克隆windows VM]]></title>
+    <link href="http://ioiioi.github.io/2012/06/06/windows-template-on-virtualbox/"/>
+    <id>http://ioiioi.github.io/2012/06/06/windows-template-on-virtualbox/</id>
+    <published>2012-06-06T15:30:00.000Z</published>
+    <updated>2012-06-30T16:50:14.000Z</updated>
+    <content type="html"><![CDATA[<p>上回讲了<a href="../debian-template-on-virtualbox">如何安装和克隆Debian VM</a>，本回说说Windows<br> VM。</p>
+<h1>1. 创建windows VM</h1>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createvm</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">modifyvm</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">memory</span> <span class="comment">512</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">acpi</span> <span class="comment">on</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">boot1</span> <span class="comment">dvd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nic1</span> <span class="comment">bridged</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nictype1</span> <span class="comment">virtio</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">bridgeadapter1</span> <span class="comment">eth0</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createhd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">filename</span> <span class="comment">/vbox</span>.<span class="comment">images/win2k3</span>-<span class="comment">template/win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">size</span> <span class="comment">20000</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storagectl</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">IDE</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">controller</span> <span class="comment">IntelAhci</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">hdd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/vbox</span>.<span class="comment">images/win2k3</span>-<span class="comment">template/win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/home/software/Windows</span>.<span class="comment">Server</span>.<span class="comment">2003</span>.<span class="comment">SP2</span>.<span class="comment">ent</span>.<span class="comment">iso
+</pre></figure>
+
+<a id="more"></a>
+
+<p>细心的读者可能会发现，硬盘控制器用的是IDE，为什么不用更快的SATA呢？因为windows 2003没有SATA驱动，所以需先以IDE的方式进行安装，进入操作系统之后再安装SATA驱动，随后再切换回SATA。</p>
+<p>网卡类型也一样，windows 2003没有virtio驱动，用户只有安装完windows 2003后，再安装<a href="http://www.linux-kvm.org/page/Virtio" target="_blank">linux-kvm.org</a>提供的驱动，才能用上virtio网卡。</p>
+<h1>2. 安装操作系统</h1>
+<pre><code><span class="comment">#</span> <span class="comment">vboxheadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="comment">e</span> <span class="comment">vrdeproperty</span> <span class="comment">tcp/ports=3390</code></pre>
+<p>假如有多个vm需要以headless的方式启动，则每台vm的VRDP所占用端口不能相同，默认是<code>3389</code>，因为该端口已被占用，因此本处选择其它端口：<code>3390</code></p>
+<h1>3. 常用软件和服务</h1>
+<ol>
+<li>mtPuTTY</li>
+<li>QQ拼音</li>
+<li>Microsoft Forefront client security</li>
+<li>xplorer_lite</li>
+<li>dotnet framework</li>
+<li>Terminal Service</li>
+</ol>
+<h1>4. 收尾</h1>
+<h2>4.1 sharedfoler</h2>
+<p>详见<a href="../virtualbox-tips">VirtualBox Tips</a></p>
+<h2>4.2 VBoxGuestAddition</h2>
+<p>类似于VMware tools，提供Guest中的图形显示优化，时间同步等有用的功能。</p>
+<p><strong>HOST</strong></p>
+<figure class="highlight"><pre><span class="comment">$</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/usr/share/virtualbox/VBoxGuestAdditions</span>.<span class="comment">iso
+</pre></figure>
+
+<p>该操作不需要关闭VM。</p>
+<p><strong>GUEST</strong></p>
+<p>在“windows资源管理器”中打开光驱，就会自动弹出安装界面，根据提示完成安装。</p>
+<h2>4.3 virtio</h2>
+<p>不知为何，网卡类型选择virtio之后，VM的FTP下载速度仅为0.1KB/s，但上传速度可达到30MB/s，尚未找到解决的办法。不过采用默认的Intel网卡，速度已经完全可以满足日常的使用，因此本文放弃了virtio这个驱动。</p>
+<h2>4.4 SATA</h2>
+<p><strong>待续</strong></p>
+<h1>5. TIPS</h1>
+<p>在“远程桌面”窗口，如何向VM发送Ctrl+Alt+Del呢？请讲快捷键更换为Ctrl+Alt+End。</p>
+<p>讲到这，我们已经完成了</p>
+<ol>
+<li><a href="../debian-template-on-virtualbox">如何安装和克隆Debian VM</a></li>
+<li><a href="../windows-template-on-virtualbox">如何安装和克隆Windows VM</a></li>
+</ol>
+<p>但是，随着VM的增多，怎样才能更好的管理和使用VirtualBox呢？且听<a href="../virtualbox-tips">下回分解</a></p>
+]]></content>
+    <category scheme="http://ioiioi.github.io/categories/windows/" term="windows"/>
+    <category scheme="http://ioiioi.github.io/categories/windows/virtualbox/" term="virtualbox"/>
+  </entry>
+</feed>

@@ -1,0 +1,383 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>如何实现Windows AD的统一认证 - linux部分 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="现代企业的业务需求多种多样，因此在生产环境中经常会出现多种操作系统互相协作的现象。微软的Windows操作系统在桌面应用方面拥有绝对的领先优势，因此很多企业部署了Windows活动目录来实现单点登录（SSO）；Linux在服务器和网络应用方面有自己的独门利器，因此很多企业的服务器操作系统和网络设备的嵌入式操作系统用的大部分是Linux。这对系统管理员来说就存在这么一个令人饶头的问题：如何实现统一登录认证？">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="如何实现Windows AD的统一认证 - linux部分"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2010-10-08T15:30:00.000Z"><a href="/2010/10/08/centralizing-authentication-with-windows-AD-part-1/">2010-10-8</a></time>
+      
+      
+  
+    <h1 class="title">如何实现Windows AD的统一认证 - linux部分</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>现代企业的业务需求多种多样，因此在生产环境中经常会出现多种操作系统互相协作的现象。微软的Windows操作系统在桌面应用方面拥有绝对的领先优势，因此很多企业部署了Windows活动目录来实现单点登录（SSO）；Linux在服务器和网络应用方面有自己的独门利器，因此很多企业的服务器操作系统和网络设备的嵌入式操作系统用的大部分是Linux。这对系统管理员来说就存在这么一个令人饶头的问题：如何实现统一登录认证？<br><a id="more"></a></p>
+<p>答案就是Samba，它就像粘胶剂一样将Windows和Linux连在一起，共同为用户服务。Samba是怎样当好这个粘胶剂的活儿的呢，下面是验证流程说明：</p>
+<h1>一、验证流程</h1>
+<p>当Linux主机中的应用程序向Linux查询用户/组的时候，根据NSS的配置，请求将会被Winbind截获，并通过系统底层重定向至AD域控制器,随后Winbind将返回的结果经过解析后再返回应用程序。</p>
+<p>解析的一个重要步骤就是将Windows的RID映射成Linux的UID和GID，这让Linux应用程序以为AD的域用户/组就是Linux操作系统的用户/组，从而实现利用Windows AD做统一验证的功能。</p>
+<p>下面将分三部分进行阐述：</p>
+<ul>
+<li>部署Windows AD域测试环境；</li>
+<li>安装和部署Linux相关组件；</li>
+<li>验证；</li>
+</ul>
+<h1>二、部署Windows AD域测试环境</h1>
+<p>Windows AD域环境的部署是一个庞大的话题，因此下面只给一个用于测试目的的简单安装流程，进阶的Windows 活动目录信息请参考微软的官方文档。</p>
+<h2>2.1 目标</h2>
+<ol>
+<li>安装一台Windows AD域控制器；</li>
+<li>创建四个域账号：alice、bob、carl和david；</li>
+<li>创建两个域用户组：net-mgmt和sys-mgmt，其中netmgmt组中的用户角色是网络管理员，组成员是alice和bob；sys-mgmt组中的用户角色是系统管理员，组成员是carl和david。</li>
+</ol>
+<h2>2.2 安装</h2>
+<ol>
+<li>通过光盘安装Windows 2003 server；</li>
+<li>分配IP地址并设置机器名为：dc，然后重启服务器；</li>
+<li>在“开始”-“命令行”中输入<code>dcpromo</code>{: .class=“”}，回车将启动域服务器的安装过程，域名为“linuxabc.com”，其他的根据提示进行选择，一般默认即可。在这个过程中将会提示安装DNS服务，因为域是跟DNS紧密结合在一起的，请选择“是”。</li>
+<li>安装结束后重启服务器，设定域管理员密码，新增alice，bob，carl和david四个域帐号，新增net-mgmt和sys-mgmt两个用户组，将alice和bob添加到net-mgmt组，将carl和david添加到sys-mgmt组。</li>
+</ol>
+<p>至此，一个简单的Windows AD域测试环境就部署完成了。</p>
+<h1>三、安装和部署Linux相关组件</h1>
+<h2>3.1 samba/winbind的安装和配置</h2>
+<figure class="highlight"><pre><span class="comment"># apt-get install samba samba-common samba-doc winbind</span>
+<span class="comment"># vim /etc/samba/smb.conf</span>
+ [global]
+    workgroup = LINUXABC   <span class="comment">#域名称，不带“.com”后缀</span>
+    server string = %h server
+    socket options = TCP_NODELAY
+    security = ads
+    netbios name = debian
+    realm = LINUXABC.COM
+    encrypt passwords = <span class="literal">true</span>
+    obey pam restrictions = <span class="literal">yes</span>
+    password server = dc.linuxabc.com
+    idmap uid = <span class="number">10000</span>-<span class="number">20000</span>
+    idmap gid = <span class="number">10000</span>-<span class="number">20000</span>
+    winbind <span class="reserved">enum</span> users = <span class="literal">yes</span>
+    winbind <span class="reserved">enum</span> groups = <span class="literal">yes</span>
+    winbind use <span class="reserved">default</span> domain = <span class="literal">yes</span>
+    template shell = <span class="regexp">/bin/</span>bash
+    domain master = <span class="literal">no</span>
+</pre></figure>
+
+<p>因为在这台服务器上并不提供共享文件和打印服务，所以smb.conf文件剩下的部分可以删除。</p>
+<h2>3.2 NSS的安装和配置</h2>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">apt</span>-<span class="comment">get</span> <span class="comment">install</span> <span class="comment">libnss</span>-<span class="comment">ldap</span>
+<span class="comment">#</span> <span class="comment">vim</span> <span class="comment">/etc/nsswitch</span>.<span class="comment">conf</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="comment">passwd:		compat</span> <span class="comment">winbind</span>
+<span class="comment">passwd_compat:	winbind</span>
+<span class="comment">group:		compat</span> <span class="comment">winbind</span>
+<span class="comment">group_compat:	winbind</span>
+<span class="comment">shadow:		compat</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</pre></figure>
+
+<p>NSS(name service switch)的作用是允许*nix主机根据配置文件/etc/nsswitch.conf按顺序依次从不同的源去查询诸如主机名、邮箱别名、用户信息等数据。</p>
+<h3>3.3 PAM的配置</h3>
+<p>NSS只是调整Winbind的优先顺序，PAM才是决定是否使用Winbind进行验证的决策者。<br>PAM是大多数Linux发行办的默认安装组件，故省略安装步骤。下面将针对/etc/pam.d/中的文件进行调整：</p>
+<figure class="highlight"><pre><span class="preprocessor"># vim /etc/pam.d/common-auth</span>
+auth	sufficient	pam_winbind<span class="variable">.so</span>
+auth	<span class="keyword">required</span>	pam_unix<span class="variable">.so</span> use_first_pass nullok_secure
+
+<span class="preprocessor"># vim /etc/pam.d/common-account</span>
+account	sufficient	pam_winbind<span class="variable">.so</span>
+account	<span class="keyword">required</span>	pam_unix<span class="variable">.so</span>
+
+<span class="preprocessor"># vim /etc/pam.d/common-session</span>
+password    sufficient	pam_winbind<span class="variable">.so</span>
+password    <span class="keyword">required</span>	pam_unix<span class="variable">.so</span>
+</pre></figure>
+
+<h2>3.4 kerberos的安装和配置</h2>
+<p>Winbind将利用kerberos协议与AD域控制器进行通信。</p>
+<figure class="highlight"><pre><span class="preprocessor"># apt-get install krb5-user krb5-config</span>
+<span class="preprocessor"># vim /etc/krb5.conf</span>
+[libdefaults]
+    ticket_lifetime = <span class="number">24000</span>
+    dns_lookup_realm = <span class="literal">true</span>
+    dns_lookup_kdc = <span class="literal">true</span>
+    default_realm = LINUXABC<span class="variable">.COM</span>
+[realms]
+    DOMAIN<span class="variable">.INTERNAL</span> = {
+	kdc = dc<span class="variable">.linuxabc</span><span class="variable">.com</span>
+	admin_server = dc<span class="variable">.linuxabc</span><span class="variable">.com</span>
+	default_domain = LINUXABC<span class="variable">.COM</span>
+    }
+[domain_realm]
+    <span class="variable">.domain</span><span class="variable">.internal</span> = LINUXABC<span class="variable">.COM</span>
+    domain<span class="variable">.internal</span> = LINUXABC<span class="variable">.COM</span>
+</pre></figure>
+
+<p>注意：</p>
+<ol>
+<li>LINUXABC.COM是域名，均为大写；</li>
+<li>dc.linuxabc.com是域控制器，均为小写。</li>
+</ol>
+<p>至此，相关的验证组件已经安装配置完毕。</p>
+<h1>四、验证</h1>
+<h2>4.1 将Linux服务器加入linuxabc.com域</h2>
+<h3>4.1.1 初始化kerberos</h3>
+<figure class="highlight"><pre><span class="comment"># kinit administrator<span class="yardoctag">@LINUXABC</span>.COM</span>
+<span class="constant">Password</span> <span class="keyword">for</span> administrator<span class="variable">@LINUXABC</span>.<span class="constant">COM</span><span class="symbol">:&lt;&lt;</span>域管理员密码&gt;&gt;
+<span class="comment"># klist</span>
+</pre></figure>
+
+<p>如果通过域验证的话将显示以下信息：</p>
+<figure class="highlight"><pre><span class="constant">Ticket</span> <span class="symbol">cache:</span> <span class="constant">FILE</span><span class="symbol">:/tmp/krb5cc_0</span>
+<span class="constant">Default</span> <span class="symbol">principal:</span> administrator<span class="variable">@LINUXABC</span>.<span class="constant">COM</span>
+
+<span class="constant">Valid</span> starting     <span class="constant">Expires</span>            <span class="constant">Service</span> principal
+<span class="number">03</span>/<span class="number">06</span>/<span class="number">10</span> <span class="number">10</span><span class="symbol">:</span><span class="number">39</span><span class="symbol">:</span><span class="number">38</span>  <span class="number">03</span>/<span class="number">06</span>/<span class="number">10</span> <span class="number">20</span><span class="symbol">:</span><span class="number">39</span><span class="symbol">:</span><span class="number">38</span>  krbtgt/<span class="constant">LINUXABC</span>.<span class="constant">COM</span><span class="variable">@LINUXABC</span>.<span class="constant">COM</span>
+
+
+<span class="constant">Kerberos</span> <span class="number">4</span> ticket <span class="symbol">cache:</span> /tmp/tkt<span class="number">0</span>
+<span class="symbol">klist:</span> <span class="constant">You</span> have no tickets cached
+</pre></figure>
+
+<p>接下来将debian加入linuxabc.com域。</p>
+<figure class="highlight"><pre># net ads join -U administrator@LINUXABC.COM
+administrator@LINUXABC.COM<span class="attribute">'s</span> password: &lt;&lt;域管理员密码&gt;&gt;
+Using short domain name <span class="comment">-- LINUXABC</span>
+Joined <span class="attribute">'DEBIAN</span>' <span class="keyword">to</span> realm <span class="attribute">'LINUXABC</span>.COM'
+</pre></figure>
+
+<p>一切顺利的话就可以在AD域控制器的“Active Directory域用户和计算机”管理界面中看到debian这台机器。</p>
+<h3>4.1.2 login验证</h3>
+<p>前面已经将Linux主机加入到AD域中，成为一个域成员，接下来要测试Linux程序能否利用AD域的用户进行验证。</p>
+<p>验证前先重启samba和winbind服务</p>
+<figure class="highlight"><pre><span class="preprocessor"># /etc/init.d/samba restart</span>
+<span class="preprocessor"># /etc/init.d/winbind restart</span>
+</pre></figure>
+
+<p>接着在debian服务器中打开一个终端窗口，用域账号alice登录。</p>
+<h1>五、参考</h1>
+<ol>
+<li><a href="http://www.samba.org/samba/docs/man/Samba-HOWTO-Collection/winbind.html" target="_blank">samba官方文档</a></li>
+<li><a href="http://thelazyadmin.com/blogs/thelazyadmin/archive/2006/03/16/Linux_2F00_Unix-Active-Directory-Authentication-Integration-Part-1.aspx" target="_blank">Linux-Unix Active Directory Authentication Integration</a></li>
+<li><a href="http://www.surlyjake.com/using-debian-in-an-active-directory-environment/install-prerequisite-packages-using-debian-in-an-active-directory-environment/" target="_blank">using debian in an active directory environment</a></li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/ldap/">ldap</a>, <a href="/categories/ldap/debian/">debian</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

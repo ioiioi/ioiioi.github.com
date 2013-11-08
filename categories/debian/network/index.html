@@ -1,0 +1,450 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>network | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title category">network</h2>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-09T03:30:00.000Z"><a href="/2012/06/09/how-to-setup-rancid-on-debian/">2012-06-9</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/09/how-to-setup-rancid-on-debian/">网络设备管理 - rancid</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>Rancid的全称是Really Awesome New Cisco ConfIg Differ，顾名思义，该软件的初衷是为了管理cisco设备，然而由于它非常实用，目前已经被扩展到支持多达xx种网络设备，诸如常见的dell，hp，juniper,foundry,redback等，当然，国内常见的h3c也不在话下。<br>It‘s not that the name is not being recognized, it’s that the scripts it&#39;s running have errors in the first line which produce &quot;</p>
+<p>“No such file or directory”<br>Lookup list of groups</p>
+<p>For each device in each list of groups<br>• Connect to the equipment (telnet, ssh, …)<br>• Run ”show” commands – config, inventory, …<br>• Collect, filter/format data<br>• Retrieve the resulting config files<br>• CVS check-in the changes<br>• Generate a diff from the previous version<br>• E-mail the diff to a mail address (individual or group)</p>
+<h1>rancid</h1>
+<p>rancid的工作原理</p>
+<h2>安装</h2>
+<pre><code><span class="preprocessor"># aptitude install rancid-core rancid rancid-utils</span></code></pre>
+<h2>Rancid配置</h2>
+<p>/etc/rancid/rancid.conf</p>
+<figure class="highlight"><pre><span class="setting">CVSROOT=<span class="value">$BASEDIR/SVN; export CVSROOT</span></span>
+<span class="setting">RCSSYS=<span class="value">svn; export RCSSYS</span></span>
+<span class="setting">LIST_OF_GROUPS=<span class="value">”access dist core”</span></span>
+</pre></figure>
+
+<ol>
+<li>rancid支持CVS和SVN这两种版本管理工具，本文选择了SVN，因为CVS太古老了。</li>
+<li>根据cisco的定义，一个大型的网络规划应该分成三层，分别是access、distribution和core，因此我们也创建三个组：access、dist、core</li>
+</ol>
+<p>配置设备</p>
+<p>cd /var/lib/rancid/<br>mkdir access<br>mkdir dist<br>mkdir core<br>touch access/router.db<br>touch dist/router.db<br>touch core/router.db</p>
+<p>接着往router.db里面填内容：</p>
+<figure class="highlight"><pre><span class="comment"># vim access/router.db</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">1</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_A</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">2</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_B</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">3</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_C</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">4</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_D</span>
+...
+</pre></figure>
+
+<p>依次创建dist/router.db和core/router.db</p>
+<figure class="highlight"><pre># vim .cloginrc
+add user * <span class="xml"><span class="tag">&lt;<span class="title">username</span>&gt;</span>
+add password * <span class="tag">&lt;<span class="title">password</span>&gt;</span>
+add method * telnet</span>
+</pre></figure>
+
+<h2>H3C脚本</h2>
+<p>H3C并不在rancid的官方支持之列，不过好在有热心的网友Jethro Binks制作了<a href="http://sites.google.com/site/jrbinks/code/rancid/h3c" target="_blank">h3c的脚本</a></p>
+<p>H3C的OS叫Comware，有3和5这两个系列，常见的S3100，S3600，S5600，S5800等均能正常使用。以下是经过测试的型号列表：</p>
+<ol>
+<li>H3C S3100 (Comware 3)</li>
+<li>H3C S5600 (Comware 3)</li>
+<li>H3C S7506 (Comware 5)</li>
+<li>H3C S7906E (Comware 5)</li>
+<li>H3C S5820X (Comware 5)</li>
+<li>H3C S5800 (Comware 5)</li>
+<li>H3C S3610 (Comware 5)</li>
+<li>H3C MSR30-60 (Comware 5)</li>
+</ol>
+<p>Jethro Binks的脚本并不适合于Debian,需要做一点小修改：</p>
+<p><strong>h3clogin:</strong></p>
+<p>将</p>
+<pre><code><span class="shebang">#! /usr/local/bin/expect --</span></code></pre>
+<p>改成</p>
+<pre><code><span class="shebang">#! /usr/bin/expect --</span></code></pre>
+<p><strong>h3crancid:</strong></p>
+<p>将</p>
+<pre><code><span class="shebang">#! /usr/bin/perl5</span></code></pre>
+<p>改成</p>
+<pre><code><span class="shebang">#! /usr/bin/perl</span></code></pre>
+<p>接着将它们拷贝到<code>/usr/lib/rancid/bin</code>中，同时赋予<code>+x</code>的属性。</p>
+<pre><code><span class="preprocessor"># cp h3clogin h3crancid /usr/lib/rancid/bin</span>
+<span class="preprocessor"># chmod +x h3crancid h3clogin</span></code></pre>
+<h2>H3C设备配置</h2>
+<p>rancid的脚本将使用perl+expect来登录H3C设备，并执行一些display命令来获取设备信息，虽然然而所以安全性需要着重考虑，直接给完整的特权账号肯定不合适，最好创建一个单独的ranciduser，并且仅分配level1权限：</p>
+<p>local-user ranciduser<br>authorization-attribute level 1</p>
+<p>看到这，有些读者不禁倒吸一口凉气：糟糕，手头上管理着几十台设备，难不成我要逐台登录和创建几十个相同的帐号？别急，我们完全可以利用clogin/h3clogin来自动完成这个任务。</p>
+<figure class="highlight"><pre># vim <span class="operator"><span class="keyword">create</span>.rancid.account
+sys
+<span class="keyword">local</span>-<span class="keyword">user</span> rancid
+<span class="keyword">authorization</span>-attribute <span class="keyword">level</span> <span class="number">1</span>
+quit
+save
+</pre></figure>
+
+<p>h3clogin -x /path/to/commands.file <device-ip></p>
+<p>最后测试一下</p>
+<pre><code># sudo -u rancid -H /usr/lib/rancid/h3clogin <span class="tag">&lt;<span class="title">H3C-device-ip</span>&gt;</span> FIXME</code></pre>
+<h2>配置变更</h2>
+<h3>硬件配置变更</h3>
+<h3>软件配置变更</h3>
+<h1>版本管理工具</h1>
+<p>rancid利用版本管理工具对配置变更进行管理，这是一个聪明而省力的做法，unix哲学就是帅。rancid支持CVS和SVN这两个版本管理工具，本文选择的是SVN，因为CVS太古老了。</p>
+<h2>安装svn</h2>
+<pre><code><span class="preprocessor"># aptitude install svn</span></code></pre>
+<h2>整合svn</h2>
+<p>cd /var/lib/rancid/<br>svnadmin create configs<br>svn mkdir file:///var/lib/rancid/configs/access -m “created folder”<br>svn mkdir file:///var/lib/rancid/configs/dist -m “created folder”<br>svn mkdir file:///var/lib/rancid/configs/core -m “created folder”<br>svn co file:///var/lib/rancid/configs/access ./access/<br>svn co file:///var/lib/rancid/configs/dist ./dist/<br>svn co file:///var/lib/rancid/configs/core ./core/</p>
+<p>chown -R rancid:rancid /var/lib/rancid/<br>chmod 0600 /var/lib/rancid/.cloginrc</p>
+<h1>sudo -u rancid -H /usr/lib/rancid/bin/rancid-run</h1>
+<p>svn mkdir access/configs<br>svn mkdir dist/configs<br>svn mkdir core/configs<br>svn add access/<em><br>svn add dist/</em><br>svn add core/*<br>svn commit -m “added files” access/<br>svn commit -m “added files” dist/<br>svn commit -m “added files” core/</p>
+<h1>配置变更提醒</h1>
+<p>当rancid检测到变更时，<code>control_rancid</code>组件利用sendmail将变更信息通过邮件发送给管理员。对于debian来说，我们将使用默认的MTA exim4来完成这项工作。</p>
+<h2>exim4的安装和配置</h2>
+<p>详见《<a href="">如何利用exim4通过gmail发送邮件</a>》</p>
+<h2>/etc/aliases</h2>
+<figure class="highlight"><pre><span class="comment"># vim /etc/aliases</span>
+<span class="keyword">...</span>
+rancid-&lt;group-name&gt; : mail-address@domain.name
+rancid-adimin-&lt;group-name&gt; : mail-address@domain.name
+<span class="keyword">...</span>
+<span class="comment"># newaliases</span>
+<span class="comment"># /etc/init.d/exim4 restart</span>
+</pre></figure>
+
+<p>当配置变更时，邮件将发送给rancid-<group-name>，当有错误信息时，邮件将发送给rancid-admin-<group-name>。</p>
+<p>至此完成了配置变更的邮件提醒功能。</p>
+<h1>查看变更历史记录</h1>
+<h2>viewvc安装</h2>
+<h2>viewvc配置</h2>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2009-04-02T15:00:00.000Z"><a href="/2009/04/02/how-to-install-wireless-nic-on-debian/">2009-04-2</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2009/04/02/how-to-install-wireless-nic-on-debian/">如何在debian中安装无线网卡</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>记得2003年的时候，Wi-Fi设备用的是WEP加密协议，由于安全性问题而未能获得广泛应用。过去几年802.11获得长足的进步，WPA1/2，EAP-TLS等多种加密技术的实现大大促进了WiFi的传播，AP和无线网卡产品异常丰富，然而兼容Linux的还是屈指可数，能在Linux成功安装无线网卡的不仅仅靠技术和忍者神龟般的耐性，更多时候还要看人品！</p>
+<p>在安装无线网卡之前有必要先了解一下WiFi的工作方式：</p>
+<p><strong>AP</strong></p>
+<p>AP是access point的简称，它将多个无线设备连接，无线设备通过它进行互联，也通过它联系外界，譬如互联网。</p>
+<p><strong>WPA</strong></p>
+<p>WPA全称是Wi-Fi Protected Access，是一种基于预协商key的加密方式，WPA之前802.11采用了WEP，后来证明是一种失败的加密方式，在安全性方面给Wi-Fi带来了很差的声誉，影响Wi-Fi的普及，WPA的出现扭转了乾坤。个人用户用得最多的是PSK，Pre shared key。<br>WPA的加密过程</p>
+<p>安装无线网卡</p>
+<p>在Linux中安装无线网卡驱动有两种方式，一种是通过ndiswrapper使用windows的驱动，另一种使用linux的原生驱动。</p>
+<p>在第一种方式中，ndiswrapper是Linux内核中的一个模块，用于加载和运行windows内核的API和NDIS API驱动，换句话来说就是ndiswrapper将linux伪装成windows，使得无线网卡的 windows驱动可以跑在linux之上。Linux fans从心理上是抵触这种方式的，感觉要低windows users一等，其次在实际应用中也存在一些恼人的问题，因此是备选方案。</p>
+<p>第二种方式是安装原生的linux的驱动，这种方式是最正宗的，直接由内核驱动硬件，效率也更高些，因此尽可能采用这种方式。可是目前linux针对无线网卡的驱动不多，因此在购买无线网卡之前需要确认一下是否兼容linux，下面是兼容linux的无线网卡列表：<a href="http://linux-wless.passys.nl/" target="_blank">http://linux-wless.passys.nl/</a></p>
+<p>b43-phy0 debug: Adding Interface type 2<br>　　b43-phy0 ERROR: Firmware file “b43/ucode5.fw” not found or load failed.<br>　　b43-phy0 ERROR: You must go to <a href="http://linuxwireless.org/en/users/Drivers/bcm43xx#devicefirmware" target="_blank">http://linuxwireless.org/en/users/Drivers/bcm43xx#devicefirmware</a> and download the correct firmware (version 4).</p>
+<ol>
+<li>查看自己的无线网卡的芯片</li>
+</ol>
+<figure class="highlight"><pre>alfie:~<span class="comment"># lspci -vnn | less</span>
+<span class="keyword">...</span>
+<span class="number">02</span>:<span class="number">00.0</span> Network controller [<span class="number">0280</span>]: Broadcom Corporation BCM4306 <span class="number">802.</span>11b/g Wireless LAN Controller [<span class="number">14e4</span>:<span class="number">4320</span>] (rev <span class="number">03</span>)
+        Subsystem: Linksys WPC54G [<span class="number">1737</span>:<span class="number">4320</span>]
+        Flags: bus master, fast devsel, latency <span class="number">64</span>, IRQ <span class="number">11</span>
+        Memory at <span class="number">24000000</span> (<span class="number">32</span>-bit, non-prefetchable) [size=8K]
+        Capabilities: [<span class="number">40</span>] Power Management version <span class="number">2</span>
+        Kernel driver <span class="keyword">in</span> use: b43-pci-bridge
+        Kernel modules: ssb
+<span class="keyword">...</span>
+</pre></figure>
+
+<p>可以看到Linux内核已经识别到了Linksys WPC54G了，它使用的芯片是Broadcom的BCM4320（我自己也说不清是4306还是4320，在<a href="http://lin...中说是以[14e4:4320]里面的数字为准）。" target="_blank">http://lin...中说是以[14e4:4320]里面的数字为准）。</a></p>
+<p>针对Broadcom的芯片，linux社区专门提供了b43驱动，在2.6.17-rc2时，内核引入了bcm43xx这个驱动，从2.6.24开始引入了b43legacy和b43，并废掉bcm43xx，其中b43legacy负责Broadcom4306 ver2以前或者仅有802.11b功能的Broadcom芯片，而b43负责剩下的所有型号芯片。</p>
+<p>上面的兼容列表比较含糊，Linksys WPC54G v1.2似乎被b43支持，又似乎被b43legacy支持，也顾不了那么多了，我决定先试一下b43。</p>
+<p>识别了网卡之后还不能马上使用，因为Broadcom的芯片工作原理有些特殊，还需要给芯片加载专有的firmware才能正常工作，因为firmware是专有的，所以debian官方源里面不直接提供，需要用户自行下载。</p>
+<ol>
+<li><p>安装b43-fwcutter</p>
+<p>aptitude install b43-fwcutter</p>
+</li>
+</ol>
+<p>安装b43-fwcutter之后会提示是否自动去<a href="http://downloads.openwrt.org/sources下载相应的firmware并解压，此时应该选择否，因为openwrt.org的链接已经失效，需要手工下载。" target="_blank">http://downloads.openwrt.org/sources下载相应的firmware并解压，此时应该选择否，因为openwrt.org的链接已经失效，需要手工下载。</a></p>
+<p>正确的地址应该是<a href="http://mirror2.openwrt.org/sources，我选择了最新的firmware：wl" target="_blank">http://mirror2.openwrt.org/sources，我选择了最新的firmware：wl</a>  4.160xxx</p>
+<p>wget /home/software <a href="http://mirror2.openwrt.org/sources/xxx" target="_blank">http://mirror2.openwrt.org/sources/xxx</a><br>cd /home/software &amp;&amp; b43-fwcutter -w /lib/firmware xxx</p>
+<p>/lib/firmware是b43内核模块默认去寻找Broadcom firmware的地方。</p>
+<p>需要说明的是，</p>
+<ol>
+<li>安装wireless-tools</li>
+</ol>
+<p>这个软件包提供了几个针对无线网卡的程序，iwconfig，iwlist</p>
+<p>4、安装wpasupplicant</p>
+<p>debian lenny中对wpasupplicant的介绍<br>WPA and WPA2 are methods for securing wireless networks, the former using IEEE 802.1X, and the latter using IEEE 802.11i. This software provides key negotiation with the WPA Authenticator, and controls association with IEEE 802.11i networks.</p>
+<p>在ubuntu中安装wpa-supplicant<br><a href="https://help.ubuntu.com/community/WifiDocs/Driver/bcm43xx/Feisty" target="_blank">https://help.ubuntu.com/community/WifiDocs/Driver/bcm43xx/Feisty</a></p>
+<p>安装wpasupplicat和wpagui<br>aptitude install wpasupplicant wpagui<br>其中wpasupplicant中包含了wpa_cli</p>
+<p>安装b43-fwcutter和wireless-tools<br>其中，boardcom公司为很多无线网卡厂商提供芯片，下面就是linksys wpc54G所使用的芯片<br>lspci -vnn<br>由于boardcom是一家商业公司，所以他提供的芯片驱动程序也具有商业性质，因此在debian的源中没有。我们需要通过openwrt.org这个源来下载，openwrt.org是说来话长，暂且按下不表。<br>b43-fwcutter安装完毕之后，将自动去downloads.openwrt.org/sources/wl_….下载firmware，然而这个链接已经失效，所以需要手工去下载。<br>wget <a href="http://mirror2.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2" target="_blank">http://mirror2.openwrt.org/sources/broadcom-wl-4.80.53.0.tar.bz2</a></p>
+<p>然后通过b43-fwcutter -w /lib/firmware broadcom-wl-4.80.53.0.tar.bz2</p>
+<p>接着modprobe b43</p>
+<p>即可完成</p>
+<p>这个时候通过iwlist wlan0 scan来测试驱动是否能够正常使用</p>
+<figure class="highlight"><pre><span class="symbol">alfie:</span>/home/chenr<span class="comment"># iwlist wlan0 scan</span>
+wlan<span class="number">0</span>     <span class="constant">Scan</span> completed <span class="symbol">:</span>
+          <span class="constant">Cell</span> <span class="number">01</span> - <span class="constant">Address</span><span class="symbol">:</span> <span class="number">00</span><span class="symbol">:</span><span class="number">14</span><span class="symbol">:BF</span><span class="symbol">:F2</span><span class="symbol">:</span><span class="number">05</span><span class="symbol">:B7</span>
+                    <span class="constant">ESSID</span><span class="symbol">:<span class="string">"dd-wrt"</span></span>
+                    <span class="constant">Mode</span><span class="symbol">:Master</span>
+                    <span class="constant">Channel</span><span class="symbol">:</span><span class="number">6</span>
+                    <span class="constant">Frequency</span><span class="symbol">:</span><span class="number">2.437</span> <span class="constant">GHz</span> (<span class="constant">Channel</span> <span class="number">6</span>)
+                    <span class="constant">Quality</span>=<span class="number">73</span>/<span class="number">100</span>  <span class="constant">Signal</span> level=-<span class="number">56</span> dBm  <span class="constant">Noise</span> level=-<span class="number">69</span> dBm
+                    <span class="constant">Encryption</span> <span class="symbol">key:</span>on
+                    <span class="constant">IE</span><span class="symbol">:</span> <span class="constant">WPA</span> <span class="constant">Version</span> <span class="number">1</span>
+                        <span class="constant">Group</span> <span class="constant">Cipher</span> <span class="symbol">:</span> <span class="constant">TKIP</span>
+                        <span class="constant">Pairwise</span> <span class="constant">Ciphers</span> (<span class="number">1</span>) <span class="symbol">:</span> <span class="constant">TKIP</span>
+                        <span class="constant">Authentication</span> <span class="constant">Suites</span> (<span class="number">1</span>) <span class="symbol">:</span> <span class="constant">PSK</span>
+                    <span class="constant">Bit</span> <span class="constant">Rates</span><span class="symbol">:</span><span class="number">1</span> <span class="constant">Mb</span>/s; <span class="number">2</span> <span class="constant">Mb</span>/s; <span class="number">5.5</span> <span class="constant">Mb</span>/s; <span class="number">11</span> <span class="constant">Mb</span>/s; <span class="number">18</span> <span class="constant">Mb</span>/s
+                              <span class="number">24</span> <span class="constant">Mb</span>/s; <span class="number">36</span> <span class="constant">Mb</span>/s; <span class="number">54</span> <span class="constant">Mb</span>/s; <span class="number">6</span> <span class="constant">Mb</span>/s; <span class="number">9</span> <span class="constant">Mb</span>/s
+                              <span class="number">12</span> <span class="constant">Mb</span>/s; <span class="number">48</span> <span class="constant">Mb</span>/s
+                    <span class="constant">Extra</span><span class="symbol">:tsf=</span><span class="number">0000002</span>95b4c72c<span class="number">0</span>
+</pre></figure>
+
+<p>说明驱动已经可以正常使用了。</p>
+<p>接下来需要配置wpa，这又是另外一个话题，先安装wpasupplicant</p>
+<p><code>iwlist</code>和<code>iwconfig</code>是wireless-tools中的小程序，其中</p>
+<p><code>iwlist</code>可以通过某长无限网卡扫描到ssid</p>
+<p>iwlist wlan0 scanning</p>
+<p>iwconfig类似ifconfig，主要为无限网卡提供设置服务。</p>
+<p>配置/etc/network/interface</p>
+<p>~~~<br>allow-hotplug wlan0<br>iface wlan0 inet manual<br>        wpa-ssid dd-wrt<br>        wpa-psk hainanyidong</p>
+<p>由于psk的密码明文显示在interface这个文件中，所以需要限制仅root可以对改文件进行修改</p>
+<p>chmod 0600 /etc/network/interface</p>
+<p>最后启动wlan0,invoke-rc.d networking restart<br>这句的好处是不需要重启机器。如果使用ifdown wlan0和ifup wlan0会显示尚未定义。</p>
+<p>下面两行是用于??</p>
+<pre><code>    wpa-driver wext
+    wpa-roam /etc/wpa_supplicant/<span class="filename">wpa_supplicant.conf</code></pre>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

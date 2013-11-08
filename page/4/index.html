@@ -1,0 +1,721 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Page 4 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-12T05:00:00.000Z"><a href="/2012/04/12/unbound-on-OpenBSD/">2012-04-12</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/12/unbound-on-OpenBSD/">unbound on OpenBSD</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>2013-03-05 更新几条kill的正确用法和客户端排错说明<br>{: class=“info” }</p>
+<p>一提起DNS，大家一般都会想到BIND。2000年的时候，Oreilly的《DNS and BIND》是最著名的也是唯一的一本关于DNS的书籍，现在已经更新到第5版。然而,时光流逝，美人迟暮，BIND的代码越来越臃肿，每向前迈一步都很困难,不少后起之秀都在觊觎BIND的地位，nsd/unbound便是其中之一，目前已有3台根域名服务器跑的就是nsd。</p>
+<p>nsd/unbound是NLnet Labs开发的一套DNS daemon，其中nsd作为authorative DNS，unbound负责recursive和caching，旨在为用户提供一套安全、简洁、高效的DNS解决方案。ubuntu和OpenBSD均计划在下一版本中将unbound作为默认的DNS解释器。<br>今天仅介绍unbound，以后有机会再讲nsd。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/12/unbound-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-11T13:00:00.000Z"><a href="/2012/04/11/fail2ban-on-OpenBSD/">2012-04-11</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/11/fail2ban-on-OpenBSD/">fail2ban on OpenBSD</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>自部署OpenBSD以来，经常发现有script kid使用暴力破解的方式试探SSH的密码，一直以来都不以为然，最近总部下发的通报让我痛下决心，非解决这个问题不可。</p>
+<p>解决方式有两种：</p>
+<ol>
+<li>将密码验证更改为证书认证；</li>
+<li>实时监控<code>/var/log/authlog</code>，一旦发现非法IP，就列入黑名单，使用pf对黑名单进行过滤。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/11/fail2ban-on-OpenBSD/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-08T05:00:00.000Z"><a href="/2012/04/08/vim-and-markdown/">2012-04-8</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/08/vim-and-markdown/">vim和markdown</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>可以选择自己喜欢的编辑器是使用octopress的一大优势，我就挑选了gVim，相对于其它编辑器，它有几大好处：<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/08/vim-and-markdown/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-08T03:54:00.000Z"><a href="/2012/04/08/hello-octopress-2/">2012-04-8</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/08/hello-octopress-2/">欢迎你，octopress！（下）</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在<a href="../hello-octopress-1">欢迎你，octopress！（上）</a>中提到，octopress的部署分为本地环境和博客平台这两个部分。</p>
+<h1>一、本地环境</h1>
+<p>本地环境主要是指octopress。octopress采用ruby脚本语言编写，源代码放在github上，因此，只要OS支持git和ruby就可以安装octopress。本文针对的是windows。</p>
+<h2>1.1 git</h2>
+<p>在windows中，我选择的是<a href="http://code.google.com/p/msysgit/downloads/list" target="_blank">msysgit</a>这个软件包。该软件包基于MSys/MinGW，它将linux中常用的命令和git打包在一起。octopress对git的版本没有要求，因此用户下载最新的版本安装即可。</p>
+<h2>1.2 ruby</h2>
+<p>在windows中，octopress的正常安装和运行依赖于以下两个组件：</p>
+<ul>
+<li><strong><a href="http://rubyforge.org/frs/download.php/75127/rubyinstaller-1.9.2-p290.exe" target="_blank">rubyinstaller</a></strong> <em>octopress要求ruby1.9.2。</em></li>
+<li><strong><a href="https://github.com/oneclick/rubyinstaller/wiki/development-kit" target="_blank">RubyInstaller DevKit</a></strong> <em>gem在生成本地模块的时候需要用到编译环境。</em></li>
+</ul>
+<p>安装完毕后，<strong>首先</strong>将<code>ruby.exe</code>添加到windows操作系统的环境变量中，这样就可以在当前目录中直接使用ruby命令。</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2012-05-27_environment-config.jpg" class="center" title="环境变量配置" alt="环境变量配置">
+
+
+<p><strong>接着</strong>修改gem source，因为默认的rubygems.org对于国内用户来说速度太慢，建议替换成淘宝的源：</p>
+<pre><code><span class="comment">$</span> <span class="comment">gem</span> <span class="comment">sources</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">remove</span> <span class="comment">http://rubygems</span>.<span class="comment">org/</span>
+<span class="comment">$</span> <span class="comment">gem</span> <span class="comment">sources</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">a</span> <span class="comment">http://ruby</span>.<span class="comment">taobao</span>.<span class="comment">org/</code></pre>
+<p><strong>最后</strong>安装<code>rdoc</code>和<code>bundler</code>这两个gem</p>
+<pre><code><span class="variable">$ </span>gem install rdoc bundler</code></pre>
+<h2>1.3 octopress</h2>
+<h3>1.3.1 安装</h3>
+<pre><code><span class="char">$ </span>mkdir /d/octopress
+<span class="char">$ </span>cd /d/octopress
+<span class="char">$ </span>git clone <span class="method">git:</span>//github.com/imathis/octopress.git
+<span class="char">$ </span>bundle install</code></pre>
+<h3>1.3.2 配置</h3>
+<p>octopress的配置文件是<code>_config.yml</code>，用户通过它来配置博客的基本信息和第三方插件，详见<a href="http://octopress.org/help/" target="_blank">octopress官方文档</a>。</p>
+<h3>1.3.3 第一篇文章</h3>
+<pre><code><span class="variable">$ </span>rake new_post[<span class="string">"octopress on heroku"</span>]</code></pre>
+<p>执行<code>ls -al</code>就会发现在<code>d:\octopress\source\_posts</code>中已经生成<code>2012-04-08-octopress-on-heroku.markdown</code>文档。接下来用户就可以用自己喜欢的编辑器来编辑这篇文章了。</p>
+<h3>1.3.4 预览&amp;生成</h3>
+<p>编辑完文档后，先在本地预览一下，查看排版是否满意</p>
+<pre><code><span class="variable">$ </span>rake preview</code></pre>
+<p>该命令将启动内置的网页服务器，监听端口为4000，用户可通过浏览器访问<code>http://localhost:4000</code>进行预览。最后生成静态网站：</p>
+<pre><code><span class="variable">$ </span>rake generate</code></pre>
+<h1>二、博客平台</h1>
+<p>博客平台既可以采用免费的github/heroku，也可以用VPS。我选择的是heroku。</p>
+<pre><code><span class="variable">$ </span>gem install heroku</code></pre>
+<h2>2.1 申请帐号</h2>
+<p>用户可在<code>www.heroku.com</code>上申请一个新的帐号，过程很简单，就不累述了，详情可参考heroku的官方文档。</p>
+<h2>2.2 创建一个新应用</h2>
+<pre><code>$ heroku <span class="operator"><span class="keyword">create</span> linuxabc</code></pre>
+<p>linuxabc指的是应用名称<br>{: class=“info” }</p>
+<p>至此，创建了一个基于heroku的博客平台，最后步骤就是将静态网站部署到博客平台上：</p>
+<pre><code><span class="variable">$ </span>git add .
+<span class="variable">$ </span>git commit -m <span class="string">'site updated'</span>
+<span class="variable">$ </span>git push heroku master</code></pre>
+<p>大功告成！</p>
+<h1>三、更新博客</h1>
+<p>如何更新博客呢？</p>
+<pre><code><span class="variable">$ </span>rake generate
+<span class="variable">$ </span>git add .
+<span class="variable">$ </span>git commit -m <span class="string">'add &lt;new-post-title&gt;'</span>
+<span class="variable">$ </span>git push heroku master</code></pre>
+<p>建议将这四条语句放在一个bash脚本中，简化操作。<br>{: class=“info” }</p>
+<h1>四、排错</h1>
+<ol>
+<li><p>无法终止<code>rake preview</code></p>
+<p> 启用<code>rake preview</code>后，直接按<code>ctrl+c</code>无法正常终止该进程，老提示<code>终止批处理操作吗（Y/N）？</code>，这时候可以另开一个<code>Git Bash</code>窗口，使用<code>ps aux | grep ruby</code>命令找出<code>pid</code>(第一个数值)，然后执行<code>kill &lt;pid&gt;</code>来停止该进程。</p>
+</li>
+</ol>
+<h1>五、tips</h1>
+<ol>
+<li><p>git restore</p>
+<p> 我不小心将一篇<code>source/_post/2012-04-xx-xx-xx.markdown</code>的内容覆盖掉了，而该blog已经<code>git push</code>过一次，接着可以通过<code>git checkout -- source/_post/2012-04-xx-xx-xx.markdown</code>来恢复该文件。</p>
+</li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-08T02:24:00.000Z"><a href="/2012/04/08/hello-octopress-1/">2012-04-8</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/08/hello-octopress-1/">欢迎你，octopress！（上）</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>前几年，我玩了一段时间wordpress，也断断续续写了一些博客，但是总感觉wordpress不顺手，遂抛弃之。</p>
+<h1>一、为什么抛弃wordpress</h1>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/08/hello-octopress-1/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-02-26T15:30:00.000Z"><a href="/2012/02/26/nfs-tips/">2012-02-26</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/02/26/nfs-tips/">NFS tips</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2>一、solaris</h2>
+<p>Solaris11 text x86默认安装已包含nfs service的相关组件<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/02/26/nfs-tips/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-02-21T00:48:00.000Z"><a href="/2012/02/21/ipt_NETFLOW-on-CentOS/">2012-02-21</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/02/21/ipt_NETFLOW-on-CentOS/">ipt_NETFLOW on CentOS</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>VPS提供商会在一个物理主机中提供多个VPS，该物理主机的资源将被这些VPS所分享，CPU、RAM、硬盘和带宽是四种最常见的资源。本文讨论的是如何为每台VPS划分一定的带宽；</p>
+<p>每个VPS用户都希望能用尽他所能使用的带宽，这就导致带宽争抢的问题，经常有用户抱怨网速过慢，那如何保证每个VPS都能独占一定的带宽呢？首先，我们要能分拣出每个VPS的带宽利用率，然后利用iptables对VPS进行限速。本文解决的是第一个问题，使用netflow对每个VPS的流量进行监控。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/02/21/ipt_NETFLOW-on-CentOS/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-02-19T15:30:00.000Z"><a href="/2012/02/19/how-to-identify-filesystem-type/">2012-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/02/19/how-to-identify-filesystem-type/">如何查看文件系统类型</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在xen hyperviso中创建domU的时候，经常要跟镜像文件或lvm打交道，尤其是文件系统，目前linux中用得最多的是：ext2、ext3、ext4，这三种文件系统各有优缺点。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/02/19/how-to-identify-filesystem-type/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-02-12T15:30:00.000Z"><a href="/2012/02/12/how-to-install-ubuntu-domU/">2012-02-12</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/02/12/how-to-install-ubuntu-domU/">安装ubuntu domU</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2>一、创建虚拟机硬盘</h2>
+<pre><code><span class="comment">#</span> <span class="comment">lvcreate</span> <span class="literal">-</span><span class="comment">L</span> <span class="comment">4096M</span> <span class="literal">-</span><span class="comment">n</span> <span class="comment">lucid</span>-<span class="comment">srv</span> <span class="comment">domU</code></pre>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/02/12/how-to-install-ubuntu-domU/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-02-11T15:30:00.000Z"><a href="/2012/02/11/how-to-install-debian-domU/">2012-02-11</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/02/11/how-to-install-debian-domU/">安装debian domU</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在CentOS(dom0)安装debian/ubuntu有多种方式：</p>
+<ol>
+<li>debootstrap</li>
+<li>virt-manager</li>
+<li>cowboy</li>
+</ol>
+<p>在这里给大家演示后两种</p>
+<p>dom0环境为：CentOS5.7，xen的版本是3.1.2，redhat在该版本中增加了对grub2的支持<br>{: class=“info” }</p>
+<h2>一、virt-manager</h2>
+<p>通过 virt-manager安装linux(hvm)很简单，就像在平常在物理机上安装linux一样，准备好iso镜像文件，再根据安装程序的提示，一步步操作就可以了。在安装的过程中，硬盘选择file backend，文件名为deb6-template，后面的步骤需要用到该镜像文件。</p>
+<p>从官方网站下载的iso文件名为：debian-6.0.2.1-amd64-xfce+lxde-cd-1.iso，文件名太长了，在virt-manager中无法识别，因此需要修改文件名，譬如debian6-amd64.iso<br>{: class=“note” }</p>
+<h2>二、cowboy</h2>
+<p>cowboy这个词来自《the book of xen》，我估计是因为这种方式比较粗野，所以作者用了cowboy这个词。这种方式的思路是直接打包一台domU的系统文件，然后解压到另一台domU的硬盘中。虽说办法是糙了一点，但是非常适合于命令行下操作，可以实现大规模部署。</p>
+<h3>2.1 创建模版</h3>
+<p>上面我们已经使用virt-manager安装了一台debian 6.0.2的源domU，接下来通过这个源domU先创建模版</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">mount</span> <span class="literal">-</span><span class="comment">o</span> <span class="comment">loop</span> <span class="comment">deb6</span>-<span class="comment">template</span>.<span class="comment">img</span> <span class="comment">/tmp/deb6</span>-<span class="comment">template</span>
+<span class="comment">#</span> <span class="comment">chroot</span> <span class="comment">/tmp/deb6</span>-<span class="comment">template</span>
+<span class="comment">#</span> <span class="comment">tar</span> <span class="literal">-</span><span class="comment">cvpzf</span> <span class="comment">deb6</span>.<span class="comment">0</span>.<span class="comment">2</span>-<span class="comment">template</span>.<span class="comment">tar</span>.<span class="comment">gz</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/deb6</span>.<span class="comment">0</span>.<span class="comment">2</span>-<span class="comment">template</span>.<span class="comment">tar</span>.<span class="comment">gz</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/tmp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/lost</span>+<span class="comment">found</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/media</span> <span class="comment">/</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=/mnt</span>  <span class="comment">/
+</pre></figure>
+
+<p>假如没有chroot的话，命令应该是：</p>
+<pre><code><span class="comment">#</span> <span class="comment">tar</span> <span class="literal">-</span><span class="comment">cvpzf</span> <span class="comment">deb6</span>.<span class="comment">0</span>.<span class="comment">2</span>-<span class="comment">template</span>.<span class="comment">tar</span>.<span class="comment">gz</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/deb6</span>.<span class="comment">0</span>.<span class="comment">2</span>-<span class="comment">template</span>.<span class="comment">tar</span>.<span class="comment">gz</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/tmp</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/lost</span>+<span class="comment">found</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/media</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">exclude=</span>.<span class="comment">/mnt</span>  <span class="comment">/</code></pre>
+<p>网上很多文档都说在创建模版的时候要exclude掉<code>/sys</code>和<code>/proc</code>这两个目录，因为在系统运行的状态下，这两个目录含有一些临时文件，但是这些文档只说了一半，解压后到domU存储后，还要记得创建这两个目录，否则，系统运行会出错。另外，也可以将源domU关机，然后打包，因为关机后，domU中这两个目录是空的。<br>{: class=“note” }</p>
+<h3>2.2 准备目标domU存储</h3>
+<p>在这里，我们选择镜像文件作为参考，读者也可以选择lvm作为目标domU的存储。</p>
+<figure class="highlight"><pre><span class="preprocessor"># dd if=/dev/zero of=/staff/domU/deb6-1.img bs=1000 count=2000K</span>
+<span class="preprocessor"># parted /staff/domU/deb6-1.img mklabel msdos</span>
+<span class="preprocessor"># parted /staff/domU/deb6-1.img mkpartfs primary ext2 0 1536</span>
+<span class="preprocessor"># parted /staff/domU/deb6-1.img mkpart extend 1537 2048</span>
+<span class="preprocessor"># parted /staff/domU/deb6-1.img mkpartfs logical linux-swap 1537 2048</span>
+</pre></figure>
+
+<p>以上命令是创建一个镜像文件，然后对其分区，先创建主分区，接着是扩展，然后是逻辑分区，swap分区位于逻辑分区。</p>
+<figure class="highlight"><pre><span class="comment"># parted deb6-1.img</span>
+&gt;<span class="keyword">set</span> <span class="number">1</span> boot <span class="function_start"><span class="keyword">on</span>
+</span>&gt;quit
+</pre></figure>
+
+<p>这个步骤是为了将主分区置为boot，实际上这个步骤是多余的，即使primary不是boot flag也能启动。</p>
+<h3>2.3 转换分区文件系统</h3>
+<p>大家有没有注意到上面的步骤中，分区类型是ext2，这是因为CentOS5.7的parted版本为1.8.1，只支持ext2，最新的parted版本是3.03倒是支持ext3，然而没有for centos5.7的rpm，所以我们还需要将ext2手工转换成ext3。<br>{: class=“info” }</p>
+<pre><code><span class="comment">#</span> <span class="comment">kpartx</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">""</span> <span class="literal">-</span><span class="comment">av</span> <span class="comment">/staff/domU/deb6</span>-<span class="comment">1</span>.<span class="comment">img</code></pre>
+<p>将在/dev/mapper/下生成loopX1和loopX5两个device map，其中loopX1是primary分区，loopX5是swap分区</p>
+<pre><code><span class="preprocessor"># tune2fs -j /dev/mapper/loopX1</span></code></pre>
+<p>这样就将ext2转换成了ext3。</p>
+<h3>2.4 克隆</h3>
+<figure class="highlight"><pre><span class="preprocessor"># mount /dev/mapper/loopX1 /tmp/deb6-1</span>
+<span class="preprocessor"># mount /dev/mapper/loopX1 /tmp/deb6-template</span>
+<span class="preprocessor"># cp -rfp /tmp/deb6-template/* /tmp/deb6-1/</span>
+</pre></figure>
+
+<p>将文件拷贝到新的domU中之后，要记得卸载分区</p>
+<figure class="highlight"><pre><span class="preprocessor"># umount /tmp/deb6-1</span>
+<span class="preprocessor"># umount /tmp/deb6-template</span>
+<span class="preprocessor"># kpartx -d /staff/domU/deb6-1.img</span>
+<span class="preprocessor"># kpartx -d /staff/domU/deb6-template.img</span>
+</pre></figure>
+
+<h3>2.5 创建配置文件</h3>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vim</span> <span class="comment">/etc/xen/deb6</span>-<span class="comment">hvm</span>.<span class="comment">cfg</span>
+
+<span class="comment">import</span> <span class="comment">os</span>, <span class="comment">re</span>
+<span class="comment">arch</span> <span class="comment">=</span> <span class="comment">os</span>.<span class="comment">uname()</span>[<span class="comment">4</span>]
+<span class="comment">if</span> <span class="comment">re</span>.<span class="comment">search('64'</span>, <span class="comment">arch):</span>
+    <span class="comment">arch_libdir</span> <span class="comment">=</span> <span class="comment">'lib64'</span>
+<span class="comment">else:</span>
+    <span class="comment">arch_libdir</span> <span class="comment">=</span> <span class="comment">'lib'</span>
+
+<span class="comment">kernel</span> <span class="comment">=</span> <span class="comment">"/usr/lib/xen/boot/hvmloader"</span>
+<span class="comment">builder='hvm'</span>
+<span class="comment">memory</span> <span class="comment">=</span> <span class="comment">1024</span>
+
+<span class="comment">#</span> <span class="comment">Should</span> <span class="comment">be</span> <span class="comment">at</span> <span class="comment">least</span> <span class="comment">2KB</span> <span class="comment">per</span> <span class="comment">MB</span> <span class="comment">of</span> <span class="comment">domain</span> <span class="comment">memory</span>, <span class="comment">plus</span> <span class="comment">a</span> <span class="comment">few</span> <span class="comment">MB</span> <span class="comment">per</span> <span class="comment">vcpu</span>.
+<span class="comment">shadow_memory</span> <span class="comment">=</span> <span class="comment">8</span>
+<span class="comment">name</span> <span class="comment">=</span> <span class="comment">'deb6</span>-<span class="comment">hvm'</span>
+<span class="comment">vif</span> <span class="comment">=</span> <span class="title">[</span> <span class="comment">'type=ioemu</span>, <span class="comment">bridge=eth0'</span> <span class="title">]</span>
+<span class="comment">#acpi</span> <span class="comment">=</span> <span class="comment">1</span>
+<span class="comment">#apic</span> <span class="comment">=</span> <span class="comment">1</span>
+<span class="comment">disk</span> <span class="comment">=</span> <span class="title">[</span> <span class="comment">'file:/home/staff/vm</span>.<span class="comment">images/deb6</span>-<span class="comment">hvm</span>.<span class="comment">img</span>,<span class="comment">sda</span>,<span class="comment">w'</span>,
+         <span class="comment">'file:/home/chenr/software/debian</span>-<span class="comment">6</span>.<span class="comment">0</span>.<span class="comment">2</span>.<span class="comment">1</span>-<span class="comment">amd64</span>.<span class="comment">iso</span>,<span class="comment">ioemu:hdc:cdrom</span>,<span class="comment">r'</span>
+<span class="title">]</span>
+
+<span class="comment">device_model</span> <span class="comment">=</span> <span class="comment">'/usr/'</span> <span class="literal">+</span> <span class="comment">arch_libdir</span> <span class="literal">+</span> <span class="comment">'/xen/bin/qemu</span>-<span class="comment">dm'</span>
+
+<span class="comment">#</span>-<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="comment">#</span> <span class="comment">boot</span> <span class="comment">on</span> <span class="comment">floppy</span> <span class="comment">(a)</span>, <span class="comment">hard</span> <span class="comment">disk</span> <span class="comment">(c)</span> <span class="comment">or</span> <span class="comment">CD</span>-<span class="comment">ROM</span> <span class="comment">(d)</span>
+<span class="comment">#</span> <span class="comment">default:</span> <span class="comment">hard</span> <span class="comment">disk</span>, <span class="comment">cd</span>-<span class="comment">rom</span>, <span class="comment">floppy</span>
+<span class="comment">boot="c"</span>
+<span class="comment">sdl=0</span>
+<span class="comment">vnc=1</span>
+<span class="comment">vncconsole=3</span>
+<span class="comment">vncpasswd=''</span>
+
+<span class="comment">serial='pty'</span>
+<span class="comment">usbdevice='tablet'</span>
+<span class="comment">#on_reboot="destroy"</span>
+<span class="comment">#on_poweroff="destroy"</span>
+<span class="comment">#on_shutdown="destroy"</span>
+<span class="comment">on_crash="preserve"
+</pre></figure>
+
+<p>需要注意的是，disk选项必须是：</p>
+<pre><code><span class="setting">disk = <span class="value">[<span class="string">"file:/staff/domU/deb6-hvm.img,sda,w"</span>]</span></span></code></pre>
+<p>不能是</p>
+<pre><code><span class="setting">disk = <span class="value">[<span class="string">"tap:aio:/staff/domU/deb6-hvm.img,xvda,w"</span>]</span></span></code></pre>
+<p>因为xen3.1.2不支持tap/xvda。</p>
+<p>virt-manager是一种通用的安装方法，适合于安装全系列的linux/windows操作系统，不过不利于大规模部署，而cowboy的方式则适合于大规模、快速部署，跟virt-manager形成互补。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination">
+  
+    <a href="/page/3/" class="alignleft prev">Prev</a>
+  
+  
+    <a href="/page/5/" class="alignright next">Next</a>
+  
+  <div class="clearfix"></div>
+</nav></div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

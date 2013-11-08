@@ -1,0 +1,414 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>fail2ban on OpenBSD | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="自部署OpenBSD以来，经常发现有script kid使用暴力破解的方式试探SSH的密码，一直以来都不以为然，最近总部下发的通报让我痛下决心，非解决这个问题不可。
+解决方式有两种：
+
+将密码验证更改为证书认证；
+实时监控/var/log/authlog，一旦发现非法IP，就列入黑名单，使用pf对黑名单进行过滤。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="fail2ban on OpenBSD"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-11T13:00:00.000Z"><a href="/2012/04/11/fail2ban-on-OpenBSD/">2012-04-11</a></time>
+      
+      
+  
+    <h1 class="title">fail2ban on OpenBSD</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>自部署OpenBSD以来，经常发现有script kid使用暴力破解的方式试探SSH的密码，一直以来都不以为然，最近总部下发的通报让我痛下决心，非解决这个问题不可。</p>
+<p>解决方式有两种：</p>
+<ol>
+<li>将密码验证更改为证书认证；</li>
+<li>实时监控<code>/var/log/authlog</code>，一旦发现非法IP，就列入黑名单，使用pf对黑名单进行过滤。<a id="more"></a>
+
+</li>
+</ol>
+<p>考虑到证书方式有些麻烦，所以我选择了第二种，经过一番研究，决定采用pf+fail2ban来实现。</p>
+<h2>1. 工作原理</h2>
+<p>OpenBSD使用/var/log/authlog来中记录每一次SSH访问，包括访问IP、用户名，以及认证结果（失败或成功），如下所示：</p>
+<figure class="highlight"><pre><span class="tag">Mar</span>  7 18<span class="pseudo">:04</span><span class="pseudo">:31</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[21329]</span>: <span class="tag">Failed</span> <span class="tag">password</span> <span class="tag">for</span> <span class="tag">root</span> <span class="tag">from</span> 114<span class="class">.251</span><span class="class">.14</span><span class="class">.194</span> <span class="tag">port</span> 36813 <span class="tag">ssh2</span>
+<span class="tag">Mar</span>  7 18<span class="pseudo">:04</span><span class="pseudo">:31</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[2578]</span>: <span class="tag">Received</span> <span class="tag">disconnect</span> <span class="tag">from</span> 114<span class="class">.251</span><span class="class">.14</span><span class="class">.194</span>: 11: <span class="tag">Bye</span> <span class="tag">Bye</span>
+<span class="tag">Mar</span>  7 18<span class="pseudo">:04</span><span class="pseudo">:32</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[17077]</span>: <span class="tag">Failed</span> <span class="tag">password</span> <span class="tag">for</span> <span class="tag">root</span> <span class="tag">from</span> 114<span class="class">.251</span><span class="class">.14</span><span class="class">.194</span> <span class="tag">port</span> 38940 <span class="tag">ssh2</span>
+<span class="tag">Mar</span>  7 18<span class="pseudo">:04</span><span class="pseudo">:33</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[12636]</span>: <span class="tag">Received</span> <span class="tag">disconnect</span> <span class="tag">from</span> 114<span class="class">.251</span><span class="class">.14</span><span class="class">.194</span>: 11: <span class="tag">Bye</span> <span class="tag">Bye</span>
+<span class="tag">Mar</span>  7 18<span class="pseudo">:04</span><span class="pseudo">:34</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[5435]</span>: <span class="tag">Failed</span> <span class="tag">password</span> <span class="tag">for</span> <span class="tag">root</span> <span class="tag">from</span> 114<span class="class">.251</span><span class="class">.14</span><span class="class">.194</span> <span class="tag">port</span> 40996 <span class="tag">ssh2</span>
+<span class="tag">Mar</span>  7 18<span class="pseudo">:04</span><span class="pseudo">:34</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[10562]</span>: <span class="tag">Received</span> <span class="tag">disconnect</span> <span class="tag">from</span> 114<span class="class">.251</span><span class="class">.14</span><span class="class">.194</span>: 11: <span class="tag">Bye</span> <span class="tag">Bye</span>
+<span class="tag">Mar</span>  7 18<span class="pseudo">:04</span><span class="pseudo">:36</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[13110]</span>: <span class="tag">Failed</span> <span class="tag">password</span> <span class="tag">for</span> <span class="tag">root</span> <span class="tag">from</span> 114<span class="class">.251</span><span class="class">.14</span><span class="class">.194</span> <span class="tag">port</span> 43031 <span class="tag">ssh2</span>
+<span class="tag">Mar</span>  7 18<span class="pseudo">:04</span><span class="pseudo">:36</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[1946]</span>: <span class="tag">Received</span> <span class="tag">disconnect</span> <span class="tag">from</span> 114<span class="class">.251</span><span class="class">.14</span><span class="class">.194</span>: 11: <span class="tag">Bye</span> <span class="tag">Bye</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:37</span><span class="pseudo">:25</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[3059]</span>: <span class="tag">Accepted</span> <span class="tag">password</span> <span class="tag">for</span> <span class="tag">root</span> <span class="tag">from</span> 221<span class="class">.182</span><span class="class">.194</span><span class="class">.246</span> <span class="tag">port</span> 56502 <span class="tag">ssh2</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:40</span><span class="pseudo">:09</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[32191]</span>: <span class="tag">Invalid</span> <span class="tag">user</span> <span class="tag">a</span> <span class="tag">from</span> 211<span class="class">.137</span><span class="class">.70</span><span class="class">.139</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:40</span><span class="pseudo">:09</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[25000]</span>: <span class="tag">input_userauthj_request</span>: <span class="tag">invalid</span> <span class="tag">user</span> <span class="tag">a</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:40</span><span class="pseudo">:09</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[32191]</span>: <span class="tag">Failed</span> <span class="tag">password</span> <span class="tag">for</span> <span class="tag">invalid</span> <span class="tag">user</span> <span class="tag">a</span> <span class="tag">from</span> 211<span class="class">.137</span><span class="class">.70</span><span class="class">.139</span> <span class="tag">port</span> 26429 <span class="tag">ssh2</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:40</span><span class="pseudo">:09</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[25000]</span>: <span class="tag">Received</span> <span class="tag">disconnect</span> <span class="tag">from</span> 211<span class="class">.137</span><span class="class">.70</span><span class="class">.139</span>: 11: <span class="tag">Bye</span> <span class="tag">Bye</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:40</span><span class="pseudo">:10</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[30727]</span>: <span class="tag">Invalid</span> <span class="tag">user</span> <span class="tag">aabdulka</span> <span class="tag">from</span> 211<span class="class">.137</span><span class="class">.70</span><span class="class">.139</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:40</span><span class="pseudo">:10</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[7248]</span>: <span class="tag">input_userauth_request</span>: <span class="tag">invalid</span> <span class="tag">user</span> <span class="tag">aabdulka</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:40</span><span class="pseudo">:10</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[30727]</span>: <span class="tag">Failed</span> <span class="tag">password</span> <span class="tag">for</span> <span class="tag">invalid</span> <span class="tag">user</span> <span class="tag">aabdulka</span> <span class="tag">from</span> 211<span class="class">.137</span><span class="class">.70</span><span class="class">.139</span> <span class="tag">port</span> 26572 <span class="tag">ssh2</span>
+<span class="tag">Mar</span>  7 21<span class="pseudo">:40</span><span class="pseudo">:10</span> <span class="tag">openbsd</span>-2 <span class="tag">sshd</span><span class="attr_selector">[7248]</span>: <span class="tag">Received</span> <span class="tag">disconnect</span> <span class="tag">from</span> 211<span class="class">.137</span><span class="class">.70</span><span class="class">.139</span>: 11: <span class="tag">Bye</span> <span class="tag">Bye</span>
+</pre></figure>
+
+<p>从上面的记录可以看出，除了<code>221.182.194.246</code>这个用户输入了正确的帐号/密码外，<code>211.137.70.139</code>则一直在尝试不同的用户名和密码，这个用户的异常行为是：短时间内重复尝试登录失败。从这可以判断该IP是一个非法IP，这时候我们可以使用一个定时执行的脚本，扫描<code>/var/log/authlog</code>，统计IP的访问失败次数，当达到一定阀值的时候就将结果添加到pf的<blacklist>这个table中，再利用block语句就可以将恶意IP过滤掉。</p>
+<p>fail2ban就是这个定时脚本。</p>
+<h2>2. 安装</h2>
+<p>fail2ban最新版本为0.9，OpenBSD 4.9的port中版本比较低，因此我采用了编译源码方式安装fail2ban最新版本。</p>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add -iv python</span>
+<span class="preprocessor"># pkg_add -iv gamin</span>
+<span class="preprocessor"># cd /usr/src</span>
+<span class="preprocessor"># wget http://www.fail2ban.org/nightly/fail2ban-trunk.tar.bz2</span>
+<span class="preprocessor"># tar xjf fail2ban-trunk.tar.bz2</span>
+<span class="preprocessor"># cd fail2ban-0.9-SVN</span>
+<span class="preprocessor"># python2.6 setup.py install</span>
+</pre></figure>
+
+<h2>3. 配置</h2>
+<h3>3.1 pf</h3>
+<p>pf的配置非常简单，只要在<code>pf.conf</code>配置文件靠前的位置添加<code>anchor fail2ban</code>这一条语句即可。这就在<code>pf.conf</code>中创建了一个临时锚，同时创建了一个同名的table，fail2ban将对该table进行增、删IP的操作。</p>
+<h3>3.2 fail2ban</h3>
+<p>在配置fail2ban之前，需说明fail2ban是如何工作的，先来看看它的配置文件目录：</p>
+<figure class="highlight"><pre><span class="comment">root@openbsd</span>-<span class="comment">2/etc/fail2ban:#</span> <span class="comment">tree</span> <span class="string">.</span><span class="comment">/</span>
+<span class="string">.</span><span class="comment">/</span>
+<span class="comment">|</span>-<span class="literal">-</span> <span class="comment">action</span>.<span class="comment">d</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">hostsdeny</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">ipfw</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">iptables</span>-<span class="comment">allports</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">iptables</span>-<span class="comment">multiport</span>-<span class="comment">log</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">iptables</span>-<span class="comment">multiport</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">iptables</span>-<span class="comment">new</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">iptables</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">pf</span>-<span class="comment">drop</span>-<span class="comment">all</span>.<span class="comment">conf</span>
+<span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span>
+<span class="comment">|</span>   <span class="comment">`</span>-<span class="literal">-</span> <span class="comment">shorewall</span>.<span class="comment">conf</span>
+<span class="comment">|</span>-<span class="literal">-</span> <span class="comment">fail2ban</span>.<span class="comment">conf</span>
+<span class="comment">|</span>-<span class="literal">-</span> <span class="comment">filter</span>.<span class="comment">d</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">apache</span>-<span class="comment">auth</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">apache</span>-<span class="comment">badbots</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">apache</span>-<span class="comment">noscript</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">apache</span>-<span class="comment">overflows</span>.<span class="comment">conf</span>
+<span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">qmail</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">sasl</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">sshd</span>-<span class="comment">ddos</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">|</span>-<span class="literal">-</span> <span class="comment">sshd</span>.<span class="comment">conf</span>
+<span class="comment">|</span>   <span class="comment">`</span>-<span class="literal">-</span> <span class="comment">xinetd</span>-<span class="comment">fail</span>.<span class="comment">conf</span>
+<span class="comment">|</span>-<span class="literal">-</span> <span class="comment">jail</span>.<span class="comment">conf</span>
+<span class="comment">`</span>-<span class="literal">-</span> <span class="comment">pf</span>-<span class="comment">anchor</span>.<span class="comment">conf</span>
+<span class="comment">~
+</pre></figure>
+
+<ol>
+<li>fail2ban是一个python脚本，将通过<code>fixme</code>启动，随后一直在后台运行，实时监控<code>/var/log/authlog</code>这个文件；</li>
+<li>一旦<code>/var/log/authlog</code>发生变化，fail2ban将根据<code>fail2ban.conf</code>和<code>filter.d/</code>的定义，使用<code>sshd-pf.conf</code>和<code>sshd-ddos-pf.conf</code>这两个过滤器对变化日志进行比对；</li>
+<li>若变化日志符合规则，而且数量超出定义的阀值，fail2ban将触发<code>action.d/</code>中相对应的的指令，将非法IP添加到pf的fail2ban这个黑名单中；</li>
+<li>该非法IP再次访问访问OpenBSD SSHd时候将被block语句拒绝掉；</li>
+<li>fail2ban脚本会定时对pf黑名单进行清理，也就是过一段时间后，该IP又可以重新访问OpenBSD的SSHd服务。之所以这么设计是有原因的，因为黑客往往通过僵尸网络对目标进行攻击，非法IP是动态变化的，所以不能永久把它列入黑名单。</li>
+</ol>
+<p>下面将对配置文件进行分别说明：</p>
+<ul>
+<li><code>fail2ban.conf</code>该文件配置fail2ban的log级别、log文件路径和socket。</li>
+<li><code>jail.conf</code>,jail是监牢的意思，该文件相当于一个监狱，建了很多个单间，每个单间针对一个单独的服务，在本例中就启用了<strong>ssh-pf</strong>和<strong>ssd-ddos-pf</strong>这两个jail，相对应的，<code>filter.d/</code>目录里面也必须包含同名的配置文件。</li>
+<li><code>filter.d/</code>，该目录中包含了<code>sshd-pf.conf</code>和<code>ssh-ddos-pf.conf</code>这两个文件，相当于过滤器，<code>sshd-pf.conf</code>文件的内容如下：</li>
+</ul>
+<figure class="highlight"><pre><span class="xml"></span><span class="comment"># Fail2Ban configuration file</span><span class="xml">
+</span><span class="comment">#</span><span class="xml">
+</span><span class="comment"># Author: Cyril Jaquier</span><span class="xml">
+</span><span class="comment">#</span><span class="xml">
+</span><span class="comment"># $Revision: 695 $</span><span class="xml">
+</span><span class="comment">#</span><span class="xml">
+
+[Definition]
+
+</span><span class="comment"># Option:  failregex</span><span class="xml">
+</span><span class="comment"># Notes.:  regex to match the password failures messages in the logfile. The</span><span class="xml">
+</span><span class="comment">#          host must be matched by a group named "host". The tag "&lt;HOST&gt;" can</span><span class="xml">
+</span><span class="comment">#          be used for standard IP/hostname matching and is only an alias for</span><span class="xml">
+</span><span class="comment">#          (?:::f{4,6}:)?(?P&lt;host&gt;\S+)</span><span class="xml">
+</span><span class="comment"># Values:  TEXT</span><span class="xml">
+</span><span class="comment">#</span><span class="xml">
+failregex = <span class="tag">&lt;<span class="title">TIME</span>&gt;</span> <span class="tag">&lt;<span class="title">PREFIX</span>&gt;</span> (?:error: PAM: )?Authentication failure for .* from <span class="tag">&lt;<span class="title">HOST</span>&gt;</span>\s*$
+            <span class="tag">&lt;<span class="title">TIME</span>&gt;</span> <span class="tag">&lt;<span class="title">PREFIX</span>&gt;</span> Failed [-/\w]+ for .* from <span class="tag">&lt;<span class="title">HOST</span>&gt;</span>(?: port \d*)?(?: ssh\d*)?$
+            <span class="tag">&lt;<span class="title">TIME</span>&gt;</span> <span class="tag">&lt;<span class="title">PREFIX</span>&gt;</span> ROOT LOGIN REFUSED.* FROM <span class="tag">&lt;<span class="title">HOST</span>&gt;</span>\s*$
+            <span class="tag">&lt;<span class="title">TIME</span>&gt;</span> <span class="tag">&lt;<span class="title">PREFIX</span>&gt;</span> [iI](?:llegal|nvalid) user .* from <span class="tag">&lt;<span class="title">HOST</span>&gt;</span>\s*$
+            <span class="tag">&lt;<span class="title">TIME</span>&gt;</span> <span class="tag">&lt;<span class="title">PREFIX</span>&gt;</span> User \S+ from <span class="tag">&lt;<span class="title">HOST</span>&gt;</span> not allowed because not listed in AllowUsers$
+            <span class="tag">&lt;<span class="title">TIME</span>&gt;</span> <span class="tag">&lt;<span class="title">PREFIX</span>&gt;</span> authentication failure; logname=\S* uid=\S* euid=\S* tty=\S* ruser=\S* rhost=<span class="tag">&lt;<span class="title">HOST</span>&gt;</span>(?:\s+user=.*)?\s
+*$
+            <span class="tag">&lt;<span class="title">TIME</span>&gt;</span> <span class="tag">&lt;<span class="title">PREFIX</span>&gt;</span> refused connect from \S+ \(<span class="tag">&lt;<span class="title">HOST</span>&gt;</span>\)\s*$
+            <span class="tag">&lt;<span class="title">TIME</span>&gt;</span> <span class="tag">&lt;<span class="title">PREFIX</span>&gt;</span> Address <span class="tag">&lt;<span class="title">HOST</span>&gt;</span> .* POSSIBLE BREAK-IN ATTEMPT\s*$
+
+</span><span class="comment"># Option:  ignoreregex</span><span class="xml">
+</span><span class="comment"># Notes.:  regex to ignore. If this regex matches, the line is ignored.</span><span class="xml">
+</span><span class="comment"># Values:  TEXT</span><span class="xml">
+</span><span class="comment">#</span><span class="xml">
+ignoreregex =</span>
+</pre></figure>
+
+<p>这些配置文件中最重要的是<code>failregex</code>，这个语句由一组正则表达式组成，将被用于与非法入侵日志进行比较。看起来像火星文，不过读者大可放心，fail2ban已经提供了丰富的过滤器，无需担心。</p>
+<ul>
+<li><code>action.d/</code>，fail2ban根据该目录的文件向防火墙发出指令。譬如iptables.conf，<br>由于fail2ban并不支持pf，所以需用户自行创建<code>pf-drop-all.conf</code>这个文件，内容如下：</li>
+</ul>
+<figure class="highlight"><pre><span class="title">[</span><span class="comment">Definition</span>]
+<span class="comment">actionstart</span> <span class="comment">=</span> <span class="comment">/sbin/pfctl</span> <span class="literal">-</span><span class="comment">a</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">Ts</span> <span class="comment">||</span> <span class="comment">/sbin/pfctl</span> <span class="literal">-</span><span class="comment">a</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">f</span> <span class="comment">/etc/fail2ban/pf</span>-<span class="comment">anchor</span>.<span class="comment">conf</span>
+<span class="comment">actionstop</span> <span class="comment">=</span> <span class="comment">/sbin/pfctl</span> <span class="literal">-</span><span class="comment">a</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">F</span> <span class="comment">rules</span>
+<span class="comment">actioncheck</span> <span class="comment">=</span> <span class="comment">/sbin/pfctl</span> <span class="literal">-</span><span class="comment">s</span> <span class="comment">info</span> <span class="comment">|</span> <span class="comment">grep</span> <span class="comment">Enabled</span>
+<span class="comment">actionban</span> <span class="comment">=</span> <span class="comment">/sbin/pfctl</span> <span class="literal">-</span><span class="comment">a</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">T</span> <span class="comment">add</span> &lt;<span class="comment">ip</span>&gt; <span class="comment">&&</span> <span class="comment">/sbin/pfctl</span> <span class="literal">-</span><span class="comment">k</span> &lt;<span class="comment">ip</span>&gt;
+<span class="comment">actionunban</span> <span class="comment">=</span> <span class="comment">/sbin/pfctl</span> <span class="literal">-</span><span class="comment">a</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">T</span> <span class="comment">delete</span> &lt;<span class="comment">ip</span>&gt;
+<span class="title">[</span><span class="comment">Init</span>]
+</pre></figure>
+
+<p>这样就完成了整个fail2ban的配置，实际需要配置的内容很少，主要是要创建<code>pf-drop-all.conf</code>这个文件。</p>
+<h2>4. 启动&amp;停止</h2>
+<p><strong>启动</strong></p>
+<p><strong>停止</strong></p>
+<h2>5. 排错</h2>
+<ul>
+<li>查看状态</li>
+</ul>
+<figure class="highlight"><pre>root@openbsd-<span class="number">2</span>/etc/<span class="method">fail2ban:</span># fail2ban-client status
+<span class="class">Status</span>
+|- <span class="class">Number</span> of <span class="method">jail:</span>      <span class="number">2</span>
+`- <span class="class">Jail</span> <span class="method">list:</span>           ssh-ddos-pf, ssh-pf
+root@openbsd-<span class="number">2</span>/etc/<span class="method">fail2ban:</span># fail2ban-client status ssh-ddos-pf
+<span class="class">Status</span> for the <span class="method">jail:</span> ssh-ddos-pf
+|- filter
+|  |- <span class="class">File</span> <span class="method">list:</span>        /var/log/authlog
+|  |- <span class="class">Currently</span> <span class="method">failed:</span> <span class="number">0</span>
+|  `- <span class="class">Total</span> <span class="method">failed:</span>     <span class="number">7</span>
+`- action
+   |- <span class="class">Currently</span> <span class="method">banned:</span> <span class="number">0</span>
+   |  `- <span class="class">IP</span> <span class="method">list:</span>
+   `- <span class="class">Total</span> <span class="method">banned:</span>     <span class="number">0</span>
+</pre></figure>
+
+<ul>
+<li>查看log</li>
+</ul>
+<figure class="highlight"><pre>tail -f /var/<span class="keyword">log</span>/fail2ban.<span class="keyword">log</span>
+</pre></figure>
+
+<p>如果发现异常，fail2ban会显示非法IP信息。</p>
+<ul>
+<li>查看pf黑名单</li>
+</ul>
+<figure class="highlight"><pre><span class="comment">/sbin/pfctl</span> <span class="literal">-</span><span class="comment">a</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">fail2ban</span> <span class="literal">-</span><span class="comment">T</span> <span class="comment">show
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/openbsd/">openbsd</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

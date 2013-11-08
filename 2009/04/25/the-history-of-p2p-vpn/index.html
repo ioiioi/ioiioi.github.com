@@ -1,0 +1,315 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>p2p VPN的今生前世 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="UPDATE(2012.04.18)：我对之前的武断表示歉意，原以为n2n会有良好的发展前景，然而前两天再去查看n2n的SVN时发现，最后一次更新是2010年，看来这些小众的开源项目，终究是逃脱不掉成为孤儿的命运。{: class=“update” }
+企业发展到一定规模的时候大都在全国乃至全球设置分支机构，它们的地理位置分散，在VPN没有出现之前，这些分支机构之间的网络互联只能通过租用专线实现，然而租用专线的费用高昂，一般企业无法承受。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="p2p VPN的今生前世"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2009-04-25T01:00:00.000Z"><a href="/2009/04/25/the-history-of-p2p-vpn/">2009-04-25</a></time>
+      
+      
+  
+    <h1 class="title">p2p VPN的今生前世</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><strong>UPDATE(2012.04.18)</strong>：我对之前的武断表示歉意，原以为n2n会有良好的发展前景，然而前两天再去查看n2n的SVN时发现，最后一次更新是2010年，看来这些小众的开源项目，终究是逃脱不掉成为孤儿的命运。<br>{: class=“update” }</p>
+<p>企业发展到一定规模的时候大都在全国乃至全球设置分支机构，它们的地理位置分散，在VPN没有出现之前，这些分支机构之间的网络互联只能通过租用专线实现，然而租用专线的费用高昂，一般企业无法承受。<br><a id="more"></a></p>
+<p>随着互联网的发展，互联网的接入越来越廉价，嗅觉敏锐的厂家推出了替代专线的解决方案：在Internet的基础上实现一张虚拟的专用网络，这就是VPN（virtual private network 虚拟专用网）的由来。它一方面采用了Internet作为传输媒介，租用成本大大降低；另一方面通过IPsec等多种安全协议实现了等同于专线般安全的效果，因此普一推出便大受欢迎，checkpoint、cisco、juniper等都有成熟的商业解决方案，然而它们针对的是企业市场，对于个人用户而言还是过于高贵了，直到2003年情况才发生改变。</p>
+<p>2003年，日本筑波大学的一名学生登游大发布了SoftEther这款软件，该软件允许用户将两台位于NAT/防火墙之后的电脑实现互联，这在当时引起了很大的轰动，为什么会这样呢？请看下图：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2009-04-05_double-nat.png" class="center" title="double-nat" alt="double-nat">
+
+
+<p>熟悉TCP/IP的读者应该知道，在互联网上通信的双方都必须有公网IP，然而公网IP的数量有限，往往是多个人通过NAT方式共享一个公网IP，所以只能是由私网的用户去访问公网的服务器，无法由公网的用户直接访问私网的主机。这在早期的互联网应用中倒也相安无事，因为当时上网主要是浏览新闻。</p>
+<p>随着互联网的发展，p2p应用层出不穷，1999年诞生的napster顿时名动天下，因为它是第一个以p2p方式共享文件的软件。后来相继诞生了许许多多的p2p应用，然而它们都只是在应用层实现了p2p，软件提供什么应用，用户就只能使用这些应用，而SoftEther不同，它直接在网络层实现了p2p，换句话说就是用户透过SoftEther可以实现联网游戏、文件共享、远程访问、视频会议等大量的互联网应用，所以这在当时赢得大量网友的青睐，为什么？因为CS、因为魔兽，这些网络游戏需要在联网对战，而玩友的电脑大都隐匿在NAT之后，SoftEther为他们实现了互联的美好愿望。</p>
+<p>2004年4月份，SoftEther公司成立。</p>
+<p>2004年8月，SoftEther正式推出1.0版本，开始闭源，开始收钱。</p>
+<p>2006年，推出2.0版，更名为PacketiX VPN，号称重写了全部源代码，跟SoftEther 1.0一点关系都没有，与个人用户渐行渐远……</p>
+<p>提起SoftEther就不得不提VNN，VNN是国人开发的一款类似软件，虽然其推出的时间要比SoftEther早些，但是一直没有得到广泛的关注，后来2004年5月份，登游大抱怨VNN主页抄袭了SoftEther的主页样式，还在日本媒体中大势宣传。当时的CCF精品技术论坛上还掀起了一番激烈的<a href="http://bbs.et8.net/bbs/printthread.php?t=527295&amp;pp=100" target="_blank">讨论</a>，这时VNN才逐渐进入众人的视野。其实两款软件实现的原理有很大的不同，SoftEther通过在ssl over tcp来保证安全，而VNN使用udp进行封装；SoftEther客户端需要在互联网上找一个公用的虚拟hub来实现互联，而VNN的客户端需要到VNN公司的服务器上进行注册才能实现连接；SoftEther客户端之间的通信需要通过虚拟hub中转，而VNN客户端注册完毕之后就可以实现点对点的互联。它们之间唯一的共同点就是都使用了虚拟网卡。令人惊奇的是两家发生矛盾的原因竟然是主页过于雷同而不是源代码的抄袭，这在软件史上倒是头一遭，权当作是茶余饭后的谈资。<br>VNN是一款闭源软件，不提供服务器版本，用户需要登录到官方的服务器上进行验证之后然后才能建立p2p通信隧道。现在由北京宇华亿欣科技有限公司推广运营，已经发展到了4.0版，功能很丰富，只是需要收取服务费，这表明它已经不跟个人用户玩了。</p>
+<p>有压迫的地方就有起义，有需求的地方就有市场，2005年，LogMeIn公司看中了p2p VPN的个人市场，推出了hamachi，它的实现原理跟VNN类似，而且可在多种OS中运行，win2k、win2k3、vista自然不在话下，还可以在Linux和OSX下跑，甚至破天荒的推出了<a href="http://files.hamachi.cc/linux/nokia-770/" target="_blank">Nokia770的版本</a>，这对移动商务人士来说可是一大噱头。时至今日，hamachi已经发展到了1.0.3，值得一提的是hamachi的版本升级非常谨慎，从0.9.9.9到1.0，总共发布了61个测试版本，时间跨度为2年，除了foobar和wine，估计无人能敌了。</p>
+<p>hamachi相对于SoftEther/VNN的优势在于</p>
+<ul>
+<li>对于个人用户免费；</li>
+<li>零配置，使用非常简单；</li>
+<li>体贴的管理功能，由用户自己组建网络，管理组内成员；</li>
+<li>采用了RSA、DH group、AES256和HMAC-SHA1多种安全技术；</li>
+</ul>
+<p>这些优势对个人用户是非常具有杀伤力的，单单免费这一项就可以把SoftEther和VNN踩在脚下，然而，hamachi的安全性还是值得怀疑，请看下图：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2009-04-05_hamachi-arch.png" class="center" title="hamachi-arch" alt="hamachi-arch">
+
+
+<p>用户需要登录到hamachi的服务器进行注册才能建立隧道，由于hamachi是一款闭源的商业软件，LogMeIn公司是否会截获用户的数据流就不得而知了，因此，在p2p VPN这个肥沃的市场中，软件公司要真的要好好想想商务模式，否则技术实现方案再好，用户不接受也是白搭。</p>
+<p>hamachi就这样不温不火的发展着，直到2008年，ntop的作者Luca Deri开始研究p2p VPN，他一方面看到公众对p2p VPN有着强烈的需求，另一方面又不满足已有产品的现状，于是n2n诞生了。</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2009-04-05_n2n-arch.png" class="center" title="n2n-arch" alt="n2n-arch">
+
+
+<p>如上图所示，n2n是一个二层架构的VPN网络，其中super node提供场所，让两个位于NAT/防火墙之后的edge node进行会面，一旦双方完成首次握手，剩下的数据流就之发生在两个edge node之间，如果有一方的NAT属于对称型（symmetrical），super node则还需继续为双方提供数据包的转发；edge node负责数据流的加解密，原理很简单。</p>
+<p>对于一个VPN而言，主要涉及封装和加解密两个步骤，edge node使用UDP协议进行封装，目的是为了更好的兼容防火墙的策略，因为很多防火墙禁用了非TCP/UDP协议禁用。加密算法则采用了twofish，好处开源、简便，处理速度快。</p>
+<p>为了降低设计难度，n2n利用了tap/tun虚拟网卡，这样做得好处是一方面软件尺寸极小，一方面源码的依赖性极低，可以很容易移植到嵌入式设备中，目前有openwrt的版本，在未来的计划中，还将移植到android和iPhone中。</p>
+<p>相对于hamachi，n2n最大的优势在于：</p>
+<ol>
+<li><strong>开源</strong>，任何人都可以检查代码，看看是否有猫腻，而hamachi是闭源的，LogMeIn是否会截获密钥不得而知，一旦截获密钥，就可以对流经hamachi服务器的数据包进行解码。n2n的加解密过程由edge node实现，只有两端的用户知道协商好的共享密钥，super node无从知晓。</li>
+<li><strong>灵活性</strong>，n2n允许用户在Internet上自行创建super node，也可以利用任何一个公开的super node。hamachi用户则必须登录到LogMeIn服务器才能创建隧道。</li>
+</ol>
+<p>n2n支持的OS也非常广，Linux、FreeBSD、MAC OSX、甚至windows，不过由于n2n只提供源代码，需要用户自行手工编译。</p>
+<p>下面就介绍一下如何在Debian Lenny中安装和使用n2n。</p>
+<h3>添加源</h3>
+<figure class="highlight"><pre><span class="label">alfie:</span>~<span class="preprocessor"># vim /etc/apt/sources.list</span>
+deb-src http://mentors<span class="preprocessor">.debian</span><span class="preprocessor">.org</span>/debian/ unstable main contrib non-free
+<span class="label">alfie:</span>~<span class="preprocessor"># aptitude update</span>
+</pre></figure>
+
+<h3>下载&amp;编译</h3>
+<figure class="highlight"><pre><span class="preprocessor"># apt-get source n2n</span>
+<span class="preprocessor"># apt-get install fakeroot build-essential devscripts</span>
+;安装编译环境所需的组件，debuild是devscripts软件包中的一个脚本，编译的时候需要用到
+<span class="preprocessor"># apt-get build-dep n2n</span>
+;编译n2n的过程可能需要一些lib的支持，该步骤就是让debian判断并下载安装相关的lib
+<span class="preprocessor"># cd /usr/src/n2n_1.2.2~svn3653</span>
+<span class="preprocessor"># debuild -us -uc</span>
+;如果不是Debian的维护者，需要打上-us和-uc这两个标签，避免编译完后签名
+</pre></figure>
+
+<h3>安装</h3>
+<figure class="highlight"><pre><span class="comment">alfie:/usr/src/n2n_1</span>.<span class="comment">2</span>.<span class="comment">2~svn3653#</span> <span class="comment">cd</span> <span class="string">.</span><span class="string">.</span>
+<span class="comment">alfie:/usr/src/#</span> <span class="comment">dpkg</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">install</span> <span class="comment">n2n_1</span>.<span class="comment">2</span>.<span class="comment">2~svn3653_i386</span>.<span class="comment">deb
+</pre></figure>
+
+<h3>使用</h3>
+<ul>
+<li>家里的电脑</li>
+</ul>
+<figure class="highlight"><pre><span class="comment">alfie:~#</span> <span class="comment">edge</span> <span class="literal">-</span><span class="comment">d</span> <span class="comment">n2n0</span> <span class="literal">-</span><span class="comment">c</span> <span class="comment">linuxabc</span> <span class="literal">-</span><span class="comment">k</span> <span class="comment">linuxabc</span> <span class="literal">-</span><span class="comment">a</span> <span class="comment">10</span>.<span class="comment">1</span>.<span class="comment">2</span>.<span class="comment">1</span> <span class="literal">-</span><span class="comment">l</span> <span class="comment">88</span>.<span class="comment">86</span>.<span class="comment">108</span>.<span class="comment">50:82
+</pre></figure>
+
+<ul>
+<li>公司的电脑</li>
+</ul>
+<figure class="highlight"><pre><span class="comment">ds</span>-<span class="comment">server:~#</span> <span class="comment">edge</span> <span class="literal">-</span><span class="comment">d</span> <span class="comment">n2n0</span> <span class="literal">-</span><span class="comment">c</span> <span class="comment">linuxabc</span> <span class="literal">-</span><span class="comment">k</span> <span class="comment">linuxabc</span> <span class="literal">-</span><span class="comment">a</span> <span class="comment">10</span>.<span class="comment">1</span>.<span class="comment">2</span>.<span class="comment">2</span> <span class="literal">-</span><span class="comment">l</span> <span class="comment">88</span>.<span class="comment">86</span>.<span class="comment">108</span>.<span class="comment">50:82
+</pre></figure>
+
+<p><code>88.86.108.50</code>是<code>http://www.vpnhosting.cz/index.php/N2n-at-vpnhosting.cz.html</code>提供的一个公共super node。<br>{: class=“info” }</p>
+<p>这样就可以将两台位于NAT/防火墙之后的电脑互联起来了，是不是特别简单呢？</p>
+<p>n2n是一个很有前途的p2p VPN软件，优秀的设计理念将会为它带来大量的用户群，随着时间的流逝，SoftEther，VNN，hamachi将成为过眼烟云，唯有开源的n2n才是永恒。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/vpn/">vpn</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

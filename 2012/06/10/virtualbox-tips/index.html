@@ -1,0 +1,314 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>VirtualBox的使用技巧 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="VirtualBox命令行用起来很方便，下面是一些常用的功能，记录下来以免忘记。
+1. sharedfolder
+随着VMs的增多，迫切需要一个“共享文件夹”
+HOST
+# mkdir -p /home/sharedfolder/linux
+# mkdir -p /home/sharedfolder/windows
+# chown -R nobody:nogroup /home/sharedfolder
+# vboxmanage sharedfolder add &lt;vm1&gt; --name &quot;sharedfolder&quot; --hostpath &quot;/home/sharedfolder&quot;
+# vboxmanage sharedfolder add &lt;vm2&gt; --name &quot;sharedfolder&quot; --hostpath &quot;/home/sharedfolder&quot;
+
+
+
+
+最后接着将公共文件放到sharedfolder中。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="VirtualBox的使用技巧"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-10T04:30:00.000Z"><a href="/2012/06/10/virtualbox-tips/">2012-06-10</a></time>
+      
+      
+  
+    <h1 class="title">VirtualBox的使用技巧</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>VirtualBox命令行用起来很方便，下面是一些常用的功能，记录下来以免忘记。</p>
+<h2>1. sharedfolder</h2>
+<p>随着VMs的增多，迫切需要一个“共享文件夹”</p>
+<p><strong>HOST</strong></p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">mkdir</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">/home/sharedfolder/linux</span>
+<span class="comment">#</span> <span class="comment">mkdir</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">/home/sharedfolder/windows</span>
+<span class="comment">#</span> <span class="comment">chown</span> <span class="literal">-</span><span class="comment">R</span> <span class="comment">nobody:nogroup</span> <span class="comment">/home/sharedfolder</span>
+<span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">sharedfolder</span> <span class="comment">add</span> &lt;<span class="comment">vm1</span>&gt; <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"sharedfolder"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">hostpath</span> <span class="comment">"/home/sharedfolder"</span>
+<span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">sharedfolder</span> <span class="comment">add</span> &lt;<span class="comment">vm2</span>&gt; <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"sharedfolder"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">hostpath</span> <span class="comment">"/home/sharedfolder"
+</pre></figure>
+
+<a id="more"></a>
+
+<p>最后接着将公共文件放到sharedfolder中。<br><a id="more"></a></p>
+<p><strong>Linux Guest</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># mkdir /mnt/sharedfolder</span>
+<span class="preprocessor"># mount -t vboxsf sharedfolder /mnt/sharedfolder</span>
+</pre></figure>
+
+<p>注意，文件类型是vboxsf，不是vboxfs，而且需要root帐号才能mount。<br>{: class=“warning”}</p>
+<p><strong>Windows Guest</strong></p>
+<figure class="highlight"><pre>C:<span class="command">\net</span> use s: <span class="command">\\</span>vboxsvr<span class="command">\sharedfolder</span>
+</pre></figure>
+
+<p>该命令将HOST中的“共享文件夹”映射成本地的“驱动器s”。</p>
+<p><strong>TroubleShooting</strong></p>
+<ul>
+<li>错误1：</li>
+</ul>
+<p>现象：The machine &#39;<vm name>&#39; is already locked for a session (or being unlocked)</p>
+<p>原因：vm处于运行状态，需先将该vm关机后再执行该操作。</p>
+<h2>2. 自启动VM</h2>
+<p>待续</p>
+<h2>3. memory balloon</h2>
+<p>待续</p>
+<h2>4. VM管理</h2>
+<p><strong>4.1 正确的查看VBox进程</strong></p>
+<p>在root中，<code>vboxmanage list runningvms</code>并不能看到non root帐号所运行的VMs，所以不要贸然地对VMs进行操作，应该用</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">ps</span> <span class="comment">aux</span> <span class="comment">|</span> <span class="comment">grep</span> <span class="comment">VBox</span>
+<span class="comment">chenr</span>    <span class="comment">13605</span>  <span class="comment">0</span>.<span class="comment">6</span>  <span class="comment">3</span>.<span class="comment">8</span> <span class="comment">193768</span> <span class="comment">157236</span> <span class="comment">pts/5</span>   <span class="comment">Sl</span>   <span class="comment">12:31</span>   <span class="comment">1:14</span> <span class="comment">/usr/lib/virtualbox/VBoxHeadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">netmgmt</span>-<span class="comment">deb6</span> <span class="literal">-</span><span class="comment">vrde=off</span>
+<span class="comment">chenr</span>    <span class="comment">13618</span>  <span class="comment">0</span>.<span class="comment">0</span>  <span class="comment">0</span>.<span class="comment">0</span>  <span class="comment">12848</span>  <span class="comment">3864</span> <span class="comment">?</span>        <span class="comment">S</span>    <span class="comment">12:31</span>   <span class="comment">0:01</span> <span class="comment">/usr/lib/virtualbox/VBoxXPCOMIPCD</span>
+<span class="comment">chenr</span>    <span class="comment">13623</span>  <span class="comment">0</span>.<span class="comment">0</span>  <span class="comment">0</span>.<span class="comment">1</span>  <span class="comment">26416</span>  <span class="comment">8112</span> <span class="comment">?</span>        <span class="comment">Sl</span>   <span class="comment">12:31</span>   <span class="comment">0:03</span> <span class="comment">/usr/lib/virtualbox/VBoxSVC</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">auto</span>-<span class="comment">shutdown</span>
+<span class="comment">chenr</span>    <span class="comment">15770</span>  <span class="comment">1</span>.<span class="comment">9</span>  <span class="comment">3</span>.<span class="comment">7</span> <span class="comment">606472</span> <span class="comment">152532</span> <span class="comment">pts/5</span>   <span class="comment">Sl</span>   <span class="comment">15:24</span>   <span class="comment">0:35</span> <span class="comment">/usr/lib/virtualbox/VBoxHeadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">win2k3</span>-<span class="comment">template</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">vrde=off
+</pre></figure>
+
+<p>进行确认</p>
+<p>当一个VM关机后，vboxheadless进程也会自动终止。<br>{: class=“info” }</p>
+<h2>5. snapshot</h2>
+<p><strong>5.1 创建快照</strong></p>
+<p>在4.1版本中，online snapshot有bug，解决办法是先“暂停”VM，再创快照。</p>
+<p>1、暂停虚拟机</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> controlvm <span class="string">"centos_5.6_64"</span> pause</code></pre>
+<p>2、快照</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> snapshot <span class="string">"centos_5.6_64"</span> take <span class="string">"after_install_office2011"</span></code></pre>
+<p>3、继续使用虚拟机</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> controlvm <span class="string">"centos_5.6_64"</span> resume</code></pre>
+<p><strong>5.2 恢复快照</strong></p>
+<p>1、列出所有snapshot</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> showvminfo <span class="string">"centos_5.6_64"</span></code></pre>
+<p>2、中止虚拟机</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> controlvm <span class="string">"centos_5.6_64"</span> poweroff</code></pre>
+<p>3、恢复到某个snapshot</p>
+<pre><code><span class="variable">$ </span><span class="constant">VBoxManage</span> snapshot <span class="string">"centos_5.6_64"</span> restore ee927385-<span class="number">5306</span>-<span class="number">4</span>efe-<span class="number">92</span>bb-<span class="number">92</span>b8279a6f37</code></pre>
+<h2>6. vmdk to vdi</h2>
+<p>qemu-img convert /path/to/original.vmdk converted.bin<br>VBoxManage convertdd converted.bin converted.vdi</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/virtualbox/">virtualbox</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

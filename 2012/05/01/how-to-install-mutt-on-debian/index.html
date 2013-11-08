@@ -1,0 +1,314 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>小VPS能干什么？ | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="baseline
+256M VPS能做什么，首先在debian 256M VPS上做一个baseline，通过apt-get安装常用的软件，譬如apache2、mysql、php、wordpress之后，使用
+作为一名网络/系统工程师，接触最多的就是console界面，tcpdump、nmap、if">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="小VPS能干什么？"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-05-01T15:00:00.000Z"><a href="/2012/05/01/how-to-install-mutt-on-debian/">2012-05-1</a></time>
+      
+      
+  
+    <h1 class="title">小VPS能干什么？</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h1>baseline</h1>
+<p>256M VPS能做什么，首先在debian 256M VPS上做一个baseline，通过apt-get安装常用的软件，譬如apache2、mysql、php、wordpress之后，使用</p>
+<p>作为一名网络/系统工程师，接触最多的就是console界面，tcpdump、nmap、iftop、pftop、systat等等工具都是在终端下才能来去自如，所以虽然现在的GUI是越来越华丽，但是仍然取代不了console，简捷是最大的优点。</p>
+<p>用得最多的当然是shell，bash、zsh<br>用得第二多的就是编辑器，因为我们要经常跟；<br>用的第三多的得是email了，mutt<br>第四多的就存在争议，网页我把这个位置给了IM，譬如gtalk、IRC，IRC在国内并不流行，gtalk也用的很少。</p>
+<p>serverfault</p>
+<h1>ps -C apache2 v</h1>
+<p>查看每个进程的内存占用率。</p>
+<ol>
+<li>美化使用环境：统一使用solarized作为主题，包括PuTTY、zsh、vim和mutt</li>
+<li>搭建博客；<br>2.1 octopress；<br>2.2 wordpress；</li>
+<li>使用vim+markdown+octopress记录文档；</li>
+<li>使用mutt管理邮件列表；</li>
+<li><p>安装VPN、radius，正常访问互联网；</p>
+</li>
+<li><p>mutt</p>
+</li>
+<li>getmail4</li>
+<li>procmail</li>
+<li>msmtp-mta</li>
+</ol>
+<h1>aptitude mutt getmail4 procmail msmtp-mta</h1>
+<p>Q1. 为什么用getmail而不用大名鼎鼎的fetchmail？</p>
+<p><a href="http://pyropus.ca/software/getmail/faq.html#faq-about-why" target="_blank">http://pyropus.ca/software/getmail/faq.html#faq-about-why</a></p>
+<h2>mutt</h2>
+<blockquote>
+<p>“All mail clients suck. This one just sucks less.” Michael Elkins, ca. 1995</p>
+</blockquote>
+<p>mutt是一个高效、高度可配置的基于console的邮件用户代理（mail user agent/MUA）</p>
+<p>debian中提供了mutt-patched这个包，包含了sidebar功能。</p>
+<h1>solarized</h1>
+<p>solarize是一个非常流行的配色，目前已移植到多个应用程序中。</p>
+<h2>putty</h2>
+<p>terminal emulator，这个是前提，tmux、vim、mutt都依赖于terminal emulator的底色，所以首先要搞定这个。</p>
+<p>xterm-256color由ncurse-term提供，因此假如没有安装该软件包的化，就没有xterm-color256这个terminfo</p>
+<h2>vim without gui</h2>
+<p>set t_Co=16</p>
+<h2>mutt 配色</h2>
+<p>mutt-colors-solarized-256.muttrc<br>mutt-colors-solarized-16.muttrc</p>
+<p>默认情况下，term的颜色仅支持8色，</p>
+<pre><code><span class="title">tput</span> colors
+<span class="number">8</span></code></pre>
+<p>需要安装ncurse-term这个软件包来解决</p>
+<pre><code><span class="title">aptitude</span> install ncurse-term</code></pre>
+<p>然后重新登录</p>
+<pre><code><span class="title">tput</span> colors
+<span class="number">256</span></code></pre>
+<p>再执行<code>mutt</code>就不会出现</p>
+<p>color not supported的错误了。</p>
+<p>References:</p>
+<ol>
+<li><a href="http://promberger.info/linux/2008/04/05/getting-256-color-support-working-for-mutt-in-xfce4-terminal/" target="_blank">Getting 256 color support working for mutt in xfce4-terminal</a></li>
+<li><a href="http://www.robmeerman.co.uk/unix/256colours" target="_blank"><a href="http://www.robmeerman.co.uk/unix/256colours">http://www.robmeerman.co.uk/unix/256colours</a></a></li>
+</ol>
+<p>mail storage<br>Maildir</p>
+<p>The advantages of Maildir are that no locking is required, so multiple applications can work on the same mailfolder at the same time without messing up. Plus, having one file per message makes manipulating mail with scripts much simpler</p>
+<p>The disadvantages are that some file-systems are very inefficient with both small-files and with thousands of files in one directory.</p>
+<p>mbox</p>
+<p>There are advantages and disadvantages with mbox format. It is slow when removing messages, as the whole thing has to be rewritten, and it can be a mess when several applications want to write to an mbox at the same time. Advantages are that the mbox format is universal and can be read by many other programs (even some in the Windows world).</p>
+<p>IMAP<br>Use IMAP mail storage in these situations:</p>
+<ul>
+<li>When you have a reliable network connection to your mailserver.</li>
+<li>For accessing your mail from different locations.</li>
+<li>When you need to be able to read your mail using different mail user agents.</li>
+</ul>
+<p>建议用IMAP作为邮件存储方式，一来有gmail作为备份，二来还需依赖gmail做全文搜索、三呢是节省存储空间。<br>我想最终会选择IMAP，因为全文检索不是mutt的强项，还得依赖gmail。</p>
+<p>mutt + gmail(imap) + msmtp</p>
+<p>.muttrc</p>
+<p>这个配置是没问题了，即便配置了缓存还是无法解决快速打开邮件的问题，唯一的问题是每次打开都要evaluate cache 27703多的邮件，也不是通过cache就可以迅速能够装载得了的，还是慢，所以就有了offlineimap这个工具。</p>
+<p>mutt + gmail(imap) + msmtp + offlineimap</p>
+<p>.muttrc</p>
+<h2>getmail</h2>
+<h2>procmail</h2>
+<h2>msmtp-mta</h2>
+<p>msmtp msa??</p>
+<p>Tiny mail sending agents</p>
+<p>If you think that installing a full-featured server-mta is overkill, there are some tiny alternatives that use less resources and that don&#39;t listen for incoming connections. Such as: the MasqMail msa, msmtp msa, esmtp msa, smtppush msa and nullmailer msa</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/VPS/">VPS</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

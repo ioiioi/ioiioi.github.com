@@ -1,0 +1,422 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>NTP服务 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="一、什么是NTP，干什么用的？
+NTP的全称是network time protocol（网络时间协议），它的作用是用来同步电脑系统时间的。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="NTP服务"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2010-03-20T01:15:00.000Z"><a href="/2010/03/20/ntp-service/">2010-03-20</a></time>
+      
+      
+  
+    <h1 class="title">NTP服务</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h1>一、什么是NTP，干什么用的？</h1>
+<p>NTP的全称是network time protocol（网络时间协议），它的作用是用来同步电脑系统时间的。<br><a id="more"></a></p>
+<p>中央1的新闻联播每天19:00准时播出，可能有人就有疑问了：为什么我的手表才18:53分，而中央1却是19:00分，到底谁的是准确的。造成这种疑惑的原因在于两者使用的时间计量仪器之间存在着误差，科学家研究表明，铯原子的振荡是最稳定的，所以用它来做时间计量标准也是最精确的，中央1台用的就是铯原子钟的时间，而机械表、电子表等计时精度都比不上铯原子，所以中央1台的时间才是精确的。电脑的BIOS时间依靠主板上的一个晶振来提供，晶振需要电源才能工作，开机时由主机电源供电，关机时依赖主板电池，然而主板晶振也存在跟机械表、电子表类似的问题：</p>
+<ol>
+<li>主板电池可能没电了</li>
+<li>与铯原子时间的存在误差</li>
+<li>用户误操作</li>
+</ol>
+<p>这三个因素都将导致电脑系统时间不精确，NTP就是为了解决这个问题而诞生的。</p>
+<p>在讲NTP之前还需要需要了解一下时区的概念：时间在某个时刻是确定的，有关国际组织商定将英国格林尼制这个地方的时间做为标准，亦即格林尼制时间。然而由于地球自转的关系，太阳从东边升起在西边落下，所以当我们中国人已经开始上班的时候英国人还在睡梦中。如果全球都统一使用格林尼制时间的话，则当格林尼制时间是00:00:00的时候，中国是凌晨，而西方是黑夜，这样各个地方之间的交流就很不方便了。因而国际组织又引入一个当地时间的概念，它将全球划分为24个时区，以格林尼制为起点，中国位于+8时区，当+8区的当地时间为2007年10月10日08:00:00的时候，格林尼制时间是2007年3月3日00:00:00。</p>
+<h1>二、NTP的工作原理</h1>
+<p>NTP采用了分布式的master/slave构架，与铯原子钟直接相连的NTP服务器称为stratum1，不妨把它当作根master，与stratum1相连的slave称为stratum2，以此类推，每一层的stratum既是下一层的master，又是上一层的slave，除此之外同一层stratum将成为peers，最大能到stratum15。</p>
+<p>每个stratum（NTP服务器）都将维护自己的时间状态（因为ntp的守护进程是ntpd，所以也称ntpd状态），它会定时查询上一层或者同一层的stratum。根据返回的ntpd状态数据包，通过一套复杂的算法校正自己ntpd状态，从而保证整个NTP系统之间只有极小的时间误差，即使在缓慢的WAN链路上，也能保证误差在毫秒极的范围。</p>
+<p>一般来说，NTP服务器最佳的安装位置是互联网网关，它除了要跟互联网上的NTP服务器同步外，还要提供NTP服务给企业内网的NTP客户端，NTP客户端泛指所有网络设备，包括路由器、交换机和其他服务器、客户端。</p>
+<h1>三、手工调整系统时间</h1>
+<p>讲了这么多原理是不是头都晕了，毕竟NTP是系统管理员才需要操心的问题，一般人关注的也仅仅是自己的系统时间准不准，如何手工校准？下面就让我们动手做些小练习提提神：</p>
+<h2>3.1 设置系统时区</h2>
+<p>一般在BIOS里面设置的是当地时间，然而Debian默认情况下以为BIOS使用的是UTC时间，也就是标准的格林尼治时间，首先调整：</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vim</span> <span class="comment">/etc/default/rcS</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="comment">#</span> <span class="comment">UTC=yes</span>
+<span class="comment">UTC=no</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</pre></figure>
+
+<p>接着将系统市区改为东八区</p>
+<pre><code># tz<span class="operator"><span class="keyword">select</span></code></pre>
+<p>根据提示选择<code>Asia/Beijing</code></p>
+<p>然后</p>
+<pre><code><span class="preprocessor"># dpkg-reconfigure tzdata</span></code></pre>
+<p>地区选择<code>asia</code>，地点选择<code>shanghai</code></p>
+<p>这样系统时区就可以调整为东八区了，也就是<code>CST</code>。</p>
+<h2>3.2 调整系统时间</h2>
+<p>以下几个命令可以显示、修改BIOS和系统时间</p>
+<p><strong>显示系统时间</strong></p>
+<pre><code><span class="comment"># date</span>
+<span class="title">Mon</span> Apr <span class="number">23</span> <span class="number">23</span>:<span class="number">25</span>:<span class="number">00</span> CST <span class="number">2012</span></code></pre>
+<p>该命令不仅显示时间、日期还有时区，本例中的时区是<code>CST</code></p>
+<p><strong>修改系统日期</strong></p>
+<pre><code><span class="preprocessor"># date -s '20070324'</span></code></pre>
+<p><strong>修改系统时间</strong></p>
+<pre><code><span class="preprocessor"># date -s '14:23:36'</span></code></pre>
+<p><strong>显示BIOS时间</strong></p>
+<pre><code># hwc<span class="operator"><span class="keyword">lock</span> --<span class="keyword">show</span></code></pre>
+<p><strong>用系统时间覆盖BIOS时间</strong></p>
+<pre><code><span class="comment">#</span> <span class="comment">hwclock</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">systohc</code></pre>
+<p><strong>用BIOS时间覆盖系统时间</strong></p>
+<pre><code><span class="comment">#</span> <span class="comment">hwclock</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">hctosys</code></pre>
+<p>date和hwclock还有其他参数，有兴趣的读者可以自行参考其他文档，这里就不累述了。</p>
+<h2>3.3 手工同步系统时间</h2>
+<p>前面手工设置的时间难免还是会跟标准时间有轻微的误差，ntpdate这个软件包可以解决这个问题，它将连上互联网的NTP服务器，同步系统时间。</p>
+<pre><code><span class="preprocessor"># apt-get install ntpdate</span>
+<span class="preprocessor"># ntpdate -u &lt;ntp_server&gt;</span></code></pre>
+<p>\<ntp_server\>指的是NTP服务器的IP地址或者域名</p>
+<p>系统每次启动时，都会调用ntpdate这个工具做时间同步，ntpdate将使用<code>/etc/default/ntpdate</code>中默认的pool.ntp.org作为NTP服务器，您也可以将其修改成其他，例如使用距离较近的ntp.pku.edu.cn，它由北京大学维护。</p>
+<p>总之，如果您的系统时间不对，可以按以下的步骤进行操作：</p>
+<ol>
+<li>先检查BIOS时间</li>
+<li>使用date修改系统时间</li>
+<li>检查修改时区设置</li>
+<li>手工ntpdate同步系统时间</li>
+<li>将系统时间写入BIOS</li>
+</ol>
+<h1>四、NTP服务器的安装</h1>
+<p>在安装NTP服务器之间，需要先按照前面的步骤手工调整好系统时间，接下再用ntpdate手工同步一下系统时间。这是因为如果当前的系统时间跟互联网上的标准时间误差太大的话，NTP服务启动会失败。<br>{: class=“info” }</p>
+<h2>4.1 安装</h2>
+<pre><code><span class="preprocessor"># apt-get install ntp ntp-server</span></code></pre>
+<p>ntp-server的守护进程是ntpd，默认的配置文件是<code>/etc/ntp.conf</code>。</p>
+<h2>4.2 配置</h2>
+<figure class="highlight"><pre><span class="preprocessor"># vim /etc/ntp.conf</span>
+----<span class="number">8</span>&lt;----
+<span class="preprocessor"># 定义ntpd的日志文件</span>
+logfile /var/log/ntpd
+
+<span class="preprocessor"># 定义drift文件，这个很重要。如果没有的话</span>
+<span class="preprocessor"># 需要手工创建</span>
+driftfile /var/lib/ntp/ntp<span class="preprocessor">.drift</span>
+
+statsdir /var/log/ntpstats/
+statistics loopstats peerstats clockstats
+filegen loopstats file loopstats type day enable
+filegen peerstats file peerstats type day enable
+filegen clockstats file clockstats type day enable
+
+<span class="preprocessor"># 定义上一层NTP服务器：</span>
+server <span class="number">0.</span>pool<span class="preprocessor">.ntp</span><span class="preprocessor">.org</span>
+server <span class="number">1.</span>pool<span class="preprocessor">.ntp</span><span class="preprocessor">.org</span>
+server <span class="number">2.</span>pool<span class="preprocessor">.ntp</span><span class="preprocessor">.org</span>
+<span class="comment">; NTP将定时跟上面的NTP服务器群进行时间同步，</span>
+<span class="comment">; 从而保证系统时间是精确的。</span>
+<span class="comment">; 这三个都是ntp的官方主机群，相当稳定。</span>
+
+<span class="preprocessor"># 企业内网的NTP服务器：</span>
+server <span class="number">127.127</span><span class="number">.1</span><span class="number">.0</span>
+<span class="comment">; 将本机作为企业内网NTP服务器</span>
+
+fudge <span class="number">127.127</span><span class="number">.1</span><span class="number">.0</span> stratum <span class="number">10</span>
+<span class="comment">; 因为要提供NTP服务给企业内网，所以应该选择一个较低的stratum，</span>
+<span class="comment">; 10是一个安全选择。</span>
+
+<span class="preprocessor"># 权限控制：</span>
+restrict default ignore
+<span class="comment">; 默认情况下拒绝所有主机的NTP数据包，下面简单讲一下常用的参数</span>
+<span class="comment">; nomodify 拒绝主机修改本机的nptd状态，不过他们仍然可以通过本机同步时间</span>
+<span class="comment">; notrust 忽略没有通过密文验证的（子网内的）主机</span>
+<span class="comment">; noquery 拒绝主机查询本机的ntpd状态</span>
+<span class="comment">; notrap 拒绝trap service的控制信息</span>
+
+restrict <span class="number">0.</span>pool<span class="preprocessor">.ntp</span><span class="preprocessor">.org</span> mask <span class="number">255.255</span><span class="number">.255</span><span class="number">.255</span> nomodify notrap noquery
+restrict <span class="number">1.</span>pool<span class="preprocessor">.ntp</span><span class="preprocessor">.org</span> mask <span class="number">255.255</span><span class="number">.255</span><span class="number">.255</span> nomodify notrap noquery
+restrict <span class="number">2.</span>pool<span class="preprocessor">.ntp</span><span class="preprocessor">.org</span> mask <span class="number">255.255</span><span class="number">.255</span><span class="number">.255</span> nomodify notrap noquery
+<span class="comment">; 不允许pool.ntp.org的NTP服务器</span>
+<span class="comment">; 1、修改本机ntpd状态</span>
+<span class="comment">; 2、查询本机ntpd状态</span>
+<span class="comment">; 3、使用trap service</span>
+
+restrict <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>
+<span class="preprocessor"># 开放本机对ntpd状态的所有权限，包括查询和修改</span>
+restrict <span class="number">192.168</span><span class="number">.100</span><span class="number">.0</span> mask <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span> nomodify notrap
+restrict <span class="number">192.168</span><span class="number">.101</span><span class="number">.0</span> mask <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span> nomodify notrap
+<span class="comment">; 开放192.168.100.0/24和192.168.101.0/24两个网段的查询权限，</span>
+<span class="comment">; 但是不允许他们修改本机的ntpd状态。</span>
+
+----<span class="number">8</span>&lt;----
+</pre></figure>
+
+<p>修改完配置后要重启守护进程：<code># /etc/init.d/ntp-server restart</code></p>
+<h1>五、NTP客户端的安装</h1>
+<p><code>ntp-server</code>既是服务器，又是客户端。</p>
+<p>互联网上很多资料都建议使用ntpdate作为时间同步的工具，这是不对的，因为它对系统时间的修改是跳跃式的，不像ntp-server那样可以通过修改drift平滑过渡，所以ntpdate只适合在系统首次启动时同步时间，详细情况可以参考（<a href="http://www.hants.lug.org.uk/cgi-bin/wiki.pl?Ntpdate）。" target="_blank">http://www.hants.lug.org.uk/cgi-bin/wiki.pl?Ntpdate）。</a></p>
+<h2>5.1 修改ntpdate的设置</h2>
+<p>ntpdate默认的ntp服务器是pool.ntp.org，用户可以自行修改成企业内网的ntp服务器。</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vim</span> <span class="comment">/etc/default/ntpdate</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="comment">NTPSERVERS="192</span>.<span class="comment">168</span>.<span class="comment">100</span>.<span class="comment">1"</span>
+<span class="comment">##</span> <span class="comment">也可以使用域名：ntp_server</span>.<span class="comment">linuxabc</span>.<span class="comment">com</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</pre></figure>
+
+<h2>5.2 手工同步系统时间</h2>
+<pre><code><span class="preprocessor"># ntpdate -u 192.168.100.1</span></code></pre>
+<h2>5.3 配置/etc/ntp.conf</h2>
+<p>因为客户端只需要去查询NTP服务器，并不提供服务器给其他人，所以配置文件很简单。</p>
+<figure class="highlight"><pre><span class="preprocessor"># vim /etc/ntp.conf</span>
+server <span class="number">192.168</span><span class="number">.100</span><span class="number">.1</span>
+restrict <span class="keyword">default</span> ignore
+<span class="preprocessor"># 忽略所有主机的ntp请求</span>
+restrict <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>
+restrict <span class="number">192.168</span><span class="number">.100</span><span class="number">.1</span> mask <span class="number">255.255</span><span class="number">.255</span><span class="number">.255</span> nomodify notrap noquery
+<span class="preprocessor"># 允许本机向192.168.100.1提交ntp请求，不允许</span>
+driftfile /<span class="keyword">var</span>/lib/ntp/drift
+<span class="preprocessor"># 192.168.100.1也可以替换成ntp_server.linuxabc.com</span>
+</pre></figure>
+
+<h1>六、排错</h1>
+<p><strong>1） 检查ntpd进程是否已经启用</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># netstat -an | grep 123</span>
+<span class="preprocessor"># ps aux | grep ntpd</span>
+</pre></figure>
+
+<p><strong>2） 查看/var/log/daemon.log</strong></p>
+<p>默认情况下，ntpd的log写在/var/log/daemon.log中。</p>
+<figure class="highlight"><pre># grep ntpd /var/<span class="built_in">log</span>/daemon.<span class="built_in">log</span> | head
+Apr <span class="number">22</span> <span class="number">07</span>:<span class="number">06</span>:<span class="number">58</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">0001</span>
+Apr <span class="number">22</span> <span class="number">07</span>:<span class="number">41</span>:<span class="number">06</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">4001</span>
+Apr <span class="number">22</span> <span class="number">07</span>:<span class="number">58</span>:<span class="number">10</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">0001</span>
+Apr <span class="number">22</span> <span class="number">09</span>:<span class="number">57</span>:<span class="number">39</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">4001</span>
+Apr <span class="number">22</span> <span class="number">10</span>:<span class="number">14</span>:<span class="number">45</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">0001</span>
+Apr <span class="number">22</span> <span class="number">11</span>:<span class="number">23</span>:<span class="number">01</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">4001</span>
+Apr <span class="number">22</span> <span class="number">11</span>:<span class="number">40</span>:<span class="number">04</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">0001</span>
+Apr <span class="number">22</span> <span class="number">13</span>:<span class="number">22</span>:<span class="number">30</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">4001</span>
+Apr <span class="number">22</span> <span class="number">13</span>:<span class="number">39</span>:<span class="number">35</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">0001</span>
+Apr <span class="number">22</span> <span class="number">14</span>:<span class="number">13</span>:<span class="number">47</span> netmgmt-debian ntpd[<span class="number">2448</span>]: kernel <span class="built_in">time</span> sync status change <span class="number">4001</span>
+</pre></figure>
+
+<p><strong>3） 使用ntpq -p查看跟NTP服务器的同步情况</strong></p>
+<figure class="highlight"><pre><span class="comment"># ntpq -p</span>
+     <span class="title">remote</span>           refid      st t when <span class="built_in">poll</span> reach   delay   offset  jitter
+==============================================================================
+*<span class="number">202.118.1.199</span>   <span class="number">202.112.31.197</span>   <span class="number">2</span> u <span class="number">2035</span> <span class="number">1024</span>  <span class="number">176</span>   <span class="number">81</span>.<span class="number">911</span>    <span class="number">0</span>.<span class="number">912</span>   <span class="number">0</span>.<span class="number">211</span>
++<span class="number">114.80.81.13</span>    <span class="number">204.152.184.72</span>   <span class="number">2</span> u  <span class="number">620</span> <span class="number">1024</span>  <span class="number">377</span>   <span class="number">41</span>.<span class="number">315</span>  -<span class="number">34</span>.<span class="number">665</span>  <span class="number">13</span>.<span class="number">221</span>
++Hshh.org        <span class="number">209.81.9.7</span>       <span class="number">2</span> u  <span class="number">681</span> <span class="number">1024</span>  <span class="number">375</span>   <span class="number">39</span>.<span class="number">913</span>  -<span class="number">29</span>.<span class="number">659</span>   <span class="number">1</span>.<span class="number">524</span>
+</pre></figure>
+
+<p>poll表示每隔1024秒，客户端就会跟服务器同步一次。NTP客户端会自动调整poll的值，如果他们的误差很小就增大poll，反之则减小poll。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/debian/">debian</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>FTP服务 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="FTP全称是File Transfer Protocol（文件传输协议），顾名思义，它的作用是在网络中传送文件。这是Internet上一个比较古老的协议，早在1971年就已经诞生，那个年代的网络条件奇差，带宽小，掉线频繁，FTP应运而生，它的断点续传功能拯救了许许多多网民宝贵的时间，时至今日，它仍然在许多重要的应用环境中发挥着不可或缺的作用。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="FTP服务"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2010-04-16T15:00:00.000Z"><a href="/2010/04/16/ftp-service/">2010-04-16</a></time>
+      
+      
+  
+    <h1 class="title">FTP服务</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>FTP全称是File Transfer Protocol（文件传输协议），顾名思义，它的作用是在网络中传送文件。这是Internet上一个比较古老的协议，早在1971年就已经诞生，那个年代的网络条件奇差，带宽小，掉线频繁，FTP应运而生，它的断点续传功能拯救了许许多多网民宝贵的时间，时至今日，它仍然在许多重要的应用环境中发挥着不可或缺的作用。</p>
+<a id="more"></a>
+
+<h1>二、工作原理</h1>
+<p>用户通过FTP客户端连接FTP服务器，客户端首先跟FTP服务器的21端口建立一条TCP链接，用于用户的身份验证，成功之后该TCP链接用于传送控制信息，例如改变目录，删除文件，上下传文件等，我们称该条TCP链接为“控制链接”；当需要进行文件传送的时候再和服务器的20端口创建第二个TCP链接用于数据传送，我们称之为“数据传送链接”。</p>
+<p>在建立“数据传送链接”的时候，FTP服务器的端口是20，客户端端口则由客户端和服务器通过“控制链接”进行协商。根据建立链接的发起者的不同有两种FTP模式：一种叫主动模式，由服务器主动发起跟客户端的TCP链接；一种叫被动模式，由服务器被动接受由客户端发起的TCP链接。这两种模式的差别将影响防火墙和NAT的设置。建议采用被动模式，详情请参考“shorewall一节”</p>
+<p>在*nix的世界里有3个主流的FTP服务器：VsFTPd、ProFTPd和Pure-FTPd，选择哪一个作为我们的FTP服务器需要从安全性、稳定性和性能这三个方面来评估，除此之外能否完善地支持LDAP也是一个考察的重点，因为大型企业里大都部署了目录服务。</p>
+<p>VsFTPd的全称是very security FTP daemon，号称是最安全的ftp服务器，它在高负载下的性能表现相当抢眼，许多企业都选用VsFTPd作为面向Internet的文件服务器，例如RedHat、SuSE、Debian的ftp服务器等等，不过它的功能相对而言较弱，尤其是对LDAP的支持很差，所以VsFTPd对于企业用户而言不是最佳的选择。</p>
+<p>ProFTPd是这三个FTP服务器中特性最多的，有众多的第三方插件，支持mysql、ldap、pam和radius各种验证方式。它的配置文档格式很像Apache，配置容易，特别是对文件系统的权限控制很方便。它的缺点是bug比较多，查看一下changelog就会发现开发小组经常修复bug，在高负载情况下性能一般，另外它在利用LDAP做quota时有些问题，所以它更适合用于有多种稀奇古怪需求的个人站点，不适合用于企业环境。</p>
+<p>Pure-FTPd从troller衍生而来，遵循BSD协议，已经被移植到包括windows在内的多种平台。它在性能和安全性方面的口碑都不错，虽然特性比ProFTPd少，但是比VsFTPd多，特别是它能跟LDAP结合紧密，很容易利用LDAP的对用户帐号做身份验证、磁盘限额和带宽控制，所以它用于我们darkblue.com还是比较合适的。</p>
+<p>随着云计算的盛行，越来越多的用户把网盘当作备份或共享的地方，不过从企业的角度来说，数据的安全性显得更为重要，因此企业内部的文件服务器仍然占据重要的一席之地，譬如有以下几种应用场景：</p>
+<ol>
+<li>提供公共文档给用户下载，例如常用软件、节日活动的照片和培训资料等，使用地点包括内网和外网。</li>
+<li>分公司定时备份系统文件至中心节点的备份服务器上。使用方式是：远程—-&gt;广州总部</li>
+<li>每个企业用户都拥有一个容量为10G的私人网络硬盘，用于备份重要的工作文档。</li>
+</ol>
+<p>有心的读者可能会问：这些服务完全可以通过文件共享来实现啊，为什么要利用ftp呢？问得好，仔细观察这些应用就会发现，第一：客户端和服务器需要经过缓慢而不稳定的Internet（或广域网）链路，直接使用文件共享会占据全部的带宽，那些关键应用的速度肯定会受到影响；第二：文件共享对链路稳定性要求较高，在Internet（或广域网）上传输的时候很容易因为链路原因而失败。<br>FTP正好能够弥补文件共享的缺陷，因为FTP具有带宽控制和断点续传的功能。</p>
+<h1>五、Pure-FTPd服务器的安装和配置</h1>
+<p>Debian的开发人员为我们提供了四个Pure-FTPd的二进制包，分别是：</p>
+<p>|—-<br>|编号|软件包|功能|<br>|1.|pure-ftpd|基础功能|<br>|2.|pure-ftpd-ldap|基础功能+ldap支持|<br>|3.|pure-ftpd-mysql|基础功能+MySQL支持|<br>|4.|pure-ftpd-postgresql|基础功能+postgresql支持|<br>{: class=“datalist”}</p>
+<p><code>pure-ftpd-ldap</code>，<code>pure-ftpd-mysql</code>和<code>pure-ftpd-postgresql</code>之间相互冲突，所以同一时间只能安装一个。</p>
+<ol>
+<li>安装</li>
+</ol>
+<p>在场景二中需要用到LDAP，所以应该安装pure-ftpd-ldap。</p>
+<p><code>apt-get install pure-ftpd-ldap</code></p>
+<p>在Debian安装软件非常简单和方便，这无疑是一件让人十分愉快的事。特别是当你曾使用过其他发行版的时候，你会发现Debian是多么的可爱。</p>
+<ol>
+<li>配置</li>
+</ol>
+<p>Pure-FTPd的配置方式比较怪异，它不是通过配置文件来配置的，而是直接通过命令行+参数来启动守护进程，据说这是为了更好的性能和安全性，我实在想不通这能起到多大的作用，相反觉得增加了用户的使用难度。</p>
+<p>Debian的开发人员为了降低使用难度，采用了一种变通的配置方式，每个选项名和参数都将单独写在一个文件中，文件名就是选项名，选项的参数就是文件内容，这些文件放在/etc/pure-ftpd/conf里面。当pure-ftpd启动的时候会调用一个叫做pure-ftpd-wrapper的perl脚本将这些文件解析成选项名和参数，最后的启动方式仍然是：<code>/usr/sbin/pure-ftpd</code>后跟一长串的选项名+参数。<br>例如不允许匿名用户登录，pure-ftpd启动的时候就应该是：</p>
+<pre><code>pure-ftpd -E <span class="keyword">...</span></code></pre>
+<p>以Debian的方式则是：</p>
+<pre><code><span class="title">echo</span> <span class="built_in">yes</span> &gt; /etc/pure-ftpd/conf/NoAnonymous</code></pre>
+<p>pure-ftpd-wrapper会自动将这个文件转换成-E这个选项。</p>
+<p>在/etc/pure-ftpd中还有auth和db这两个文件夹，其中auth里面有3个文件，</p>
+<p><em>ls -al /etc/pure-ftpd/auth的结果</em></p>
+<p>他们分别是/etc/pure-ftpd/conf/中LDAPConfigFile、PAMAuthentication、UnixAuthentication这三个文件的链接。他们代表了3种不同的验证方式，文件名中的序号越低，优先级越高，所以验证的次序依次是ldap &gt; unix &gt; pam。<br>事实上，这三个文件分别是/etc/pure-ftpd/conf/中<br>LDAPConfigFile、PAMAuthentication、UnixAuthentication<br>这三个文件的链接。</p>
+<p>另外一个文件夹db里面存放的则是ldap.conf文件和虚拟用户数据库文件。当做LDAP验证时，pure-ftpd-ldap将通过ldap.conf跟OpenLDAP交互，进行身份验证。虚拟用户数据库文件则是pure-ftpd使用虚拟用户时创建的一个数据库文件，对应的验证方式是PureDB，该数据库文件以pdb为后缀。</p>
+<standalone vs inetd>
+
+<p>最后有一点需要注意的是，在Debian中，pure-ftpd默认时inetd方式，如果要改成standalone方式的话需要修改/etc/default/pure-ftpd-common:<br>STANDALONE_OR_INET=standalone</p>
+<p>同时将/etc/inetd.conf中的ftp disable掉<br>update-inetd —disable ftp</p>
+<p>重启inetd和pure-ftpd</p>
+<figure class="highlight"><pre>/etc/init.d/openbsd-inetd re<span class="operator"><span class="keyword">start</span>
+/etc/init.d/pure-ftpd-ldap restart
+</pre></figure>
+
+<p>下面让我们来看看如何实现上面的三种应用。</p>
+<p>应用场景一：</p>
+<p>因为提供的是公共下载服务，所以不需要对用户进行验证，这可以通过简单的匿名FTP来实现。</p>
+<p>1、创建ftp帐号和组</p>
+<p>Pure-FTPd以系统是否有ftp来判断是否开通匿名FTP服务，所以需要先创建一个ftp帐号和组。由于该帐号仅仅用于文件权限控制，不需要登录，所以创建的时候shell设为/bin/false，提高安全性。</p>
+<p>groupadd ftp<br>useradd -s /bin/false -m -c Anonymous ftp -d /home/ftp ftp ftp</p>
+<p>2、限制匿名用户权限</p>
+<figure class="highlight"><pre><span class="title">cd</span> /etc/pure-ftpd/conf
+echo <span class="built_in">yes</span> &gt; AnonymousOnly
+echo <span class="built_in">no</span> &gt; NoAnonymous
+</pre></figure>
+
+<h1>只允许匿名用户</h1>
+<p>echo no &gt; AnonymousCanCreateDirs</p>
+<h1>不允许匿名用户创建目录</h1>
+<p>echo yes &gt; AnonymousCantUpload</p>
+<h1>不允许匿名用户上传</h1>
+<p>echo no &gt; AllowAnonymousFXP</p>
+<h1>不允许匿名FXP</h1>
+<p>echo yes &gt; ChrootEveryone</p>
+<h1>将匿名用户chroot到ftp的家目录/home/ftp，提高安全性</h1>
+<p>3、限速</p>
+<p>企业用户如果太多的话就需要对速率进行限制，否则容易引起性能问题，甚至DDOS。<br>echo 10000 &gt; AnonymousBandwidth</p>
+<h1>只允许所有匿名用户共用10000 Kb/s（10Mb/s）的带宽</h1>
+<p>4、限用户进程</p>
+<p>同时一个IP只允许开启一个登陆进程</p>
+<p>echo 1 &gt; MaxClientsPerIP</p>
+<p>5、配置共享文件夹</p>
+<p>将共享文件夹拷贝到/home/ftp，例如software</p>
+<figure class="highlight"><pre><span class="comment">cp</span> <span class="literal">-</span><span class="comment">r</span> <span class="comment">software</span> <span class="comment">/home/ftp</span>
+<span class="comment">chown</span> <span class="literal">-</span><span class="comment">R</span> <span class="comment">ftp:ftp</span> <span class="comment">/home/ftp/software</span>
+<span class="comment">chmod</span> <span class="literal">-</span><span class="comment">R</span> <span class="comment">550</span> <span class="comment">/home/ftp/software
+</pre></figure>
+
+<p>说明：这里需要将权限设为550，如果设为只读的话用户无法进入software这个目录中。</p>
+<p>6、绑定IP地址和端口</p>
+<p>Pure-FTPd默认下会监听所有的网卡地址，默认的端口是21<br>我们只需要让它监听本机的eth0就OK了，eth0连接的是企业的内网段，假设为192.168.100.1/24<br>echo yes &gt; IPV4Only<br>echo 192.168.100.1,21 &gt; Bind</p>
+<p>7、重启服务器</p>
+<p>/etc/init.d/pure-ftpd restart<br>大功告成，一个简单、高效的匿名FTP服务器就这样安装成功了。</p>
+<p>应用场景二：<br>在第二种应用中，需要利用系统内置的backup目录来登陆FTP，接着上传备份文件至中央服务器，所以需要开启系统账户的验证功能，当然还有恰当的权限控制和上传带宽限制，否则巨大的备份文件会吞噬整条分节点到中央节点的广域/Internet链路带宽。</p>
+<p><strong><em> 待续 </em></strong></p>
+<p>应用场景三：<br>在这个场景中可以通过Pure-FTPd + LDAP来实现。因为LDAP的账户信息（LDAP术语：“条目”）中包括了以下属性：<br>1、该用户是否能否使用FTP，也就是说必须通过LDAP验证才能让他接入私人网络硬盘；<br>2、磁盘限额，Pure-FTPd根据该属性来限制用户所能使用的磁盘空间；<br>3、上传/下载速率，Pure-FTPd将通过这两个属性来限制用户使用FTP时的速率，以免过大的传输速率导致系统负载过大。<br>通过以上属性，我们就可以利用LDAP来很好地控制用户的私人网络硬盘了。</p>
+<p>安装的时候选择的是pure-ftpd-ldap，所以默认就已经开启了LDAP验证的选项。不过还需要对LDAP进行其他的相关配置。<br>2、修改/etc/pure-ftpd/db/ldap.conf</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vim</span> <span class="comment">/etc/pure</span>-<span class="comment">ftpd/db/ldap</span>.<span class="comment">conf</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="comment">LDAPServer</span> <span class="comment">127</span>.<span class="comment">0</span>.<span class="comment">0</span>.<span class="comment">1</span>
+<span class="comment">LDAPPort</span>   <span class="comment">389</span>
+<span class="comment">LDAPBaseDN</span> <span class="comment">ou=People</span>,<span class="comment">dc=darkblue</span>,<span class="comment">dc=com</span>
+<span class="comment">LDAPBindDN</span> <span class="comment">cn=admin</span>,<span class="comment">dc=darkblue</span>,<span class="comment">dc=com</span>
+<span class="comment">LDAPBindPW</span> <span class="comment">type_admin_password_here</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</pre></figure>
+
+<p>ldap.conf的详细说明请参考“OpenLDAP服务”一节</p>
+<p>3、加载pureftpd.schema</p>
+<p>Pure-FTPd整合LDAP需要用到pureftpd.schema。pure-ftpd-ldap二进制包中没有这个，需要下载源码包，将里面的pureftpd.schema解压到/etc/ldap/schema中。</p>
+<p>1) apt-get source pure-ftpd<br>   gzip -d pure-ftpd-1.0.19<br>   cp pure-ftpd-1.0.19/pureftpd.schema /etc/ldap/schema</p>
+<p>   <strong><strong> 待续 </strong></strong></p>
+<p>2) 在slapd.conf中添加pureftpd.schema</p>
+<h2>vi /etc/ldap/slapd.conf</h2>
+<p>snip——</p>
+<h2>include    /etc/ldap/schema/pureftpd.schema</h2>
+<p>snip——</p>
+<p>4、重启OpenLDAP服务</p>
+<h1>/etc/init.d/slapd restart</h1>
+<p>slapd.conf更新了，需要重启OpenLDAP重新读取pureftpd.schema。</p>
+<p>5、修改OpenLDAP条目</p>
+<p>pureftpd.schema定义了一些FTP相关的属性，为了利用LDAP承载这些FTP属性，我们需要修改OpenLDAP的条目。<br>如下所示：<br>dn: uid=carl,ou=People,dc=darkblue,dc=com<br>uid: carl<br>cn: carl<br>objectClass: posixAccount<br>objectClass: PureFTPdUser<br>objectClass: top<br>objectClass: shadowAccount<br>userPassword:: e2NyeXB0fSQxJHlFMFpyMFQ4JFdhaTAxc01TbGVmUHowQ0ZWNS5iSjE=<br>shadowLastChange: 13593<br>shadowMax: 99999<br>shadowWarning: 7<br>loginShell: /bin/bash<br>uidNumber: 1011<br>gidNumber: 1011<br>homeDirectory: /home/carl<br>gecos: carl,,,,LDAP account<br>FTPStatus: enabled<br>FTPQuotaMBytes: 200<br>FTPDownloadBandwidth: 500<br>FTPUploadBandwidth: 100<br>FTPDownloadRatio: 5<br>FTPUploadRatio: 1</p>
+<p>通过该条目的相关FTP属性，我们可以控制用户<br>1) 能否登录<br>2) 能上传、下载的文件数量<br>3) 磁盘限额，单位MBytes<br>4) 上传、下载的带宽，单位KB/s<br>5) 上传、下载文件数量的比例</p>
+<p>说明：account这个objectclass跟PureFTPdUser有冲突，两者不能在同一个OpenLDAP条目中出现。</p>
+<p>6、LDAP用户的home目录<br>个人网络硬盘（也就是LDAP用户的home目录）里面的数据都是一些重要的文档，建议专门放在一个文件服务器srv_slave.darkblue.com中，然后通过NFS服务mount到srv_master.darkblue.com上来，这样也方便数据的管理和备份。详情请参考“NFS服务”一节。</p>
+<p>五、SSL/TLS<br>FTP协议很早就诞生了，当时没有过多的考虑安全问题，用户名和密码都是明文传送的，很容易被他人窃取，例如Ethereal就可以看到这些敏感信息：<br><strong><strong> Ethereal </strong></strong><br>为了更安全的使用FTP，我们需要利用SSL/TLS来加密“控制链路”，这样在这条链路里面的控制命令，特别是用户名和密码对于sniffer来说是毫无意义的，因为他们已经被加密了，sniffer得到的只是一些乱码。“数据链路”就不需要加密了，否则性能将急剧下降。</p>
+<p>在Pure-FTPd里配置SSL/TLS非常简单，只需要生成一个自签署的pure-ftpd.pem证书，放在/etc/ssl/private里面就可以了。当然，要生成证书需要先安装OpenSSL，可以参考“OpenVPN一节”</p>
+<p>1、生成自签署证书：</p>
+<p>openssl req -x509 -nodes -newkey keyout rsa:1024 \<br>-keyout /etc/ssl/private/pure-ftpd.pem \<br>-out /etc/ssl/private/pure-ftpd.pem</p>
+<p>注意：证书名称必须是pure-ftpd.pem，而且必须放在/etc/ssl/private目录下。</p>
+<p>2、配置Pure-FTPd</p>
+<p><code>echo 2 &gt; /etc/pure-ftpd/conf/TLS</code></p>
+<p>有三个参数可以选择，<br>“0”表示客户端以非加密方式登录，默认情况就是如此；<br>“1”表示客户端可以加密和非加密两种方式连接；<br>“2”表示客户端必须开启加密选项才允许连接。</p>
+<p>3、重启Pure-FTPd</p>
+<p><code>/etc/init.d/pure-ftpd-ldap restart</code></p>
+<p>至此Pure-FTPd就支持SSL/TLS加密了。</p>
+<p>六、FTP客户端的安装和使用<br>在linux的控制台下，lftp是不二之选，因为它的功能非常强大。在windows环境下，最方便的无疑就是IE，IE具有ftp客户端的功能，不过如果需要更高级的功能建议使用FileZilla，该客户端是一款开源软件，功能强大，使用却很简单，支持SSL/TLS。</p>
+<p>您可以看到速度保持在50KB/s，下图是没有配置FTPDownloadBandwidth时的截图，由此看出Pure-FTPd已经达到利用LDAP控制带宽目的。</p>
+<p>六、Pure-FTPd在企业里的应用<br>需要考虑的几个问题：<br>1、当用户在srv_master没有根目录的时候<br>2、管理员对根目录做了系统级的quota，PureFTPd也有quota，两者有冲突，以谁为准？<br>3、每个分支机构最多只能用到多少的带宽将在哪里实现？<br>PureFTPd实现一部分，网管实现分支机构的带宽控制<br>4、每个用户都有创建、删除、修改文件和文件夹的权限。<br>5、srv_master能够mount其他文件服务器的目录，针对该文件目录做权限控制<br>6、</p>
+<p>七、排错</p>
+<p>pure-ftpd<br>pure-ftpd-common<br>pure-ftpd-ldap<br>pure-ftpd是基础的软件包，pure-ftpd-ldap是在原来的基础上增加了对ldap的支持<br>pure-ftpd-common是最基本的软件支撑包。前面讲的都依赖于此包。</p>
+<p>2007-04-02<br>srv_master安装完pure-ftpd-ldap后，又添加了alice, bob, carl, dave到/etc/passwd中，然后使用migrationtools导入ldap，接着从/etc/passwd中删除这几个帐号，最后在ISP_server可以使用alice登录srv_master的pure-ftpd-ldap服务器。</p>
+<p>登录后，传送vmware-tools-distrib.tar.gz到/home/alice(srv_master)，不能传送到其他目录，因为没有写入的权限。也就是说，用什么帐号登录ftp，就需要那个目录有这个帐号可以写入的权限。</p>
+<p>2007-04-03<br>pureftpd.schema中定义的都是可选项，也就是说你可以只写FTPStatus（建议一定要写这个），也可以只写FTPDownloadBandwidth。</p>
+<p>当<br>ldapadd -x -D ‘cn=admin,dc=darkblue,dc=com’ -W -f alice.ldif<br>出现下面的故障</p>
+<p>ldap_add: Object class violation (65)<br>additional info: invalid structural object class chain (PureFTPd/account)<br>这是因为PureFTPd和account这两个objectClass不能同时出现在一个ldif中，否则会引起冲突，account没什么用，所以我们应该删除它，这样就可以导入了。</p>
+<p>2007-04-04<br>If ‘ftp’ isn&#39;t a strict requirement, apache with mod_dav is a great<br>solution to the file transfer problem.  Windows and Mac users can mount<br>a “web folder” or some such to access DAV directories without any need<br>for extra client software.</p>
+<p>The advantages on the server are many: no wacky connection<br>tracking/firewall holes necessary, robustness, flexibility, ease, and<br>security of apache (adding SSL and/or digest authentication is also very<br>easy).<br>如果不是非得要FTP的话，apache + mod_dav会更好些。</p>
+<ol>
+<li>apt-get install pure-ftpd-common pure-ftpd-ldap<br>这样就可以实现ldap验证了，ldap不行的话就找unix系统用户</li>
+<li>下载pure-ftpd 1.19源代码，将pureftpd.schema解压到/etc/ldap/schema</li>
+<li><h2>vi /etc/ldap/slapd.conf</h2>
+snip——<h2>include /etc/ldap/schema/pureftpd.schema</h2>
+snip——</li>
+<li>apt-get install ldapvi</li>
+<li><h2>ldapvi -D cn=Manager,dc=example,dc=com&#39;</h2>
+snip—-<br>objectClass: posixAccount<br>objectClass: PureFTPdUser<br>FTPStatus: enabled<br>FTPDownloadBandwidth: 50<h2>FTPUploadBandwidth: 50</h2>
+snip—-</li>
+<li>/etc/init.d/slapd restart</li>
+<li>/etc/init.d/pure-ftpd-ldap restart<br>客户端：</li>
+<li>apt-get install lftp</li>
+<li>lftp ftp_server_ip</li>
+<li>testing……</li>
+<li>and last: troubleshooting, tail -f /var/log/syslog and /var/log/pure-ftpd/trans.. will give you a clue.</li>
+</ol>
+<p>2007-04-04<br>不能直接通过ldapvi修改ldap数据库（由migrationtools导出/etc/passwd，接着使用ldapadd导入ldap数据库）<br>但是可以通过ldapdelete一个DN，然后修改为</p>
+<p>dn: uid=carl,ou=People,dc=darkblue,dc=com<br>uid: carl<br>cn:: Y2FybA==<br>objectClass: PureFTPdUser<br>objectClass: posixAccount<br>objectClass: top<br>objectClass: shadowAccount<br>userPassword: {crypt}$1$9zuNH5RX$sI8V6KF7AGo9t/nlpqihR0<br>shadowLastChange: 13603<br>shadowMax: 99999<br>shadowWarning: 7<br>loginShell: /bin/bash<br>uidNumber: 1011<br>gidNumber: 1011<br>homeDirectory: /home/carl<br>gecos: carl,413,66666666,<br>FTPStatus: enabled<br>FTPQuotaMBytes: 30</p>
+<p>就没问题</p>
+<p>有一个严重的问题，当客户端上传一个大于30M的文件时，PureFTPd不会判断该文件是否符合quota的要求，所以客户端可以先上传，当传到30M时，PureFTPd就自动断掉当前传送的session，client接着又重新开始传，周而复始。</p>
+<p>今天用lftp测试起来它的带宽控制还是比较理想的。</p>
+<p>2007-04-05<br>当修改了PureFTPd的配置后，需要重启服务进程才能生效，但是如果当前有人正在连接服务器，就无法通过/etc/init.d/pure-ftpd-ldap restart来完成重启过程。</p>
+<p>错，在standalone模式下，是可以通过/etc/init.d/pure-ftpd-ldap restart来直接重启pureftpd的。</p>
+<p>2007-04-10<br>如果已经安装了pure-ftpd，再安装pure-ftpd-ldap的时候会自动先卸载pure-ftpd。<br>在/etc/pure-ftpd/auth中将出现<br>srv_master:/etc/pure-ftpd/auth# ls<br>30ldap  65unix  70pam<br>也就是说先用ldap验证，接着是/etc/passwd，最后才是pam<br>通过openldap中添加的alice，可以使用ftp验证通过。</p>
+<p>怎么去dabian的pkg中查找一个文件<br>apt-get install apt-file<br>apt-file update<br>apt-file search pureftpd.schema</p>
+<p>gosa….<br>apt-get -d install gosa</p>
+<p>下载pure-ftpd的源码包，里面有pureftpd.schema，这个schema在使用openldap作quota的时候需要用到，因为它里面说明了ftpstatus, ftpdownloadbandwidth等属性。<br>修改ldap数据有两种方式，一种通过ldapvi来直接修改，一种可以在windows客户机上面使用JXplorer来修改，虽然JXplorer直观些，但是ldapvi更方便。<br>ldapvi的用法<br>ldapvi -D cn=admin,dc=darkblue,dc=com -h 127.0.0.1</p>
+<p>objectClass=PureFTPdUser<br>objectClass=account<br>这两个不可以共存，否则的话每个账号的ldif无法导入到ldap数据库中，它会报错说structure chain violatie这类的错误。</p>
+<p>FTPStatus: enabled<br>FTPQuotaFiles: 50</p>
+<h1>每个用户只能上传、下载50个文件</h1>
+<p>这个选项没什么必要，除非是对安全性要求很高<br>FTPQuotaMBytes: 10<br>这个选项要求FTP只能处理10M的文件容量</p>
+<p>FTPDownloadBandwidth: 50<br>FTPUploadBandwidth: 50<br>好像这个速度控制并不精确，proftpd要精确一些。</p>
+<p>FTPDownloadRatio: 5<br>FTPUploadRatio: 1</p>
+<p>FTP限速在企业中的应用，一般而言，对于使用Internet或者专线接入的分节点对带宽要有一定的控制，否则如果直接使用文件共享会占用掉所有的带宽。故可以使用针对分解点的用户做带宽控制。</p>
+<p>sftp适合所有情况，因为ftp的历史悠久，协议设计之初没考虑安全问题，可以通过sniffer工具看账号和密码。</p>
+<p>应用场景二：<br>企业用户通过LDAP验证，登陆Pure-FTPd管理自己的网络文件夹<br>….</p>
+<p>使用filezilla试一下</p>
+<p>使用Unix账号验证<br>当在/etc/pure-ftpd/auth里面的65unix写yes的时候，debian的wrapper会自动在/etc/pure-ftpd/conf/里创建一个UNIXauthentication</p>
+<p>unix账号必须是正常的用户账号，亦即有home目录，有bin，否则登陆失败。</p>
+<p>unix账号登陆后，可以change root到其他目录，不过他的权限由unix系统来决定。<br>例如unix上有wangyp和zhouzg这两个账号，使用zhouzg登陆后，在ftp里他可以进入/home/wangyp，然而他只能下载，无法上传，因为zhouzg没有对wangyp写的权限。同样，zhouzg的本地目录也可以进入/home/wangyp，然而只能从/home/wangyp上传给/home/zhouzg，反之则不行。</p>
+<p>如果使用了ChrootEveryone yes之后，用户就无法在ftp里面从/home/zhouzg去到/home/wangyp了。</p>
+<p>sarge中的pure-ftpd-ldap默认情况下是不支持virtualchroot的，需要下载源代码包自行编译。<br>在etch下，每个flavo都有两个进程可供选择，一个是带有virtualchroot的，另一个是没有的。<br>其实virtualchroot挺好用的，安全问题可以通过良好的规划来避免。</p>
+<p>pure-ftpd的验证过程根据/etc/pure-ftpd/auth里面文件的先后顺序来判断，例如：<br>30ldap<br>65unix<br>70pam<br>就应该是ldap —&gt; unix —&gt; pam</p>
+<p>====================================================<br>让我们先看看如何配置Pure-FTPd来实现应用一。每个企业用户都拥有200MB的私人网络硬盘，也就是说需要在文件服务器上为每个用户创建一个磁盘限额为200MB的目录，同时该用户具有对该文件夹完全权限。<br>darkblue.com使用OpenLDAP来集中管理用户身份信息，能否使用Pure-FTPd也可以由LDAP来控制，</p>
+<p>应用二最简单，因为这是一个公共目录FTP，所有人都可以登录下载，所以就无需做用户身份验证，匿名FTP无疑是最合适的方式。</p>
+<p>Pure-FTPd实现匿名FTP很简单<br>1、在系统里添加ftp用户和ftp组<br>groupadd ftp<br>useradd -s /bin/false -d /home/ftp -m -c ftp ftp<br>2、允许匿名用户登录<br>echo no &gt; /etc/pure-ftpd/conf/NoAnonymous<br>3、在/home/ftp里面做公共文件夹的链接<br>ln -s /home/share/software /home/ftp/software<br>ln -s /home/share/training /home/ftp/training<br>ln -s /home/share/culture /home/ftp/culture</p>
+<p>4、重启Pure-FTPd进程<br>/etc/init.d/pure-ftpd-ldap restart<br>这样就匿名用户就可以登录了，我们还需要对匿名用户做一些限制<br>echo no &gt; AnonymousCanCreateDirs</p>
+<h1>不允许匿名用户创建目录</h1>
+<p>echo no &gt; AnonymousCantUpload</p>
+<h1>不允许匿名用户上传文件</h1>
+<p>chmod -R 500 /home/share/software<br>chmod -R 500 /home/share/training<br>chmod -R 500 /home/share/culture<br>这样就可以允许用户进入该目录，而且只有只读、下载的权限，没有删除的权限。</p>
+<p>需要说明的是，Pure-FTPd以系统里面是否有ftp用户和ftp组来判断能否提供匿名服务，这有点霸道，如果已经将ftp账户挪作他用的用户则需要好好考虑调整一下策略了。</p>
+<p>应用三：</p>
+<p>chmod 500 /home/download<br>这样可以让匿名用户登录，可以进入download中下载里面的文件。<br>如果chmod 400 /home/download是无法让用户进入download的。</p>
+<p>以下是Pure-FTPd的选项列表：</p>
+<p>创建一个upload:upload系统账号，在/home/upload下面创建一个incoming的目录。<br>chmod -R 330 incoming<br>接着使用upload账号登陆ftp，可以进入incoming目录，创建和删除目录，文件均可，但是不能浏览文件。<br>rwx的x可以让用户cd到那个目录。</p>
+<p>创建一个download:download系统账号<br>mkdir software<br>chmod -R 550 software<br>touch software/file1.txt<br>chmod 440 software/file1.txt<br>touch software/file2.txt</p>
+<p>mkdir temp<br>touch temp/file3.txt<br>chmod 440 temp/file3.txt<br>touch temp/file4.txt</p>
+<p>接着使用download账号登陆ftp<br>发现当目录是：<br>dr-xr-x—-    2 download download     1024 Apr 10 19:13 software<br>就可以登陆，也就是说必须得有x这个权限。<br>紧接着，在该目录下可以下载，但是不能上传和删除，不能上传和删除的原因是因为在系统里面，software这个目录属性是只读，所以不论里面的文件属性是什么都不可以写或者删除。<br>然而temp目录下的文件却可以删除，那是因为temp目录属性是可写，所以不论它里面的文件属性是什么，都可以删除。当然也可以上传文件进去。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/debian/">debian</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

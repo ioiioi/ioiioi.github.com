@@ -1,0 +1,618 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>DHCP服务 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="在TCP/IP的世界里，每台计算机都必须拥有一个IP地址才能跟其他计算机通信。在DHCP没有诞生之前，计算机的IP地址都必须手工分配，因此也称之为静态IP地址。随着计算机数量的急剧增多，静态IP呈现出以下缺点：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="DHCP服务"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-06-27T15:30:00.000Z"><a href="/2011/06/27/dhcp-service/">2011-06-27</a></time>
+      
+      
+  
+    <h1 class="title">DHCP服务</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在TCP/IP的世界里，每台计算机都必须拥有一个IP地址才能跟其他计算机通信。在DHCP没有诞生之前，计算机的IP地址都必须手工分配，因此也称之为静态IP地址。随着计算机数量的急剧增多，静态IP呈现出以下缺点：<br><a id="more"></a></p>
+<ol>
+<li><p><strong>IP地址浪费</strong>，互联网IP地址资源紧缺，若每台电脑都分配一个静态互联网IP地址是一种很奢侈的行为，因为并不是每台电脑时刻处于开机状态，也不是每一台电脑都必须永远在线，这些电脑具有临时访问网络的特点，所以静态IP地址策略会导致互联网IP地址的极度浪费。</p>
+</li>
+<li><p><strong>管理困难</strong>，为了避免IP地址冲突，网络管理员需要维护一张IP地址表，然而随着企业规模的不断扩张，文档的维护将日趋繁重，任何一项需手动操作的工作都可能成为压死骆驼的最后一根稻草。</p>
+</li>
+<li><p><strong>配置烦琐</strong>，静态IP地址的配置除了IP地址外，还有子网掩码、默认网关、DNS服务器等内容，这些都是相对专业的术语，许多用户需要寻求网管的帮助才能配置成功，这项工作又繁琐又无成就感，久而久之无疑会令网络管理员产生一种挫败感。</p>
+</li>
+<li><p><strong>扩展性差</strong>，IT架构经常因企业的发展而发生变化，IP地址需要重新规划几率很大，一旦企业的发展需要对IP地址重新调整，那对IT部门而言将是一场噩梦，业务和时间的压力会让网络管理员们乱成一群热锅上的蚂蚁，他们将为整个企业的用户端配置静态IP地址而疲于奔命。</p>
+</li>
+</ol>
+<p>DHCP协议正是为了解决上述问题而诞生的，它全称是dynamic host configuration Protocol （动态主机配置协议），DHCP服务器通过该协议与计算机客户端进行交互，最终将分配一个动态IP地址给客户端。</p>
+<p>DHCP服务器可以从IP地址池中将一个空闲IP分配给一台DHCP客户端，当客户端不用的时候就回收待用。在分配IP地址的同时还携带了子网掩码、默认网关、DNS和WINS服务器的IP地址，这样不仅拯救网管于水深火热之中，还极大降低了IP地址冲突的几率。</p>
+<h1>一、工作原理</h1>
+<p>DHCP的工作原理跟读者去图书馆借书的流程很相似：读者来图书馆借书，到期归还，也可以续借，所以在不同的时间段里，同一本书籍将会在不同的读者手中被阅读。相类似的，IP地址相当于书籍，DHCP服务器相当于图书馆，而DHCP客户端则相当于读者。客户端向服务器申请IP地址，服务器根据策略分配一个未用的IP地址给他，逾期不续借则将IP地址回收，准备分配给下一台计算机。</p>
+<p>读者可能会问这样一个问题，当PC还没有IP地址的情况下，如何跟DHCP服务器进行通信？原来PC首先会发出一个DHCP discovery的广播包，DHCP服务器收到后，根据策略为其分配一个空闲的IP地址，工作步骤如下图所示：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2011-06-27_dhcp-interaction.jpg" class="center" title="DHCP交互流程图" alt="DHCP交互流程图">
+
+
+<p>了解了DHCP的工作原理后，接下来让我们来看看在Debian中都有哪些相关的软件包。</p>
+<h1>二、DHCP套件</h1>
+<p>最著名的DHCP套件由ISC org开发和维护，它主要包含以下三个组件：</p>
+<ul>
+<li><strong>dhcp-server</strong>，dhcp守护进程，负责IP地址动态分配和管理功能；</li>
+<li><strong>dhcp-relay</strong>，dhcp代理，当客户端和服务器不在同一个网段的时候，它们之间进行交互而产生的广播包需要由dhcp3-relay进行转发。；</li>
+<li><strong>dhcp-client</strong>，dhcp客户端，它的功能主要有发起DHCP申请，续约和归还IP。</li>
+</ul>
+<p>在debian/ubuntu中，这三个组件对应的软件包分别为<code>isc-dhcp-server</code>、<code>isc-dhcp-relay</code>和<code>isc-dhcp-client</code>。另外，Debian将ISC DHCP组件中的共用文件打包成一个独立的软件包：<code>isc-dhcp-common</code>，因此在安装上述任一组件的时，Debian都会自动安装<code>isc-dhcp-common</code>这个软件包。</p>
+<p>好了，下面即将步入正题：如何安装和配置DHCP服务，不过我想在这之前先说说DHCP客户端的使用，因为这才是普通用户用得最多的，也是网络管理员必须熟练掌握的。</p>
+<h1>三、DHCP客户端</h1>
+<h2>3.1 Linux</h2>
+<h3>3.1.1 安装</h3>
+<p>在debian中，dhcp客户端的软件包名为<code>isc-dhcp-client</code></p>
+<pre><code><span class="preprocessor"># aptitude install isc-dhcp-client</span></code></pre>
+<h3>3.1.2 使用</h3>
+<p>DHCP客户端的可执行文件是/sbin/dhclient，配置文件位于/etc/dhcp/dhclient.conf，一般不需要修改该文件。</p>
+<ul>
+<li>获取或续约动态IP地址</li>
+</ul>
+<figure class="highlight"><pre><span class="comment"># dhclient eth0</span>
+Internet Systems Consortium DHCP Client V4<span class="number">.1</span><span class="number">.1</span>-P1
+Copyright <span class="number">2004</span>-<span class="number">2010</span> Internet Systems Consortium.
+All rights reserved.
+For info, please visit http://www.isc.org/sw/dhcp/
+
+Listening <span class="function_start"><span class="keyword">on</span> <span class="title">LPF</span></span>/eth1/<span class="number">00</span>:<span class="number">0</span>c:<span class="number">29</span>:<span class="number">88</span>:<span class="number">91</span>:c2
+Sending <span class="function_start"><span class="keyword">on</span> </span>  LPF/eth1/<span class="number">00</span>:<span class="number">0</span>c:<span class="number">29</span>:<span class="number">88</span>:<span class="number">91</span>:c2
+Sending <span class="function_start"><span class="keyword">on</span> </span>  Socket/fallback
+DHCPDISCOVER <span class="function_start"><span class="keyword">on</span> <span class="title">eth1</span></span> <span class="keyword">to</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.255</span> port <span class="number">67</span> interval <span class="number">5</span>
+DHCPOFFER <span class="keyword">from</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.254</span>
+DHCPREQUEST <span class="function_start"><span class="keyword">on</span> <span class="title">eth1</span></span> <span class="keyword">to</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.255</span> port <span class="number">67</span>
+DHCPACK <span class="keyword">from</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.254</span>
+bound <span class="keyword">to</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.21</span> <span class="comment">-- renewal in 247 seconds.</span>
+</pre></figure>
+
+<ul>
+<li>释放动态IP地址</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># dhclient –r</span>
+</pre></figure>
+
+<p>dhclient获取到动态IP地址后，将该IP地址的相关信息写到/var/lib/dhcp3/dhclient.lease文件中，以便下次进行续借。有时候用户希望能获取其它IP，则需要先将该文件清空：</p>
+<pre><code><span class="preprocessor"># echo &gt; /var/lib/dhcp3/dhclient.lease</span></code></pre>
+<h2>3.2 Windows</h2>
+<h3>3.2.1 图形界面</h3>
+<p>用户只需要在网卡的“Internet协议（TCP/IP）属性”对话框中配置成自动获取IP地址即可，实际上该配置只是通知windows调用“DHCP Client”服务，因此用户若遇到问题，需要检查是否安装并启动了“DHCP Client”服务。默认情况下，windows自动安装并启用该服务。</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2011-06-27_Internet-protocol-property.jpg" class="center" title="Internet协议(TCP/IP)属性" alt="Internet协议(TCP/IP)属性">
+
+
+<h3>3.2.2 命令行</h3>
+<p>命令行工具才是网络管理员喜爱的方式，它更灵活，更方便。</p>
+<ul>
+<li>显示动态IP地址</li>
+</ul>
+<figure class="highlight"><pre>c:\&gt;ipconfig /<span class="built_in">all</span>
+</pre></figure>
+
+<ul>
+<li>释放动态IP地址</li>
+</ul>
+<figure class="highlight"><pre>c:\&gt;ipconfig /release <span class="tag">&lt;<span class="title">网卡名称</span>&gt;</span>
+</pre></figure>
+
+<ul>
+<li>获取动态IP地址</li>
+</ul>
+<figure class="highlight"><pre>c:\&gt;ipconfig /renew <span class="tag">&lt;<span class="title">网卡名称</span>&gt;</span>
+</pre></figure>
+
+<p>为了使用方面，建议用户将默认的“本地连接”这个网卡名称改为英文，譬如“nic”。<br>{: class=“info” }</p>
+<h1>四、DHCP服务器</h1>
+<h2>4.1 安装</h2>
+<pre><code><span class="preprocessor"># aptitude install isc-dhcp-common isc-dhcp-server</span></code></pre>
+<p>安装完成后，<code>isc-dhcp-server</code>进程将自启动，但默认配置无法满足实际要求，为了避免不必要的麻烦，因此应先中止服务进程（见xx节，停止dhcp服务），先进行配置后再启动。</p>
+<h2>4.2 基本配置</h2>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2011-06-27_dhcp-basic-setting.jpg" class="center" title="DHCP基本配置" alt="DHCP基本配置">
+
+
+<p>如上图所示，linuxabc公司内有一台DHCP服务器，该服务器的网卡名称是eth1，IP地址为192.168.0.254/24。该公司还处于起步阶段，员工仅有十几人，因此IP地址规划只有一个网段192.168.0.0/24，其中192.168.0.1-192.168.0.50为预留IP地址，192.168.0.51-192.168.0.250将作为动态IP地址提供客户端。</p>
+<p>DHCP服务器的配置文件主要是/etc/dhcp/dhcpd.conf和/etc/default/isc-dhcp-server，以后将经常跟这两个文件打交道。</p>
+<h3>4.2.1 /etc/dhcp/dhcpd.conf</h3>
+<figure class="highlight"><pre>option domain-name <span class="string">"linuxabc.net.cn"</span><span class="comment">;</span>
+option domain-name-servers <span class="number">192.168</span><span class="number">.0</span><span class="number">.1</span>
+<span class="preprocessor"># 服务器除了将IP/子网掩码/默认网关提供给客户端外</span>
+<span class="preprocessor"># 还可以提供域名，NTP等许多额外的服务器设置。</span>
+default-lease-time <span class="number">600</span><span class="comment">;</span>
+max-lease-time <span class="number">7200</span><span class="comment">;</span>
+<span class="preprocessor"># 租约时间设定，单位是秒</span>
+authoritative<span class="comment">;</span>
+log-facility local7<span class="comment">;</span>
+subnet <span class="number">192.168</span><span class="number">.0</span><span class="number">.0</span> netmask <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span> {
+range <span class="number">192.168</span><span class="number">.0</span><span class="number">.51</span> <span class="number">192.168</span><span class="number">.0</span><span class="number">.250</span><span class="comment">;</span>
+<span class="preprocessor"># 可用的IP地址段</span>
+option routers <span class="number">192.168</span><span class="number">.0</span><span class="number">.254</span><span class="comment">;</span>
+<span class="preprocessor"># 默认网关</span>
+    option broadcast-address <span class="number">192.168</span><span class="number">.0</span><span class="number">.255</span><span class="comment">;</span>
+}
+<span class="preprocessor"># 每个网段声明由一个网段头和花括号括起来的网段内容组成。</span>
+</pre></figure>
+
+<h3>4.2.2 /etc/default/isc-dhcp-server</h3>
+<p>默认情况下，DHCP守护进程只监听eth0这块网卡，假如有多块网卡需要监听的话需要修改/etc/default/isc-dhcp-server中的INTERFACES参数。</p>
+<pre><code><span class="setting">INTERFACES=<span class="value"><span class="string">"eth0 eth1"</span></span></span></code></pre>
+<p>至此DHCP服务器的基本配置就完成了。</p>
+<p>接下来需要重启DHCP守护进程才能令刚才的配置生效：</p>
+<pre><code># /etc/init.d/isc-dhcp-server re<span class="operator"><span class="keyword">start</span></code></pre>
+<h2>4.3 使用</h2>
+<p>同其它Linux服务守护进程一样，isc-dhcp-server可以通过/etc/init.d/isc-dhcp-server脚本进行控制：</p>
+<ul>
+<li>启动</li>
+</ul>
+<figure class="highlight"><pre># /etc/init.d/isc-dhcp-server <span class="operator"><span class="keyword">start</span>
+</pre></figure>
+
+<ul>
+<li>停止</li>
+</ul>
+<figure class="highlight"><pre># /etc/init.d/isc-dhcp-server re<span class="operator"><span class="keyword">start</span>
+</pre></figure>
+
+<ul>
+<li>重启</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># /etc/init.d/isc-dhcp-server stop</span>
+</pre></figure>
+
+<h2>4.4 高级配置</h2>
+<p>企业的网络架构随时都在变，IP地址规划也在变，DHCP拥有足够的灵活性以适应网络环境的多样化需求。</p>
+<h3>4.4.1 多网卡多网段服务</h3>
+<p>企业规模在过去的5年中翻了一番，人员也在增加，原来规划的IP地址已然告罄，需要新增三个C类网段：192.168.1.0/24、192.168.2.0/24和192.168.3.0/24。192.168. 0.0/24网段的IP地址将回收作为服务器地址段。</p>
+<p>在这里需要先澄清几个概念，许多读者将网段（network segment）、VLAN和IP子网（IP subnet）这几个概念相混淆，事实上它们是不同的概念，网段指的是人为地将一个计算机网络划分为多个容易管理的区域，比如说将每层楼单独划分为一个的网段，其具体的实现就是一个VLAN。IP子网是网络管理员分配给网段的IP地址段，比如一个分支机构分配一个192.168.0.0/24的C类IP子网。在网络管理中，大家都习惯将网段、VLAN跟IP子网进行绑定，因此，为了叙述方便，本文一提到网段，读者就应联想到背后还有一个相对应的VLAN和一个IP子网。</p>
+<p>DHCP服务进程可监听多块网卡，因此，最直接的方式是用3块网卡分别为这3个网段服务，如下图所示：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2011-06-27_multi-nic-and-multi-segment.jpg" class="center" title="多网卡多网段拓扑" alt="多网卡多网段拓扑">
+
+
+<p>相应的，网络管理员只需调整/etc/dhcp/dhcpd.conf和/etc/default/isc-dhcp-server就可以实现这个需求。</p>
+<ul>
+<li>/etc/dhcp/dhcpd.conf</li>
+</ul>
+<figure class="highlight"><pre><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">clip</span>-<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="comment">#</span> <span class="comment">在前面的配置中删除subnet</span> <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">0</span>.<span class="comment">0，添加以下网段</span>
+<span class="comment">subnet</span> <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">1</span>.<span class="comment">0</span> <span class="comment">netmask</span> <span class="comment">255</span>.<span class="comment">255</span>.<span class="comment">255</span>.<span class="comment">0</span> <span class="comment">{</span>
+    <span class="title">[</span><span class="comment">…</span>]
+<span class="comment">}</span>
+<span class="comment">subnet</span> <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">2</span>.<span class="comment">0</span> <span class="comment">netmask</span> <span class="comment">255</span>.<span class="comment">255</span>.<span class="comment">255</span>.<span class="comment">0</span> <span class="comment">{</span>
+    <span class="title">[</span><span class="comment">…</span>]
+<span class="comment">}</span>
+<span class="comment">subnet</span> <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">3</span>.<span class="comment">0</span> <span class="comment">netmask</span> <span class="comment">255</span>.<span class="comment">255</span>.<span class="comment">255</span>.<span class="comment">0</span> <span class="comment">{</span>
+    <span class="title">[</span><span class="comment">…</span>]
+<span class="comment">}</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">clip</span>-<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</pre></figure>
+
+<ul>
+<li>/etc/default/isc-dhcp-server</li>
+</ul>
+<figure class="highlight"><pre><span class="setting">INTERFACES=<span class="value"><span class="string">"eth0 eth1 eth2"</span></span></span>
+</pre></figure>
+
+<p>然而这种方式并非最佳，因为假如企业的网络环境扩张到20个网段，甚至更多呢？多网卡的方式就不适用了，因此需要用到下面的单网卡多网段服务方案。</p>
+<h3>4.4.2 单网卡多网段服务</h3>
+<p>不知读者是否还记得DHCP的工作原理？DHCP客户端通过发起的广播包来寻找DHCP服务器，然而我们知道，vlan诞生的主要目的就是为了限制广播包，那么不同网段的广播包是否都能到达只有一张网卡的DHCP服务器呢？这是单网卡多网段服务必须解决的关键问题，目前有两种办法可以解决这个问题，一种是vlan trunk，一种是DHCP代理，其中vlan trunk适用于简单的二层网络，譬如几十个人的小型企业； DHCP代理则适用于更复杂、更常见的三层网络架构，譬如成百上千人的大型企业。</p>
+<h4>4.4.2.1 vlan trunk</h4>
+<p>还是沿用“多网卡多网段服务”中的例子。<br>Debian中有一个VLAN的软件包可以使普通网卡支持vlan trunk功能，假如与之相连的交换机端口也配置成vlan trunk，那么DHCP服务器和交换机相连的网线就可以跑多个VLAN，解决了不同VLAN广播包到达同一块网卡的问题。如下图所示：</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2011-06-27_single-nic-and-multi-segment-vlan-trunk.jpg" class="center" title="单网卡多网段vlan trunk" alt="单网卡多网段vlan trunk">
+
+
+<p><strong>1.安装vlan软件包</strong></p>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude install vlan</span>
+<span class="preprocessor"># echo 8021q &gt;&gt; /etc/modules</span>
+</pre></figure>
+
+<p><strong>2.配置vlan接口</strong></p>
+<figure class="highlight"><pre># vim /etc/network/interfaces
+<span class="title">auto</span> eth0
+<span class="title">iface</span> eth0 inet static
+<span class="title">address</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span>
+<span class="title">auto</span> eth0<span class="number">.1</span>
+<span class="title">iface</span> eth0<span class="number">.1</span> inet static
+<span class="title">address</span> <span class="number">192.168</span><span class="number">.1</span><span class="number">.254</span>
+<span class="title">netmask</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="title">broadcast</span> <span class="number">192.168</span><span class="number">.1</span><span class="number">.255</span>
+<span class="title">vlan_raw_device</span> eth0
+<span class="title">auto</span> eth0<span class="number">.2</span>
+<span class="title">iface</span> eth0<span class="number">.2</span> inet static
+<span class="title">address</span> <span class="number">192.168</span><span class="number">.2</span><span class="number">.254</span>
+<span class="title">netmask</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="title">broadcast</span> <span class="number">192.168</span><span class="number">.2</span><span class="number">.255</span>
+<span class="title">vlan_raw_device</span> eth0
+<span class="title">auto</span> eth0<span class="number">.3</span>
+<span class="title">iface</span> eth0<span class="number">.3</span> inet static
+<span class="title">address</span> <span class="number">192.168</span><span class="number">.3</span><span class="number">.254</span>
+<span class="title">netmask</span> <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span>
+<span class="title">broadcast</span> <span class="number">192.168</span><span class="number">.3</span><span class="number">.255</span>
+<span class="title">vlan_raw_device</span> eth0
+# /etc/init.d/networking restart
+</pre></figure>
+
+<p>以上的配置表示在eth0物理网卡中创建eth0.1、eth0.2和eth0.3三个子接口，它们分别隶属于VLAN1、VLAN2和VLAN3。这样，来自不同VLAN的DHCP discovery广播包就能到达对应的子接口，从而解决了不同VLAN广播包到达同一块网卡的问题。</p>
+<p>关于交换机的vlan trunk端口配置请读者自行参考设备的《用户手册》。<br>{: class=“info”}</p>
+<p>剩下的配置就非常简单了，由于需要提供服务的网段与“多网卡多网段”的例子相同，因此/etc/dhcp/dhcpd.conf不需修改，另外本方案仅用到一块网卡，因此将/etc/default/isc-dhcp-server调整为：</p>
+<figure class="highlight"><pre><span class="setting">INTERFACES=<span class="value"><span class="string">"eth0"</span></span></span>
+</pre></figure>
+
+<p>最后重启一下DHCP服务进程即可。</p>
+<p>不过这种方式的可扩展性还是不够，因为二层的应用范围较窄，仅适用于小型的企业环境，在一个大型的企业网络环境中，三层才是最基本的互连方式。那就需要用到下面的DHCP代理方式。</p>
+<h4>4.4.2.2 DHCP代理</h4>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2011-06-27_dhcp-proxy.jpg" class="center" title="DHCP代理" alt="DHCP代理">
+
+
+<p>假设一个大型的企业网络拓扑若上图所示，该企业有10栋楼，每栋楼有10层，每一层均分配了一个C类子网，想象一下，假如这100个C类子网的IP完全通过vlan trunk的方式来分配给用户，那会是一个什么样的结果？核心交换机将被大量的广播包堵塞，处理能力急剧下降，无暇处理业务应用数据。好在DHCP协议在设计之初就考虑到跨网段服务的问题，DHCP代理就是处理这类问题的。DHCP代理位于三层设备上，当来自某个VLAN的广播包到达三层设备后，DHCP代理会将该广播包转换成单播包直接转发给DHCP服务器，DHCP服务器返回的数据包同样被DHCP代理转发客户端。通过DHCP代理，广播包变成了单播包，提高了网络效率，实现了跨网段的DHCP服务。<br>在上图中，汇聚交换机就是三层设备。当然，用户也可以用Unix-Linux服务器来担任汇聚交换机的角色，实际上国外企业利用FreeBSD/OpenBSD来担任核心路由器的案例屡见不鲜。</p>
+<p>下面将分别给DHCP代理在Debian、H3C和cisco三种不同设备中的配置方式：</p>
+<ul>
+<li>Debian</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude install isc-dhcp-relay</span>
+<span class="preprocessor"># cat /etc/default/isc-dhcp-relay</span>
+SERVERS=<span class="string">"192.168.0.1"</span>
+INTERFACES=<span class="string">"eth0"</span>
+OPTIONS=<span class="string">""</span>
+</pre></figure>
+
+<p>在安装isc-dhcp-relay软件包的时候，Debian将询问你一些问题，最后生成/etc/default/isc-dhcp-relay这个配置文件。</p>
+<ul>
+<li>cisco</li>
+</ul>
+<figure class="highlight"><pre>cisco#configure terminal
+Enter configuration commands, one per line.  End <span class="keyword">with</span> CNTL/Z.
+cisco(config)#<span class="class"><span class="keyword">interface</span> <span class="title">Ethernet0</span>
+<span class="title">cisco</span>(<span class="title">config</span>-<span class="title">if</span>)#<span class="title">ip</span> <span class="title">helper</span>-<span class="title">address</span> 192.168.0.254
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">interface</span> <span class="title">Ethernet1</span>
+<span class="title">cisco</span>(<span class="title">config</span>-<span class="title">if</span>)#<span class="title">ip</span> <span class="title">helper</span>-<span class="title">address</span> 192.168.0.254
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">interface</span> <span class="title">Ethernet2</span>
+<span class="title">cisco</span>(<span class="title">config</span>-<span class="title">if</span>)#<span class="title">ip</span> <span class="title">helper</span>-<span class="title">address</span> 192.168.0.254
+' 配置<span class="title">DHCP</span>服务器<span class="title">IP</span>地址，启用<span class="title">DHCP</span>代理服务。
+<span class="title">cisco</span>(<span class="title">config</span>-<span class="title">if</span>)#<span class="title">exit</span>
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">no</span> <span class="title">ip</span> <span class="title">forward</span>-<span class="title">protocol</span> <span class="title">udp</span> <span class="title">tftp</span>
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">no</span> <span class="title">ip</span> <span class="title">forward</span>-<span class="title">protocol</span> <span class="title">udp</span> <span class="title">nameserver</span>
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">no</span> <span class="title">ip</span> <span class="title">forward</span>-<span class="title">protocol</span> <span class="title">udp</span> <span class="title">domain</span>
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">no</span> <span class="title">ip</span> <span class="title">forward</span>-<span class="title">protocol</span> <span class="title">udp</span> <span class="title">time</span>
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">no</span> <span class="title">ip</span> <span class="title">forward</span>-<span class="title">protocol</span> <span class="title">udp</span> <span class="title">netbios</span>-<span class="title">ns</span>
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">no</span> <span class="title">ip</span> <span class="title">forward</span>-<span class="title">protocol</span> <span class="title">udp</span> <span class="title">netbios</span>-<span class="title">dgm</span>
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">no</span> <span class="title">ip</span> <span class="title">forward</span>-<span class="title">protocol</span> <span class="title">udp</span> <span class="title">tacacs</span>
+' 只转发<span class="title">DHCP</span>广播包，其他服务广播包将被丢弃
+<span class="title">cisco</span>(<span class="title">config</span>)#<span class="title">end</span>
+<span class="title">cisco</span>#<span class="title">wr</span>
+</pre></figure>
+
+<ul>
+<li>H3C</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># 启用dhcp服务</span>
+&lt;h3c&gt; system-view
+[h3c] dhcp enable
+<span class="preprocessor"># 配置VLAN 接口1 工作在DHCP 中继模式。</span>
+[h3c] <span class="class"><span class="keyword">interface</span> <span class="title">vlan</span>-<span class="title">interface</span> 1
+[<span class="title">h3c</span>-<span class="title">Vlan</span>-<span class="title">interface1</span>] <span class="title">dhcp</span> <span class="title">select</span> <span class="title">relay</span>
+[<span class="title">h3c</span>-<span class="title">Vlan</span>-<span class="title">interface1</span>] <span class="title">quit</span>
+# 配置<span class="title">DHCP</span> 服务器的地址，并配置<span class="title">VLAN</span> 接口1 对应<span class="title">DHCP</span> 服务器组1
+[<span class="title">h3c</span>] <span class="title">dhcp</span> <span class="title">relay</span> <span class="title">server</span>-<span class="title">group</span> 1 <span class="title">ip</span> 192.168.0.1
+[<span class="title">h3c</span>] <span class="title">interface</span> <span class="title">vlan</span>-<span class="title">interface</span> 1
+[<span class="title">h3c</span>-<span class="title">Vlan</span>-<span class="title">interface1</span>] <span class="title">dhcp</span> <span class="title">relay</span> <span class="title">server</span>-<span class="title">select</span> 1
+</pre></figure>
+
+<ul>
+<li>DHCP服务配置</li>
+</ul>
+<p><strong>1. /etc/dhcp/dhcpd.conf</strong></p>
+<figure class="highlight"><pre>subnet <span class="number">192.168</span><span class="number">.0</span><span class="number">.0</span> netmask <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span> {
+}
+subnet <span class="number">192.168</span><span class="number">.1</span><span class="number">.0</span> netmask <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span> {
+    range <span class="number">192.168</span><span class="number">.1</span><span class="number">.1</span> <span class="number">192.168</span><span class="number">.1</span><span class="number">.250</span>;
+    option routers <span class="number">192.168</span><span class="number">.1</span><span class="number">.254</span>;
+    option broadcast-address <span class="number">192.168</span><span class="number">.1</span><span class="number">.255</span>;
+}
+[<span class="keyword">...</span>]
+subnet <span class="number">192.168</span><span class="number">.100</span><span class="number">.0</span> netmask <span class="number">255.255</span><span class="number">.255</span><span class="number">.0</span> {
+    range <span class="number">192.168</span><span class="number">.2</span><span class="number">.1</span> <span class="number">192.168</span><span class="number">.2</span><span class="number">.250</span>;
+    option routers <span class="number">192.168</span><span class="number">.2</span><span class="number">.254</span>;
+    option broadcast-address <span class="number">192.168</span><span class="number">.2</span><span class="number">.255</span>;
+}
+</pre></figure>
+
+<p><strong>2. /etc/default/isc-dhcp-server</strong></p>
+<figure class="highlight"><pre><span class="setting">INTERFACES=<span class="value"><span class="string">"eth0"</span></span></span>
+</pre></figure>
+
+<p>细心的读者对配置可能会产生疑惑，为什么192.168.0.0子网的声明没有任何内容呢？因为/etc/dhcp/dhcpd.conf必须有一个监听网卡所在网段的声明才能正常启动DHCP服务，由于192.168.0.0是服务器网段，服务器全部采用静态IP，因此该段的声明没有实际内容。</p>
+<h2>4.5 DHCP snooping</h2>
+<p>在DHCP应用环境中，网络管理员经常会碰到两个棘手的问题：一个是IP地址冲突；一个是用户私自架设DHCP服务器。</p>
+<p>IP地址冲突是大家经常会遇到的问题，在同一个网段中，两台计算机配置了相同的IP就叫IP地址冲突，根据TCP/IP协议栈的工作原理，这两台机将无法正常地跟其它计算机通信。导致IP地址冲突的原因有很多，在一个DHCP应用环境中，最常见的原因是某一用户私自配置了一个静态IP，然而DHCP服务器并不知道，于是将这个IP地址再分配给另外一台PC，从而导致IP地址冲突。</p>
+<p>随着消费级网络产品的日益盛行，DHCP应用环境遭受到越来越多的外界干扰。比如用户为了方便，私自将无线路由器接入到一个DHCP网络中，致使其它用户获取到的是无线路由器所分配的IP地址，而不是DHCP服务器所分配的IP地址，结果导致这些用户无法正常访问网络。</p>
+<p>这两个问题单纯靠DHCP协议根本无法解决，但它又实实在在困扰着用户。有需求就有市场，cisco公司率先在其IOS中提供了DHCP snooping这项功能，旨在解决IP地址冲突和用户私设DHCP服务器的问题，随后，其它网络设备厂家也迅速跟进，纷纷在其产品中提供了类似的功能。</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2011-06-27_dhcp-snooping.jpg" class="center" title="DHCP snooping" alt="DHCP snooping">
+
+
+<p>当交换机启用了DHCP snooping功能后，交换机会监听流经的DHCP数据包，从上图可以看出，DHCP offer和DHCP ack数据包可以正常流经信任端口，但不能流经非信任端口。因此，处于非信任端口的无线路由器就无法为PC分配非法的IP。</p>
+<p>另外，交换机将从流经非信任端口的DHCP request和DHCP ack数据包中提取IP、MAC租期和VLAN-ID等信息，用于创建和维护一张绑定表。当非信任端口的PC想跟其它主机通信时，交换机会检查该PC的IP地址是否存在绑定表中，假如不存在则阻止它跟外界通信。换句话说，只有通过DHCP服务器获取合法IP地址的PC才能跟外界通信，用户私自手工配置的IP地址则无法正常使用，从而解决了IP地址的冲突问题。</p>
+<p>下面给出H3C和cisco的配置示例：</p>
+<ul>
+<li>H3C</li>
+</ul>
+<figure class="highlight"><pre><span class="preprocessor"># 开启DHCP Snooping功能，交换机</span>
+<span class="preprocessor"># 的所有端口将自动置于非信任端口模式</span>
+&lt;h3c&gt; system-view
+[h3c] dhcp-snooping
+<span class="preprocessor"># 端口Eth1/0/1与DHCP服务器相连，因此</span>
+<span class="preprocessor"># 设置端口Ethernet1/0/1 为信任端口。</span>
+[h3c] <span class="class"><span class="keyword">interface</span> <span class="title">Ethernet1</span>/0/1
+[<span class="title">h3c</span>-<span class="title">Ethernet1</span>/0/1] <span class="title">dhcp</span>-<span class="title">snooping</span> <span class="title">trust</span>
+[<span class="title">h3c</span>-<span class="title">Ethernet1</span>/0/1] <span class="title">quit</span>
+[<span class="title">h3c</span>] <span class="title">save</span>
+</pre></figure>
+
+<ul>
+<li>cisco</li>
+</ul>
+<figure class="highlight"><pre>n1000v# config t
+n1000v(config)# feature dhcp
+n1000v(config)# ip dhcp snooping
+n1000v(config)# ip dhcp snooping vlan <span class="number">1</span>-<span class="number">100</span>
+n1000v(config)# <span class="class"><span class="keyword">interface</span> <span class="title">vethernet</span> 3
+<span class="title">n1000v</span>(<span class="title">config</span>-<span class="title">if</span>)# <span class="title">ip</span> <span class="title">dhcp</span> <span class="title">snooping</span> <span class="title">trust</span>
+<span class="title">n1000v</span>(<span class="title">config</span>-<span class="title">if</span>)# <span class="title">wr</span>
+</pre></figure>
+
+<h1>五、排错</h1>
+<h2>5.1 检查网络连接</h2>
+<p>首先要保证网络连接是否正常，可以先手工分配一个静态IP地址给客户端，通过ping来测试客户端和DHCP服务器之间的连通性。</p>
+<h2>5.2 查看DHCP服务端口和日志</h2>
+<p>DHCP服务进程监听UDP的67端口：</p>
+<figure class="highlight"><pre><span class="comment"># netstat -an | grep 67</span>
+<span class="title">udp</span>        <span class="number">0</span>      <span class="number">0</span> <span class="number">0.0.0.0:67</span>              <span class="number">0.0.0.0</span>:*
+</pre></figure>
+
+<p>如果没有看到任何信息的话就得查一下日志是否有错误信息了。DHCP服务器的log记录在<code>/var/log/syslog</code>中，使用</p>
+<figure class="highlight"><pre><span class="preprocessor"># tail -f /var/log/syslog | grep dhcp</span>
+</pre></figure>
+
+<p>可以实时看到dhcp服务器的日志。</p>
+<h2>5.3 DHCP中继</h2>
+<p>网络设备大都提供的debug工具，读者可以利用这些工具来定位DHCP跨网段失败的原因。</p>
+<h2>5.4 利用抓包工具进行分析</h2>
+<p>tcpdump的使用是网络管理员必须掌握的一个重要工具，以下是tcpdump在DHCP服务器上抓取一个完整的DHCP交互流程：</p>
+<figure class="highlight"><pre><span class="comment"># tcpdump -ni eth1 port \( 67 and 68 \)</span>
+tcpdump: verbose output suppressed, use -v <span class="keyword">or</span> -vv <span class="keyword">for</span> full protocol decode
+listening <span class="function_start"><span class="keyword">on</span> <span class="title">eth1</span></span>, link-type EN10MB (Ethernet), capture size <span class="number">96</span> bytes
+<span class="number">23</span>:<span class="number">05</span>:<span class="number">59.826726</span> IP <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span><span class="number">.68</span> &gt; <span class="number">255.255</span><span class="number">.255</span><span class="number">.255</span><span class="number">.67</span>: BOOTP/DHCP, Request <span class="keyword">from</span> <span class="number">00</span>:<span class="number">0</span>c:<span class="number">29</span>:<span class="number">88</span>:<span class="number">91</span>:c2, <span class="property">length</span> <span class="number">300</span>
+<span class="number">23</span>:<span class="number">06</span>:<span class="number">00.002082</span> IP <span class="number">192.168</span><span class="number">.0</span><span class="number">.254</span><span class="number">.67</span> &gt; <span class="number">192.168</span><span class="number">.0</span><span class="number">.21</span><span class="number">.68</span>: BOOTP/DHCP, Reply, <span class="property">length</span> <span class="number">300</span>
+<span class="number">23</span>:<span class="number">06</span>:<span class="number">00.002684</span> IP <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span><span class="number">.68</span> &gt; <span class="number">255.255</span><span class="number">.255</span><span class="number">.255</span><span class="number">.67</span>: BOOTP/DHCP, Request <span class="keyword">from</span> <span class="number">00</span>:<span class="number">0</span>c:<span class="number">29</span>:<span class="number">88</span>:<span class="number">91</span>:c2, <span class="property">length</span> <span class="number">300</span>
+<span class="number">23</span>:<span class="number">06</span>:<span class="number">00.012078</span> IP <span class="number">192.168</span><span class="number">.0</span><span class="number">.254</span><span class="number">.67</span> &gt; <span class="number">192.168</span><span class="number">.0</span><span class="number">.21</span><span class="number">.68</span>: BOOTP/DHCP, Reply, <span class="property">length</span> <span class="number">300</span>
+</pre></figure>
+
+<p>67和68是DHCP协议用到的端口号，末尾加上port (67 and 68)这个过滤条件是为了其它噪音数据包。<br>{: class=“info” }</p>
+<p>对比客户端的日志和DHCP服务器端的tcpdump记录就发现它们的交互过程完全吻合。</p>
+<p>通过tcpdump或wildshark可以很容易找到问题所在。</p>
+<h1>六、参考</h1>
+<ol>
+<li>《Cisco Nexus 1000V Security Configuration Guide, Release 4.2(1) SV1(4)》</li>
+<li>《H3C S5500-EI 系列以太网交换机操作手册》</li>
+</ol>
+<p>版权所有，未经书面许可，本文的任何部分或全部不得以任何形式重制<br>{: class=“update” }</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/dhcp/">dhcp</a>, <a href="/categories/dhcp/debian/">debian</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

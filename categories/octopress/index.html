@@ -1,0 +1,379 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>octopress | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title category">octopress</h2>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-17T01:15:00.000Z"><a href="/2012/04/17/octopress-customization/">2012-04-17</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/17/octopress-customization/">octopress customization</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <ul>
+<li><p>about分页</p>
+<ol>
+<li>在<code>source</code>下新建about目录，并在里面添加index.markdown文件。</li>
+<li>编辑导航条<code>source/_includes/custom/navigation.html</code></li>
+<li>注意:<code>index.markdown</code>文件需要加上头，否则会找不到。</li>
+</ol>
+</li>
+<li><p>摘要</p>
+<ol>
+<li>在文中加入<code>&lt;!--more--&gt;</code>来控制摘要截取位置</li>
+<li>修改<code>_config.yml</code>里的<code>excerpt_link</code>控制连接文字，默认是<code>readon-&gt;</code>。</li>
+</ol>
+</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/17/octopress-customization/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-08T03:54:00.000Z"><a href="/2012/04/08/hello-octopress-2/">2012-04-8</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/08/hello-octopress-2/">欢迎你，octopress！（下）</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在<a href="../hello-octopress-1">欢迎你，octopress！（上）</a>中提到，octopress的部署分为本地环境和博客平台这两个部分。</p>
+<h1>一、本地环境</h1>
+<p>本地环境主要是指octopress。octopress采用ruby脚本语言编写，源代码放在github上，因此，只要OS支持git和ruby就可以安装octopress。本文针对的是windows。</p>
+<h2>1.1 git</h2>
+<p>在windows中，我选择的是<a href="http://code.google.com/p/msysgit/downloads/list" target="_blank">msysgit</a>这个软件包。该软件包基于MSys/MinGW，它将linux中常用的命令和git打包在一起。octopress对git的版本没有要求，因此用户下载最新的版本安装即可。</p>
+<h2>1.2 ruby</h2>
+<p>在windows中，octopress的正常安装和运行依赖于以下两个组件：</p>
+<ul>
+<li><strong><a href="http://rubyforge.org/frs/download.php/75127/rubyinstaller-1.9.2-p290.exe" target="_blank">rubyinstaller</a></strong> <em>octopress要求ruby1.9.2。</em></li>
+<li><strong><a href="https://github.com/oneclick/rubyinstaller/wiki/development-kit" target="_blank">RubyInstaller DevKit</a></strong> <em>gem在生成本地模块的时候需要用到编译环境。</em></li>
+</ul>
+<p>安装完毕后，<strong>首先</strong>将<code>ruby.exe</code>添加到windows操作系统的环境变量中，这样就可以在当前目录中直接使用ruby命令。</p>
+<img src="http://dl.linuxabc.net.cn/u/74911209/octopress/2012-05-27_environment-config.jpg" class="center" title="环境变量配置" alt="环境变量配置">
+
+
+<p><strong>接着</strong>修改gem source，因为默认的rubygems.org对于国内用户来说速度太慢，建议替换成淘宝的源：</p>
+<pre><code><span class="comment">$</span> <span class="comment">gem</span> <span class="comment">sources</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">remove</span> <span class="comment">http://rubygems</span>.<span class="comment">org/</span>
+<span class="comment">$</span> <span class="comment">gem</span> <span class="comment">sources</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">a</span> <span class="comment">http://ruby</span>.<span class="comment">taobao</span>.<span class="comment">org/</code></pre>
+<p><strong>最后</strong>安装<code>rdoc</code>和<code>bundler</code>这两个gem</p>
+<pre><code><span class="variable">$ </span>gem install rdoc bundler</code></pre>
+<h2>1.3 octopress</h2>
+<h3>1.3.1 安装</h3>
+<pre><code><span class="char">$ </span>mkdir /d/octopress
+<span class="char">$ </span>cd /d/octopress
+<span class="char">$ </span>git clone <span class="method">git:</span>//github.com/imathis/octopress.git
+<span class="char">$ </span>bundle install</code></pre>
+<h3>1.3.2 配置</h3>
+<p>octopress的配置文件是<code>_config.yml</code>，用户通过它来配置博客的基本信息和第三方插件，详见<a href="http://octopress.org/help/" target="_blank">octopress官方文档</a>。</p>
+<h3>1.3.3 第一篇文章</h3>
+<pre><code><span class="variable">$ </span>rake new_post[<span class="string">"octopress on heroku"</span>]</code></pre>
+<p>执行<code>ls -al</code>就会发现在<code>d:\octopress\source\_posts</code>中已经生成<code>2012-04-08-octopress-on-heroku.markdown</code>文档。接下来用户就可以用自己喜欢的编辑器来编辑这篇文章了。</p>
+<h3>1.3.4 预览&amp;生成</h3>
+<p>编辑完文档后，先在本地预览一下，查看排版是否满意</p>
+<pre><code><span class="variable">$ </span>rake preview</code></pre>
+<p>该命令将启动内置的网页服务器，监听端口为4000，用户可通过浏览器访问<code>http://localhost:4000</code>进行预览。最后生成静态网站：</p>
+<pre><code><span class="variable">$ </span>rake generate</code></pre>
+<h1>二、博客平台</h1>
+<p>博客平台既可以采用免费的github/heroku，也可以用VPS。我选择的是heroku。</p>
+<pre><code><span class="variable">$ </span>gem install heroku</code></pre>
+<h2>2.1 申请帐号</h2>
+<p>用户可在<code>www.heroku.com</code>上申请一个新的帐号，过程很简单，就不累述了，详情可参考heroku的官方文档。</p>
+<h2>2.2 创建一个新应用</h2>
+<pre><code>$ heroku <span class="operator"><span class="keyword">create</span> linuxabc</code></pre>
+<p>linuxabc指的是应用名称<br>{: class=“info” }</p>
+<p>至此，创建了一个基于heroku的博客平台，最后步骤就是将静态网站部署到博客平台上：</p>
+<pre><code><span class="variable">$ </span>git add .
+<span class="variable">$ </span>git commit -m <span class="string">'site updated'</span>
+<span class="variable">$ </span>git push heroku master</code></pre>
+<p>大功告成！</p>
+<h1>三、更新博客</h1>
+<p>如何更新博客呢？</p>
+<pre><code><span class="variable">$ </span>rake generate
+<span class="variable">$ </span>git add .
+<span class="variable">$ </span>git commit -m <span class="string">'add &lt;new-post-title&gt;'</span>
+<span class="variable">$ </span>git push heroku master</code></pre>
+<p>建议将这四条语句放在一个bash脚本中，简化操作。<br>{: class=“info” }</p>
+<h1>四、排错</h1>
+<ol>
+<li><p>无法终止<code>rake preview</code></p>
+<p> 启用<code>rake preview</code>后，直接按<code>ctrl+c</code>无法正常终止该进程，老提示<code>终止批处理操作吗（Y/N）？</code>，这时候可以另开一个<code>Git Bash</code>窗口，使用<code>ps aux | grep ruby</code>命令找出<code>pid</code>(第一个数值)，然后执行<code>kill &lt;pid&gt;</code>来停止该进程。</p>
+</li>
+</ol>
+<h1>五、tips</h1>
+<ol>
+<li><p>git restore</p>
+<p> 我不小心将一篇<code>source/_post/2012-04-xx-xx-xx.markdown</code>的内容覆盖掉了，而该blog已经<code>git push</code>过一次，接着可以通过<code>git checkout -- source/_post/2012-04-xx-xx-xx.markdown</code>来恢复该文件。</p>
+</li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-08T02:24:00.000Z"><a href="/2012/04/08/hello-octopress-1/">2012-04-8</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/08/hello-octopress-1/">欢迎你，octopress！（上）</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>前几年，我玩了一段时间wordpress，也断断续续写了一些博客，但是总感觉wordpress不顺手，遂抛弃之。</p>
+<h1>一、为什么抛弃wordpress</h1>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/04/08/hello-octopress-1/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

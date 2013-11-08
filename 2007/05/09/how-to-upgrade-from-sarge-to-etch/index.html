@@ -1,0 +1,302 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>如何从sarge升级到etch | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="这两天做sarge到etch的升级，参考了官方的release note，结合自己的实践写下本文，以便日后查询之用。
+Debian官方建议使用aptitude来管理包，所以下面的操作均以aptitude为例，需要说明的是一旦用了aptitude，就不要再混用apt-get。
+本文假定用户没有安装X ">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="如何从sarge升级到etch"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2007-05-09T15:00:00.000Z"><a href="/2007/05/09/how-to-upgrade-from-sarge-to-etch/">2007-05-9</a></time>
+      
+      
+  
+    <h1 class="title">如何从sarge升级到etch</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>这两天做sarge到etch的升级，参考了官方的release note，<br>结合自己的实践写下本文，以便日后查询之用。</p>
+<p>Debian官方建议使用aptitude来管理包，所以下面的操作均<br>以aptitude为例，需要说明的是一旦用了aptitude，就不要<br>再混用apt-get。</p>
+<p>本文假定用户没有安装X windows系统，毕竟Debian更适合于<br>做服务器，桌面还是用Ubuntu吧。</p>
+<h1>1. 备份</h1>
+<p>将系统中重要的系统文件做备份，一般是配置文件、数据库等</p>
+<pre><code><span class="preprocessor"># tar -cvf /home/backup/etc.bak /etc/*</span></code></pre>
+<h1>2. 准备升级环境</h1>
+<p>升级的过程中会重启一些服务，所以千万不要通过telnet、<br>ssh远程连接方式进行升级，最好在本机的终端窗口下操作<br>（不要在X windows），或者通过modem的serial口远程登录。<br>（这跟telnet、ssh的远程连接有所区别，cisco等网络设备<br>经常会用到这种方式）</p>
+<h1>3. 检查系统软件包状态</h1>
+<p>系统中如果有软件包处于hold状态，则在升级过程中可能<br>失败，最好手工将他们设为unhold</p>
+<figure class="highlight lang-bash"><pre><span class="comment"># aptitude search "~ahold" | grep "^.h"</span>
+<span class="comment"># aptitude unhold pkg_name</span>
+</pre></figure>
+
+<p>如果sarge系统中使用了非官方的软件包，例如backports，<br>最好先将他们全部卸载，否则升级过程中会引起冲突。<br>{: class=“warning” }</p>
+<h1>4. 更改source.list</h1>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vi</span> <span class="comment">/etc/apt/source</span>.<span class="comment">list</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="comment">#</span> <span class="comment">deb</span> <span class="comment">http://debian</span>.<span class="comment">cn99</span>.<span class="comment">com/debian</span> <span class="comment">sarge</span> <span class="comment">main</span> <span class="comment">contrib</span> <span class="comment">non</span>-<span class="comment">free</span>
+<span class="comment">deb</span> <span class="comment">http://debian</span>.<span class="comment">cn99</span>.<span class="comment">com/debian</span> <span class="comment">etch</span> <span class="comment">main</span> <span class="comment">contrib</span> <span class="comment">non</span>-<span class="comment">free</span>
+<span class="comment">#</span> <span class="comment">deb</span>-<span class="comment">src</span> <span class="comment">http://debian</span>.<span class="comment">cn99</span>.<span class="comment">com/debian</span> <span class="comment">sarge</span> <span class="comment">main</span> <span class="comment">contrib</span> <span class="comment">non</span>-<span class="comment">free</span>
+<span class="comment">deb</span>-<span class="comment">src</span> <span class="comment">http://debian</span>.<span class="comment">cn99</span>.<span class="comment">com/debian</span> <span class="comment">etch</span> <span class="comment">main</span> <span class="comment">contrib</span> <span class="comment">non</span>-<span class="comment">free</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</pre></figure>
+
+<p>中国一般用cn99源，速度比较快，只需要将sarge改为etch就可以了。</p>
+<h1>5. 更新软件包列表</h1>
+<pre><code># aptitude <span class="operator"><span class="keyword">update</span></code></pre>
+<h1>6. 确认具有足够的硬盘空间</h1>
+<p>在升级的过程中需要占用一些临时的磁盘空间，所以要确认是否还有足够的剩余空间</p>
+<figure class="highlight"><pre><span class="comment"># aptitude -y -s -f --with-recommends dist-upgrade</span>
+     [ <span class="keyword">...</span> ]
+     XXX upgraded, XXX newly installed, XXX to remove and XXX not upgraded.
+     Need to get xx.xMB/yyyMB of archives. After unpacking AAAMB will be used.
+     Would download/install/remove packages.
+</pre></figure>
+
+<p>如果不能满足请删除一些文件，例如aptitude clean或者删除/var/log</p>
+<h1>7. 升级</h1>
+<p>sarge和etch之间有不少软件包是有冲突的，直接使用<br><code>aptitude dist-upgrade</code>会卸载掉sarge系统里的软件包，而有些软件包是<br>你想保留的，为了尽量避免这种情况发生，需要做阶段性升级，分三个步骤：</p>
+<h2>7.1 最小化升级：</h2>
+<pre><code><span class="preprocessor"># aptitude upgrade</span>
+
+这样就只是更新的软件而不会删除其他东西。
+
+<span class="preprocessor"># aptitude install initrd-tools</span>
+
+这将会自动升级libc6和locale，这个时候会重启某些服务。</code></pre>
+<h2>7.2 升级内核</h2>
+<p>在做下一步操作之前强烈建议手工升级内核，Etch引进的udev技术已经无法支持比2.6.15旧的内核，而Debian Etch的软件仓库中的内核版本则是2.6.18。我们安装它就可以了。</p>
+<p>先确认一下你目前的内核版本</p>
+<pre><code><span class="preprocessor"># uname -r</span></code></pre>
+<figure class="highlight lang-bash"><pre><span class="comment"># aptitude search linux-image-2.6*</span>
+<span class="comment"># aptitude install linux-image-2.6-686</span>
+</pre></figure>
+
+<p>这样就可以安装2.6.18的内核了。</p>
+<h2>7.3 全面升级</h2>
+<pre><code><span class="preprocessor"># aptitude dist-upgrade</span></code></pre>
+<p>这将会对sarge进行完全的更新，时间大约半个小时，比我预料中要快很多。</p>
+<h1>8. 更新软件包的签名信息</h1>
+<p>Etch的软件包关系系统引入了签名功能，简言之，没有经过Debian官方<br>签署的软件包无法在etch系统上安装，你当然也可以通过更改<br><code>/etc/apt/</code>来取消这个限制。</p>
+<pre><code># aptitude <span class="operator"><span class="keyword">update</span></code></pre>
+<p>至此，您的操作系统就更新完毕了，整个过程不需要重启，这对服务器而言无疑是非常贴心的一项设计。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/debian/">debian</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,697 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Page 2 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-07-04T04:30:00.000Z"><a href="/2012/07/04/drop-packet-error-on-virtualbox-host/">2012-07-4</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/07/04/drop-packet-error-on-virtualbox-host/">VirtualBox Host中drop packet错误</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>前两天，我在VirtualBox的VM中安装了最新版的PRTG，结果发现SNMP traffic sensor的图像有断断续续的现象，同时伴随着异常返回值，这令我非常焦虑，因为cacti就是因为图像经常无缘无故出现异常而被我抛弃的，而PRTG这两年来一直位列我的十大兵器谱头名，可不能辜负了我对它的信任呀。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/07/04/drop-packet-error-on-virtualbox-host/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-27T13:53:00.000Z"><a href="/2012/06/27/how-to-install-confluence-on-centos/">2012-06-27</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/27/how-to-install-confluence-on-centos/">在CentOS5.6 64bit(VPS)中安装confluence standalone(4.1.5)</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h1>1. 硬件需求</h1>
+<p>20个并发用户的时候，需要2G内存和双CPU</p>
+<h1>2. 软件需求</h1>
+<p><strong>OS</strong></p>
+<ul>
+<li>Linux</li>
+<li>windows</li>
+<li>solaris
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/27/how-to-install-confluence-on-centos/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-27T13:30:00.000Z"><a href="/2012/06/27/packet-capture-on-h3c-devices/">2012-06-27</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/27/packet-capture-on-h3c-devices/">在H3C S5500中抓包</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>网络设备大多没有提供正儿八经的抓包工具，一般都建议通过端口镜像方式，将可疑端口的流量倾泻到监控端口，由PC来完成抓包动作。</p>
+<p>然而，这种方式并不适用于远程维护的情况，网络工程师更倾向于能在交换机上看见流经的数据包。那如何在H3C S5500上抓包呢，可以采用曲线救国的办法：利用ACL的统计功能。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/27/packet-capture-on-h3c-devices/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-10T04:30:00.000Z"><a href="/2012/06/10/virtualbox-tips/">2012-06-10</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/10/virtualbox-tips/">VirtualBox的使用技巧</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>VirtualBox命令行用起来很方便，下面是一些常用的功能，记录下来以免忘记。</p>
+<h2>1. sharedfolder</h2>
+<p>随着VMs的增多，迫切需要一个“共享文件夹”</p>
+<p><strong>HOST</strong></p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">mkdir</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">/home/sharedfolder/linux</span>
+<span class="comment">#</span> <span class="comment">mkdir</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">/home/sharedfolder/windows</span>
+<span class="comment">#</span> <span class="comment">chown</span> <span class="literal">-</span><span class="comment">R</span> <span class="comment">nobody:nogroup</span> <span class="comment">/home/sharedfolder</span>
+<span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">sharedfolder</span> <span class="comment">add</span> &lt;<span class="comment">vm1</span>&gt; <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"sharedfolder"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">hostpath</span> <span class="comment">"/home/sharedfolder"</span>
+<span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">sharedfolder</span> <span class="comment">add</span> &lt;<span class="comment">vm2</span>&gt; <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"sharedfolder"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">hostpath</span> <span class="comment">"/home/sharedfolder"
+</pre></figure>
+
+<!--more-->
+
+<p>最后接着将公共文件放到sharedfolder中。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/10/virtualbox-tips/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-09T03:30:00.000Z"><a href="/2012/06/09/some-troubleshooting-tools-on-ros/">2012-06-9</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/09/some-troubleshooting-tools-on-ros/">ROS中的几个调试工具</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>ROS的几个有用的测试工具</p>
+<p>1、ping</p>
+<ul>
+<li>语法：ping <address> option</li>
+<li>例子：ping 8.8.8.8 src-address=10.10.10.254</li>
+<li>说明：src-address这个选项有bug，icmp request包头的源地址仍然使用接口地址，而非10.10.10.254</li>
+</ul>
+<p>2、telnet</p>
+<ul>
+<li>语法：telnet <address> port</li>
+<li>例子：telnet 10.168.1.9 80</li>
+</ul>
+<p>3、tcpdump</p>
+<p>没有找到tcpdump，用什么来捕获数据包呢？原来ROS提供了一个<a href="http://wiki.mikrotik.com/wiki/Manual:Tools/Packet_Sniffer" target="_blank">packet sniffer</a>的工具，只是用起来没有tcpdump那么方便，搞不懂源于linux的ROS为何不用tcpdump这个正统的排错工具。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-09T03:30:00.000Z"><a href="/2012/06/09/how-to-setup-rancid-on-debian/">2012-06-9</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/09/how-to-setup-rancid-on-debian/">网络设备管理 - rancid</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>Rancid的全称是Really Awesome New Cisco ConfIg Differ，顾名思义，该软件的初衷是为了管理cisco设备，然而由于它非常实用，目前已经被扩展到支持多达xx种网络设备，诸如常见的dell，hp，juniper,foundry,redback等，当然，国内常见的h3c也不在话下。<br>It‘s not that the name is not being recognized, it’s that the scripts it&#39;s running have errors in the first line which produce &quot;</p>
+<p>“No such file or directory”<br>Lookup list of groups</p>
+<p>For each device in each list of groups<br>• Connect to the equipment (telnet, ssh, …)<br>• Run ”show” commands – config, inventory, …<br>• Collect, filter/format data<br>• Retrieve the resulting config files<br>• CVS check-in the changes<br>• Generate a diff from the previous version<br>• E-mail the diff to a mail address (individual or group)</p>
+<h1>rancid</h1>
+<p>rancid的工作原理</p>
+<h2>安装</h2>
+<pre><code><span class="preprocessor"># aptitude install rancid-core rancid rancid-utils</span></code></pre>
+<h2>Rancid配置</h2>
+<p>/etc/rancid/rancid.conf</p>
+<figure class="highlight"><pre><span class="setting">CVSROOT=<span class="value">$BASEDIR/SVN; export CVSROOT</span></span>
+<span class="setting">RCSSYS=<span class="value">svn; export RCSSYS</span></span>
+<span class="setting">LIST_OF_GROUPS=<span class="value">”access dist core”</span></span>
+</pre></figure>
+
+<ol>
+<li>rancid支持CVS和SVN这两种版本管理工具，本文选择了SVN，因为CVS太古老了。</li>
+<li>根据cisco的定义，一个大型的网络规划应该分成三层，分别是access、distribution和core，因此我们也创建三个组：access、dist、core</li>
+</ol>
+<p>配置设备</p>
+<p>cd /var/lib/rancid/<br>mkdir access<br>mkdir dist<br>mkdir core<br>touch access/router.db<br>touch dist/router.db<br>touch core/router.db</p>
+<p>接着往router.db里面填内容：</p>
+<figure class="highlight"><pre><span class="comment"># vim access/router.db</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">1</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_A</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">2</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_B</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">3</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_C</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">4</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_D</span>
+...
+</pre></figure>
+
+<p>依次创建dist/router.db和core/router.db</p>
+<figure class="highlight"><pre># vim .cloginrc
+add user * <span class="xml"><span class="tag">&lt;<span class="title">username</span>&gt;</span>
+add password * <span class="tag">&lt;<span class="title">password</span>&gt;</span>
+add method * telnet</span>
+</pre></figure>
+
+<h2>H3C脚本</h2>
+<p>H3C并不在rancid的官方支持之列，不过好在有热心的网友Jethro Binks制作了<a href="http://sites.google.com/site/jrbinks/code/rancid/h3c" target="_blank">h3c的脚本</a></p>
+<p>H3C的OS叫Comware，有3和5这两个系列，常见的S3100，S3600，S5600，S5800等均能正常使用。以下是经过测试的型号列表：</p>
+<ol>
+<li>H3C S3100 (Comware 3)</li>
+<li>H3C S5600 (Comware 3)</li>
+<li>H3C S7506 (Comware 5)</li>
+<li>H3C S7906E (Comware 5)</li>
+<li>H3C S5820X (Comware 5)</li>
+<li>H3C S5800 (Comware 5)</li>
+<li>H3C S3610 (Comware 5)</li>
+<li>H3C MSR30-60 (Comware 5)</li>
+</ol>
+<p>Jethro Binks的脚本并不适合于Debian,需要做一点小修改：</p>
+<p><strong>h3clogin:</strong></p>
+<p>将</p>
+<pre><code><span class="shebang">#! /usr/local/bin/expect --</span></code></pre>
+<p>改成</p>
+<pre><code><span class="shebang">#! /usr/bin/expect --</span></code></pre>
+<p><strong>h3crancid:</strong></p>
+<p>将</p>
+<pre><code><span class="shebang">#! /usr/bin/perl5</span></code></pre>
+<p>改成</p>
+<pre><code><span class="shebang">#! /usr/bin/perl</span></code></pre>
+<p>接着将它们拷贝到<code>/usr/lib/rancid/bin</code>中，同时赋予<code>+x</code>的属性。</p>
+<pre><code><span class="preprocessor"># cp h3clogin h3crancid /usr/lib/rancid/bin</span>
+<span class="preprocessor"># chmod +x h3crancid h3clogin</span></code></pre>
+<h2>H3C设备配置</h2>
+<p>rancid的脚本将使用perl+expect来登录H3C设备，并执行一些display命令来获取设备信息，虽然然而所以安全性需要着重考虑，直接给完整的特权账号肯定不合适，最好创建一个单独的ranciduser，并且仅分配level1权限：</p>
+<p>local-user ranciduser<br>authorization-attribute level 1</p>
+<p>看到这，有些读者不禁倒吸一口凉气：糟糕，手头上管理着几十台设备，难不成我要逐台登录和创建几十个相同的帐号？别急，我们完全可以利用clogin/h3clogin来自动完成这个任务。</p>
+<figure class="highlight"><pre># vim <span class="operator"><span class="keyword">create</span>.rancid.account
+sys
+<span class="keyword">local</span>-<span class="keyword">user</span> rancid
+<span class="keyword">authorization</span>-attribute <span class="keyword">level</span> <span class="number">1</span>
+quit
+save
+</pre></figure>
+
+<p>h3clogin -x /path/to/commands.file <device-ip></p>
+<p>最后测试一下</p>
+<pre><code># sudo -u rancid -H /usr/lib/rancid/h3clogin <span class="tag">&lt;<span class="title">H3C-device-ip</span>&gt;</span> FIXME</code></pre>
+<h2>配置变更</h2>
+<h3>硬件配置变更</h3>
+<h3>软件配置变更</h3>
+<h1>版本管理工具</h1>
+<p>rancid利用版本管理工具对配置变更进行管理，这是一个聪明而省力的做法，unix哲学就是帅。rancid支持CVS和SVN这两个版本管理工具，本文选择的是SVN，因为CVS太古老了。</p>
+<h2>安装svn</h2>
+<pre><code><span class="preprocessor"># aptitude install svn</span></code></pre>
+<h2>整合svn</h2>
+<p>cd /var/lib/rancid/<br>svnadmin create configs<br>svn mkdir file:///var/lib/rancid/configs/access -m “created folder”<br>svn mkdir file:///var/lib/rancid/configs/dist -m “created folder”<br>svn mkdir file:///var/lib/rancid/configs/core -m “created folder”<br>svn co file:///var/lib/rancid/configs/access ./access/<br>svn co file:///var/lib/rancid/configs/dist ./dist/<br>svn co file:///var/lib/rancid/configs/core ./core/</p>
+<p>chown -R rancid:rancid /var/lib/rancid/<br>chmod 0600 /var/lib/rancid/.cloginrc</p>
+<h1>sudo -u rancid -H /usr/lib/rancid/bin/rancid-run</h1>
+<p>svn mkdir access/configs<br>svn mkdir dist/configs<br>svn mkdir core/configs<br>svn add access/<em><br>svn add dist/</em><br>svn add core/*<br>svn commit -m “added files” access/<br>svn commit -m “added files” dist/<br>svn commit -m “added files” core/</p>
+<h1>配置变更提醒</h1>
+<p>当rancid检测到变更时，<code>control_rancid</code>组件利用sendmail将变更信息通过邮件发送给管理员。对于debian来说，我们将使用默认的MTA exim4来完成这项工作。</p>
+<h2>exim4的安装和配置</h2>
+<p>详见《<a href="">如何利用exim4通过gmail发送邮件</a>》</p>
+<h2>/etc/aliases</h2>
+<figure class="highlight"><pre><span class="comment"># vim /etc/aliases</span>
+<span class="keyword">...</span>
+rancid-&lt;group-name&gt; : mail-address@domain.name
+rancid-adimin-&lt;group-name&gt; : mail-address@domain.name
+<span class="keyword">...</span>
+<span class="comment"># newaliases</span>
+<span class="comment"># /etc/init.d/exim4 restart</span>
+</pre></figure>
+
+<p>当配置变更时，邮件将发送给rancid-<group-name>，当有错误信息时，邮件将发送给rancid-admin-<group-name>。</p>
+<p>至此完成了配置变更的邮件提醒功能。</p>
+<h1>查看变更历史记录</h1>
+<h2>viewvc安装</h2>
+<h2>viewvc配置</h2>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-07T15:30:00.000Z"><a href="/2012/06/07/how-to-setup-tftpd-on-debian/">2012-06-7</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/07/how-to-setup-tftpd-on-debian/">如何在debian中安装和配置tftpd</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>tftp服务类似FTP服务，但它短小精干，仅适合于小文件的传输，所以大多数网络设备都选择tftp作为配置文件备份、firmware升级等操作的默认传输方式。<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/07/how-to-setup-tftpd-on-debian/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-07T15:30:00.000Z"><a href="/2012/06/07/how-to-run-virtualbox-with-non-root-user/">2012-06-7</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/07/how-to-run-virtualbox-with-non-root-user/">如何以non root帐号运行VirtualBox</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在openSUSE 11.3中，root帐号可以正常地创建、注册、启动、停止和注销VM，然而non-root帐号就不行，使用<code>vboxmanage</code>的时候提示：</p>
+<pre><code><span class="attribute">ERROR</span>: <span class="string">failed to initialize COM!</span></code></pre>
+<p>请教了google大神，该问题得以解决：<br>
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/07/how-to-run-virtualbox-with-non-root-user/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-06T15:30:00.000Z"><a href="/2012/06/06/debian-template-on-virtualbox/">2012-06-6</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/06/debian-template-on-virtualbox/">如何在VirtualBox中安装和克隆Debian VM</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>上一回中讲了<a href="../how-to-install-virtualbox-on-opensuse">如何在openSUSE中安装最新版VirtualBox</a>，本回将讲如何安装和克隆Debian VM。</p>
+<h1>1. 环境：</h1>
+<ol>
+<li>HOST  OS : openSUSE11.3</li>
+<li>Guest OS : Debian 6.0.5 netinstall</li>
+<li>VirtualBox : 4.1.16</li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/06/debian-template-on-virtualbox/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+  <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-06T15:30:00.000Z"><a href="/2012/06/06/windows-template-on-virtualbox/">2012-06-6</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/06/windows-template-on-virtualbox/">如何在VirtualBox中安装和克隆windows VM</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>上回讲了<a href="../debian-template-on-virtualbox">如何安装和克隆Debian VM</a>，本回说说Windows<br> VM。</p>
+<h1>1. 创建windows VM</h1>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createvm</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">modifyvm</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">memory</span> <span class="comment">512</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">acpi</span> <span class="comment">on</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">boot1</span> <span class="comment">dvd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nic1</span> <span class="comment">bridged</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nictype1</span> <span class="comment">virtio</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">bridgeadapter1</span> <span class="comment">eth0</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createhd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">filename</span> <span class="comment">/vbox</span>.<span class="comment">images/win2k3</span>-<span class="comment">template/win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">size</span> <span class="comment">20000</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storagectl</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">IDE</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">controller</span> <span class="comment">IntelAhci</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">hdd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/vbox</span>.<span class="comment">images/win2k3</span>-<span class="comment">template/win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"win2k3</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"IDE</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/home/software/Windows</span>.<span class="comment">Server</span>.<span class="comment">2003</span>.<span class="comment">SP2</span>.<span class="comment">ent</span>.<span class="comment">iso
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2012/06/06/windows-template-on-virtualbox/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination">
+  
+    <a href="/" class="alignleft prev">Prev</a>
+  
+  
+    <a href="/page/3/" class="alignright next">Next</a>
+  
+  <div class="clearfix"></div>
+</nav></div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>OpenNTPd on OpenBSD | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="计算机时间是否同步是一个简单但很重要的命题，因为很多应用都要求计算机之间的时间一致，譬如VPN的构建、AD域的认证，log日志的排错等均需要时间同步，因此，早在1985年就诞生了NTP协议，它的全称是network time protocol（网络时间协议），被广泛用于计算机时间同步。它是一个协议，任何人都可以根据这个协议开发时间同步的软件，最著名的实现是ntp.org维护的同名套件，然而OpenBSD的开发人员对这个套件并不感冒，于是他们另起炉灶，重新开发了OpenNTPd，它旨在实现：">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="OpenNTPd on OpenBSD"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-12T13:00:00.000Z"><a href="/2012/04/12/OpenNTPd-on-OpenBSD/">2012-04-12</a></time>
+      
+      
+  
+    <h1 class="title">OpenNTPd on OpenBSD</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>计算机时间是否同步是一个简单但很重要的命题，因为很多应用都要求计算机之间的时间一致，譬如VPN的构建、AD域的认证，log日志的排错等均需要时间同步，因此，早在1985年就诞生了NTP协议，它的全称是network time protocol（网络时间协议），被广泛用于计算机时间同步。它是一个协议，任何人都可以根据这个协议开发时间同步的软件，最著名的实现是ntp.org维护的同名套件，然而OpenBSD的开发人员对这个套件并不感冒，于是他们另起炉灶，重新开发了OpenNTPd，它旨在实现：<br><a id="more"></a></p>
+<ol>
+<li>合理地保证时间的精确性；</li>
+<li>安全；</li>
+<li>配置简单；</li>
+<li>遵循BSD协议；</li>
+</ol>
+<p>读者可能会对第一条产生困惑，什么叫合理地保证时间的精确性，OpenBSD的开发人员认为，没有必要尽最大的可能保证时间的精确性，只要做到一般精确（+-0.25秒）就可以了，但必须保证代码的简洁和安全。</p>
+<h2>安装</h2>
+<p>OpenBSD4.9默认安装就已包含了OpenNTPD，因此OpenBSD的用户可以省略安装这个步骤。</p>
+<h2>配置</h2>
+<p>OpenNTPd的配置文件只有一个<code>/etc/ntpd.conf</code>，配置也非常简单</p>
+<figure class="highlight"><pre>listen on *
+<span class="preprocessor"># listen on后面跟的是提供时间同步的IP地址，假如需要在所有IP地址上提供服务，</span>
+<span class="preprocessor"># 则用“*”代替；假如不需要向外提供时间同步则注释掉该选项。</span>
+
+server time-a.nist.org
+server time-b.nist.org
+
+servers asia.pool.ntp.org
+
+<span class="preprocessor"># server</span>
+<span class="preprocessor"># server后面跟的是时间服务器域名或IP地址，OpenNTPD将调用dns client解析该域名，</span>
+<span class="preprocessor"># 假如在该域名解析出多个IP地址，OpenNTPD会优先跟第一个进行同步，万一第一个失效，</span>
+<span class="preprocessor"># 则OpenNTPD会再尝试跟第二个进行同步，至此最后一个。</span>
+
+<span class="preprocessor"># 假如有多个时间服务器，可以写多条server语句，譬如上面的time-a.nist.org</span>
+<span class="preprocessor"># 和time-b.nist.org，OpenNTPD将同这两个时间服务器进行同步；</span>
+
+<span class="preprocessor"># servers</span>
+<span class="preprocessor"># 它的作用跟多条server语句的作用相似，譬如asia.pool.ntp.org，</span>
+<span class="preprocessor"># 这是一个ntp.org维护的时间服务器群，连续执行</span>
+<span class="preprocessor"># hostname asia.pool.ntp.org就会解析出多个不同的IP地址，</span>
+<span class="preprocessor"># OpenNTPD将同所有解析出来的时间服务器进行同步。</span>
+</pre></figure>
+
+<p> (warning)为了方面说明，上面的例子过于冗余，实际上只用一条<code>servers asia.pool.ntp.org</code>足以满足大部分用户的需求。</p>
+<p>中国科学院国家授时中心的公共服务意识很差劲，我google了整个Internet都找不到一个官方的时间服务器地址，倒是看到有推销其生产的时间同步设备。相反，美国这方面就做得很好。因此在本例中就选用美国的两个时间服务器。</p>
+<h2>自启动配置</h2>
+<p>在/etc/rc.conf加入：</p>
+<figure class="highlight"><pre>ntpd_flags=<span class="string">"-s"</span>
+<span class="preprocessor"># -s的意思当开机后，ntpd进程立刻将系统时间变更为正确的时间，</span>
+<span class="preprocessor"># 而不是通过drift慢慢的将系统时间更新至正确的时间。</span>
+</pre></figure>
+
+<h2>启动</h2>
+<pre><code><span class="preprocessor"># /usr/sbin/ntpd -s</span></code></pre>
+<h2>验证</h2>
+<ul>
+<li>查看端口</li>
+</ul>
+<figure class="highlight"><pre><span class="comment"># netstat -an | grep 123</span>
+<span class="title">udp</span>          <span class="number">0</span>      <span class="number">0</span>  <span class="number">10.168.1.11</span>.<span class="number">20808</span>      <span class="number">158.108.7.157</span>.<span class="number">123</span>
+udp          <span class="number">0</span>      <span class="number">0</span>  <span class="number">10.168.1.11</span>.<span class="number">1328</span>       <span class="number">59.106.180.168</span>.<span class="number">123</span>
+udp          <span class="number">0</span>      <span class="number">0</span>  <span class="number">10.168.1.11</span>.<span class="number">5548</span>       <span class="number">140.109.1.4</span>.<span class="number">123</span>
+udp          <span class="number">0</span>      <span class="number">0</span>  <span class="number">10.168.1.11</span>.<span class="number">21989</span>      <span class="number">129.6.15.29</span>.<span class="number">123</span>
+udp          <span class="number">0</span>      <span class="number">0</span>  <span class="number">10.168.1.11</span>.<span class="number">13848</span>      <span class="number">129.6.15.28</span>.<span class="number">123</span>
+udp          <span class="number">0</span>      <span class="number">0</span>  <span class="number">10.168.1.11</span>.<span class="number">123</span>        *.*
+</pre></figure>
+
+<ul>
+<li>查看进程</li>
+</ul>
+<figure class="highlight"><pre># ps axu | grep ntpd
+<span class="title">_ntp</span>      <span class="number">9379</span>  <span class="number">0.0</span>  <span class="number">0.1</span>   <span class="number">636</span>   <span class="number">968</span> ??  <span class="type">Ss</span>    <span class="number">11</span>:<span class="number">43</span>AM    <span class="number">0</span>:<span class="number">00.04</span> ntpd: ntp engine (ntpd)
+<span class="title">_ntp</span>      <span class="number">7130</span>  <span class="number">0.0</span>  <span class="number">0.1</span>   <span class="number">768</span>   <span class="number">932</span> ??  <span class="type">Is</span>    <span class="number">11</span>:<span class="number">43</span>AM    <span class="number">0</span>:<span class="number">00.05</span> ntpd: dns engine (ntpd)
+<span class="title">root</span>     <span class="number">26733</span>  <span class="number">0.0</span>  <span class="number">0.1</span>   <span class="number">552</span>   <span class="number">772</span> ??  <span class="type">Is</span>    <span class="number">11</span>:<span class="number">43</span>AM    <span class="number">0</span>:<span class="number">00.00</span> ntpd: [priv] (ntpd)
+</pre></figure>
+
+<ul>
+<li>查看日志</li>
+</ul>
+<figure class="highlight"><pre># grep ntpd /var/log/messages
+
+Jun  6 10:44:29 openbsd ntpd[16964]: ntp engine ready
+Jun  6 10:44:49 openbsd ntpd[16964]: peer 184.171.168.106 now valid
+Jun  6 10:44:51 openbsd ntpd[16964]: peer 173.8.198.243 now valid
+Jun  6 10:44:59 openbsd ntpd[16964]: peer 173.9.142.98 now valid
+Jun  6 10:45:58 openbsd ntpd[2936]: adjusting local c<span class="operator"><span class="keyword">lock</span> <span class="keyword">by</span> <span class="number">14.875577</span>s
+Jun  <span class="number">6</span> <span class="number">10</span>:<span class="number">48</span>:<span class="number">40</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">14.072775</span>s
+Jun  <span class="number">6</span> <span class="number">10</span>:<span class="number">51</span>:<span class="number">23</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">13.266602</span>s
+Jun  <span class="number">6</span> <span class="number">10</span>:<span class="number">54</span>:<span class="number">40</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">12.294596</span>s
+Jun  <span class="number">6</span> <span class="number">10</span>:<span class="number">58</span>:<span class="number">58</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">11.006576</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">00</span>:<span class="number">06</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">10.671895</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">02</span>:<span class="number">45</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">9.885871</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">05</span>:<span class="number">21</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">9.109984</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">07</span>:<span class="number">31</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">8.468130</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">10</span>:<span class="number">42</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">7.521360</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">13</span>:<span class="number">23</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">6.723380</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">15</span>:<span class="number">35</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">6.071997</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">18</span>:<span class="number">51</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">5.095530</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">20</span>:<span class="number">26</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">4.630313</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">24</span>:<span class="number">50</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">3.321498</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">28</span>:<span class="number">38</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">2.186491</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">30</span>:<span class="number">11</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">1.731629</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">34</span>:<span class="number">30</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">0.440410</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">35</span>:<span class="number">00</span> openbsd ntpd[<span class="number">2936</span>]: adjusting <span class="keyword">local</span> clock <span class="keyword">by</span> <span class="number">0.295056</span>s
+Jun  <span class="number">6</span> <span class="number">11</span>:<span class="number">37</span>:<span class="number">44</span> openbsd ntpd[<span class="number">16964</span>]: clock <span class="keyword">is</span> now synced
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/openbsd openntpd/">openbsd openntpd</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

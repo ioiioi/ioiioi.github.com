@@ -1,0 +1,302 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>欢迎你，octopress！（上） | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="前几年，我玩了一段时间wordpress，也断断续续写了一些博客，但是总感觉wordpress不顺手，遂抛弃之。
+一、为什么抛弃wordpress">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="欢迎你，octopress！（上）"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-08T02:24:00.000Z"><a href="/2012/04/08/hello-octopress-1/">2012-04-8</a></time>
+      
+      
+  
+    <h1 class="title">欢迎你，octopress！（上）</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>前几年，我玩了一段时间wordpress，也断断续续写了一些博客，但是总感觉wordpress不顺手，遂抛弃之。</p>
+<h1>一、为什么抛弃wordpress</h1>
+<a id="more"></a>
+
+<p>主要原因是：</p>
+<ul>
+<li><p><strong>帖代码麻烦</strong><br>，作为一个linux用户，经常要跟命令和代码块打交道，所以我迫切希望能快速插入代码块。wordpress的处理方式中显得颇为累赘，要么需要挪动鼠标去点击visual editor中的<code>&lt;code&gt;</code>按钮，要么需要在代码块前后插入<code>&lt;pre lang=&quot;bash&quot;&gt;</code>和<code>&lt;/pre&gt;</code>这样的标签，原本愉悦的写作心情顿时受阻，如鲠在喉。</p>
+</li>
+<li><p><strong>标签、标签、太多的标签！</strong>虽然wordpress提供了visual editor，但是功能太弱，资深用户往往切换到plain text模式，然而这种模式最大的缺点就是<code>&lt;html&gt;、&lt;h1&gt;</code>这样的标签和文字参杂在一块，版面混乱，修改起来非常困难。</p>
+</li>
+<li><p><strong>缺乏合适的客户端</strong>，一般用户都希望能有个客户端进行离线写作，完事后再发布到博客中，然而目前还没有一款成熟的客户端可供使用。绝大部分的用户必须登录到wordpress后台进行编辑。</p>
+</li>
+</ul>
+<blockquote class="pullquote"><p>{“ 总之，在wordpress中，技术类文档要想有漂亮的排版，作者必是经历一番辛苦的调整。 ”}这还不算，最郁闷的是，每一篇都要经历这个痛苦的过程，所以说，wordpress只适合于一般的文字工作者，不适合于技术人员。</p>
+</blockquote>
+
+
+<p>为了将wordpress改造得更便利一些，我曾尝试过一些插件：</p>
+<ul>
+<li><p><strong>编辑器插件</strong>：尝试过TinyMCE Advanced等插件，这条路是走错了，原因有二：1、可视化编辑器跟一些代码高亮插件冲突；2、它们基于GUI，无法满足快速插入代码块和快速格式化的需求，放弃之；</p>
+</li>
+<li><p><strong>wiki插件</strong>：曾尝试着将wordpress改造成wiki，也找过一些wiki插件，其中BlogText效果最好，可以满足我的要求，本以为，我就这么一直用下去，安心落户于wordpress之中。</p>
+</li>
+</ul>
+<p>然而随后的数据丢失事件耗尽了我的耐心。我的博客是跟别人合租的一个dreamhost虚拟空间，2011年的某天，我发现博客无法访问，联系房东后被告知，由于合租者中有人不守规矩，创建非法网站，dreamhost停用了整个空间，并删除了所有数据，WTF！辛辛苦苦写的博客全没了。虽然电脑里面还有一些原始文稿，但要重新录入wordpress，又要经历一番痛苦的折磨，索性作罢。</p>
+<h1>二、新欢：octopress</h1>
+<p>直到前段时间，我偶然间发现了<strong>markdown</strong>和<strong>vim</strong>，接着发现了<strong>github</strong>、<strong>jekyll</strong>，然后是<strong>octopress</strong>和<strong>herohu</strong>，我的激情又被点燃。这是一个多么神奇的组合，仿佛就是为技术控而打造的。</p>
+<p>下面简单介绍这些组件：</p>
+<ul>
+<li><p><strong>markdown</strong></p>
+<p>  根据wikipedia的定义，它是一种轻量级标记语言，主要目的是为用户提供一种“易读易写的纯文本格式“编写文档，这意味着：1、帖代码非常方便；2、不需html标签就可以达成漂亮的排版。这是吸引广大技术博主的主因，因为用wordpress来写技术类文档简直就是反人类。</p>
+</li>
+<li><p><strong>vim</strong></p>
+<p>  vim是一款非常优秀的编辑器，它跟声名显赫的emacs并驾齐驱。坊间流传着这样的一句话：emacs是神的编辑器，而vim是编辑器之神。足见vim的地位之高。vim的特点是编辑功能强大而灵活，扩展性强，非常适合于码农或高阶用户。近年被移植到了windows，同样在windows程序员间引起了一阵旋风，纷纷从IDE叛逃至vim阵营。用vim写markdown文档是一种享受，因为经过打磨后的vim不仅有着漂亮的外表，还有自动补齐这些便利的功能。这就解决了编辑器的问题，至此，还有什么理由抱着wordpress不放呢？</p>
+</li>
+<li><p><strong>git</strong></p>
+<p>  是一个分布式版本控制系统。它linux内核开发过程中意外诞生的，现在被广泛应用于软件项目的代码管理。相对于CVS、SVN而言，git的特点是每个开发者的电脑均有整个代码仓库的镜像，大部分操作在本地执行，所以git具有速度快、对网络依赖小，不存在单点故障的优点。</p>
+</li>
+<li><p><strong>github</strong></p>
+<p>   顾名思义，它就是基于git工具的远程仓库托管平台。有大量的开源项目和著名的软件公司均使用它作为项目代码的远程仓库。不过，最吸引我的则是github pages功能，它允许用户免费存放300M的静态页面，此外还提供了一个二级域名：<code>http://&lt;user-id&gt;.github.com/</code>，用户可以用它来创建一个免费的静态网站。看到这，读者可能会犯嘀咕：“都什么年代了，还要手写html网页啊？”，github当然也想到这一点，于是其创始人Tom Preton-Werner开发了jekyll这个引擎。</p>
+</li>
+<li><p><strong>jekyll</strong></p>
+<p>  是一个简单的、面向博客的静态网站生成器。当用户上传（push）源文件到github仓库后，github将触发jekyll引擎，调用markdown解析器对源文件进行编译，同时结合网站模版添加统一的风格，最终生成静态页面。jekyll引擎是一项关键性技术，它将用户从繁琐的html标签中解救出来。这样，用户就可以用markdown来随心所欲的书写文档了。然而jekyll仅仅是一个引擎，用户还需要调教评论、代码高亮、Javascripts和css等组件才能打造一个称心如意的博客。于是，octopress应运而生。</p>
+</li>
+<li><p><strong>octopress</strong></p>
+<p>  是一个基于jekyll的博客框架，它整合了Pinboard、Delicious、Disqus、google plus one等插件，还有一个高质量的HTML5模版。虽然octopress将自己标榜为“a blogging framework for hackers”，但普通用户也可以很容易用octopress创建一个漂亮的静态博客。</p>
+</li>
+</ul>
+<p>嗯，似乎很麻烦，不就是写个博客吗，只好以“生命不息，折腾不止”自勉了。</p>
+<h1>三、octopress的使用流程</h1>
+<p>octopress的使用分两部分：</p>
+<p><strong>一、本地</strong></p>
+<ol>
+<li>使用自己喜好的编辑器，遵循markdown语法来写博文；</li>
+<li>使用<code>rake generate</code>，遵循octopress/jekyll的定义生成一个完整的静态网站内容；</li>
+<li>使用<code>git</code>或<code>rsync</code>将该静态网站内容推送到位于互联网上的博客平台；</li>
+</ol>
+<p><strong>二、博客平台</strong></p>
+<p>博客平台所做的工作就非常简单了：</p>
+<ol>
+<li>接收从本地推送过来的静态网站；</li>
+<li>提供www访问服务；</li>
+</ol>
+<p>也就是说博客平台只要提供一定的磁盘空间，接着开启apache或nginx就可，完全不需要考虑PHP、MySQL等组件。用户既可以选择github或heroku这些免费的平台上，也可以放在自己的VPS中。</p>
+<p>那如何在部署octopress博客环境呢，请看<a href="../hello-octopress-2">欢迎你，octopress！（下）</a>。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/octopress/">octopress</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

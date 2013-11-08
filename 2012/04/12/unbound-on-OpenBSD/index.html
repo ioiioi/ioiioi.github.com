@@ -1,0 +1,356 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>unbound on OpenBSD | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="2013-03-05 更新几条kill的正确用法和客户端排错说明{: class=“info” }
+一提起DNS，大家一般都会想到BIND。2000年的时候，Oreilly的《DNS and BIND》是最著名的也是唯一的一本关于DNS的书籍，现在已经更新到第5版。然而,时光流逝，美人迟暮，BIND的代码越来越臃肿，每向前迈一步都很困难,不少后起之秀都在觊觎BIND的地位，nsd/unbound便是其中之一，目前已有3台根域名服务器跑的就是nsd。
+nsd/unbound是NLnet Labs开发的一套DNS daemon，其中nsd作为authorative DNS，unbound负责recursive和caching，旨在为用户提供一套安全、简洁、高效的DNS解决方案。ubuntu和OpenBSD均计划在下一版本中将unbound作为默认的DNS解释器。今天仅介绍unbound，以后有机会再讲nsd。">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="unbound on OpenBSD"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-12T05:00:00.000Z"><a href="/2012/04/12/unbound-on-OpenBSD/">2012-04-12</a></time>
+      
+      
+  
+    <h1 class="title">unbound on OpenBSD</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>2013-03-05 更新几条kill的正确用法和客户端排错说明<br>{: class=“info” }</p>
+<p>一提起DNS，大家一般都会想到BIND。2000年的时候，Oreilly的《DNS and BIND》是最著名的也是唯一的一本关于DNS的书籍，现在已经更新到第5版。然而,时光流逝，美人迟暮，BIND的代码越来越臃肿，每向前迈一步都很困难,不少后起之秀都在觊觎BIND的地位，nsd/unbound便是其中之一，目前已有3台根域名服务器跑的就是nsd。</p>
+<p>nsd/unbound是NLnet Labs开发的一套DNS daemon，其中nsd作为authorative DNS，unbound负责recursive和caching，旨在为用户提供一套安全、简洁、高效的DNS解决方案。ubuntu和OpenBSD均计划在下一版本中将unbound作为默认的DNS解释器。<br>今天仅介绍unbound，以后有机会再讲nsd。<br><a id="more"></a></p>
+<p><strong>需求</strong></p>
+<ol>
+<li>仅为内网用户服务，且仅支持IPv4；</li>
+<li>为两个本地域提供简单的域名解析；</li>
+<li>访问外网时由unbound实现递归解析及缓存；</li>
+</ol>
+<p><strong>安装</strong></p>
+<pre><code><span class="preprocessor"># pkg_add -r unbound</span></code></pre>
+<p><strong>配置</strong></p>
+<figure class="highlight"><pre>/var/unbound/etc/unbound.conf
+<span class="title">server</span>:
+	verbosity: <span class="number">1</span>
+	 interface: <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>
+	 interface: <span class="number">192.168</span><span class="number">.5</span><span class="number">.254</span>
+	 interface: <span class="number">192.168</span><span class="number">.8</span><span class="number">.254</span>
+	 outgoing-interface: <span class="number">202.138</span><span class="number">.174</span>.xx
+ # 假如是openbsd只有一块网卡，并且位于内网，则outgoing-interface设置为内网ip
+	 <span class="keyword">do</span>-ip4: yes
+	 <span class="keyword">do</span>-ip6: no
+	 <span class="keyword">do</span>-udp: yes
+	 <span class="keyword">do</span>-tcp: no
+	 access-control: <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span>/<span class="number">0</span> refuse
+	 access-control: <span class="number">127.0</span><span class="number">.0</span><span class="number">.0</span>/<span class="number">8</span> allow
+	 access-control: <span class="number">192.168</span><span class="number">.5</span><span class="number">.0</span>/<span class="number">24</span> allow
+	 access-control: <span class="number">192.168</span><span class="number">.8</span><span class="number">.0</span>/<span class="number">24</span> allow
+<span class="title">local</span> zone: <span class="string">"beijing.gov.cn."</span> static
+	local-<span class="typedef"><span class="keyword">data</span>: "moa.beijing.gov.cn.            <span class="type">IN</span> <span class="type">A</span> 10.168.1.5"</span>
+	local-<span class="typedef"><span class="keyword">data</span>: "mas.beijing.gov.cn.            <span class="type">IN</span> <span class="type">A</span> 10.168.1.8"</span>
+	local-<span class="typedef"><span class="keyword">data</span>: "oa.beijing.gov.cn.             <span class="type">IN</span> <span class="type">A</span> 10.168.1.9"</span>
+<span class="title">local</span>-zone: <span class="string">"oaserver.com."</span> static
+	local-<span class="typedef"><span class="keyword">data</span>: "oa_server1.oaserver.com        <span class="type">IN</span> <span class="type">A</span> 10.168.1.6"</span>
+	local-<span class="typedef"><span class="keyword">data</span>: "oa_server2.oaserver.com        <span class="type">IN</span> <span class="type">A</span> 10.168.1.7"</span>
+
+<span class="title">local</span>-<span class="typedef"><span class="keyword">data</span>-ptr: "10.168.1.5                    moa.beijing.gov.cn"</span>
+<span class="title">local</span>-<span class="typedef"><span class="keyword">data</span>-ptr: "10.168.1.8                    mas.beijing.gov.cn"</span>
+<span class="title">local</span>-<span class="typedef"><span class="keyword">data</span>-ptr: "10.168.1.9                     oa.beijing.gov.cn"</span>
+<span class="title">local</span>-<span class="typedef"><span class="keyword">data</span>-ptr: "10.168.1.6               oa_server1.oaserver.com"</span>
+<span class="title">local</span>-<span class="typedef"><span class="keyword">data</span>-ptr: "10.168.1.7               oa_server2.oaserver.com"</span>
+
+<span class="title">forward</span>-zone:
+ 	name: <span class="string">"."</span>
+ 	forward-addr: <span class="number">8.8</span><span class="number">.4</span><span class="number">.4</span>  # public dns-<span class="number">1</span>
+ 	forward-addr: <span class="number">8.8</span><span class="number">.8</span><span class="number">.8</span>  # public dns-<span class="number">2</span>
+</pre></figure>
+
+<p>unbound的配置浅显易懂，上手容易。</p>
+<p><strong>配置resolv.conf</strong></p>
+<pre><code><span class="preprocessor"># echo "nameserver 172.0.0.1" &gt; /etc/resolv.conf</span></code></pre>
+<p><strong>启动</strong></p>
+<pre><code><span class="preprocessor"># /usr/local/sbin/unbound</span></code></pre>
+<p><strong>自启动</strong></p>
+<p>在<code>/etc/rc.local</code>中加入以下片段</p>
+<figure class="highlight"><pre><span class="keyword">if</span> <span class="test_condition">[ -x /usr/local/sbin/unbound ]</span>; <span class="keyword">then</span>
+   <span class="keyword">echo</span> -n <span class="string">' unbound'</span>;
+   /usr/local/sbin/unbound
+<span class="keyword">fi</span>
+</pre></figure>
+
+<p><strong>重启</strong></p>
+<p>kill -HUP <code>cat /var/unbound/var/run/unbound.pid</code></p>
+<p><code>-HUP</code>仅是重新加载配置文件，进程并未中止。在执行该命令的前后分别<code>ps -aux | grep unbound</code>就会发现进程id不变。这条命令非常有用。</p>
+<p><strong>停止</strong></p>
+<p>kill -QUIT <code>cat /var/unbound/var/run/unbound.pid</code></p>
+<p>建议使用<code>-QUIT</code>来终止unbound，否则会出现日志中会出现<code>openbsd unbound: [12078:0] warning: did not exit gracefully last time
+ (14222)</code>的warning。</p>
+<p><strong>测试</strong></p>
+<figure class="highlight"><pre>root@openbsd:~<span class="preprocessor"># dig @&lt;unbound-ip&gt; www.baidu.com</span>
+
+<span class="comment">; &lt;&lt;&gt;&gt; DiG 9.4.2-P2 &lt;&lt;&gt;&gt; www.baidu.com</span>
+<span class="comment">;; global options:  printcmd</span>
+<span class="comment">;; Got answer:</span>
+<span class="comment">;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 30454</span>
+<span class="comment">;; flags: qr rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 4, ADDITIONAL: 4</span>
+
+<span class="comment">;; QUESTION SECTION:</span>
+<span class="comment">;www.baidu.com.                 IN      A</span>
+
+<span class="comment">;; ANSWER SECTION:</span>
+www<span class="preprocessor">.baidu</span><span class="preprocessor">.com</span>.          <span class="number">301</span>     <span class="keyword">IN</span>      CNAME   www<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.
+www<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.       <span class="number">557</span>     <span class="keyword">IN</span>      A       <span class="number">61.135</span><span class="number">.169</span><span class="number">.105</span>
+www<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.       <span class="number">557</span>     <span class="keyword">IN</span>      A       <span class="number">61.135</span><span class="number">.169</span><span class="number">.125</span>
+
+<span class="comment">;; AUTHORITY SECTION:</span>
+a<span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.           <span class="number">6968</span>    <span class="keyword">IN</span>      NS      ns2<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.
+a<span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.           <span class="number">6968</span>    <span class="keyword">IN</span>      NS      ns5<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.
+a<span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.           <span class="number">6968</span>    <span class="keyword">IN</span>      NS      ns4<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.
+a<span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.           <span class="number">6968</span>    <span class="keyword">IN</span>      NS      ns6<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.
+
+<span class="comment">;; ADDITIONAL SECTION:</span>
+ns2<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.       <span class="number">540</span>     <span class="keyword">IN</span>      A       <span class="number">123.125</span><span class="number">.113</span><span class="number">.66</span>
+ns4<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.       <span class="number">530</span>     <span class="keyword">IN</span>      A       <span class="number">123.125</span><span class="number">.113</span><span class="number">.67</span>
+ns5<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.       <span class="number">28</span>      <span class="keyword">IN</span>      A       <span class="number">220.181</span><span class="number">.3</span><span class="number">.178</span>
+ns6<span class="preprocessor">.a</span><span class="preprocessor">.shifen</span><span class="preprocessor">.com</span>.       <span class="number">94</span>      <span class="keyword">IN</span>      A       <span class="number">220.181</span><span class="number">.4</span><span class="number">.178</span>
+
+<span class="comment">;; Query time: 26 msec</span>
+<span class="comment">;; SERVER: 127.0.0.1#53(127.0.0.1)</span>
+<span class="comment">;; WHEN: Sat Jun 11 12:41:19 2011</span>
+<span class="comment">;; MSG SIZE  rcvd: 226</span>
+</pre></figure>
+
+<p>另外还可以通过<code>tcpdump</code>来跟踪53端口数据包</p>
+<figure class="highlight"><pre>root@openbsd:/var/log<span class="preprocessor"># tcpdump -nvi fxp0 port 53 </span>
+tcpdump: listening on fxp0, link-type EN10MB
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">01.931549</span> <span class="number">10.168</span><span class="number">.9</span><span class="number">.34</span><span class="number">.55420</span> &gt; <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.53</span>: [udp sum ok] <span class="number">3200</span>+ A? www<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. (<span class="number">33</span>) (ttl <span class="number">61</span>, <span class="keyword">id</span> <span class="number">13401</span>, len <span class="number">61</span>)
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">01.932139</span> <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.32044</span> &gt; <span class="number">8.8</span><span class="number">.4</span><span class="number">.4</span><span class="number">.53</span>: [udp sum ok] <span class="number">28238</span>+% [<span class="number">1</span>au] A? www<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. (<span class="number">44</span>) (ttl <span class="number">64</span>, <span class="keyword">id</span> <span class="number">63444</span>, len <span class="number">72</span>)
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">01.951483</span> <span class="number">8.8</span><span class="number">.4</span><span class="number">.4</span><span class="number">.53</span> &gt; <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.32044</span>: <span class="number">28238</span> <span class="number">18</span>/<span class="number">0</span>/<span class="number">1</span> www<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. CNAME jupiter<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>., jupiter<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. CNAME ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>., [|domain] (ttl <span class="number">46</span>, <span class="keyword">id</span> <span class="number">54578</span>, len <span class="number">368</span>)
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">01.952231</span> <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.31698</span> &gt; <span class="number">8.8</span><span class="number">.4</span><span class="number">.4</span><span class="number">.53</span>: [udp sum ok] <span class="number">35898</span>+% [<span class="number">1</span>au] A? jupiter<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. (<span class="number">48</span>) (ttl <span class="number">64</span>, <span class="keyword">id</span> <span class="number">25386</span>, len <span class="number">76</span>)
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">02.091097</span> <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.15044</span> &gt; <span class="number">8.8</span><span class="number">.4</span><span class="number">.4</span><span class="number">.53</span>: [udp sum ok] <span class="number">46337</span>+% [<span class="number">1</span>au] A? jupiter<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. (<span class="number">48</span>) (ttl <span class="number">64</span>, <span class="keyword">id</span> <span class="number">2656</span>, len <span class="number">76</span>)
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">02.112195</span> <span class="number">8.8</span><span class="number">.4</span><span class="number">.4</span><span class="number">.53</span> &gt; <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.15044</span>: <span class="number">46337</span> <span class="number">17</span>/<span class="number">0</span>/<span class="number">1</span> jupiter<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. CNAME ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>., ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. A <span class="number">58.63</span><span class="number">.236</span><span class="number">.36</span>, ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>.[|domain] (ttl <span class="number">46</span>, <span class="keyword">id</span> <span class="number">39434</span>, len <span class="number">350</span>)
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">02.112863</span> <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.10921</span> &gt; <span class="number">8.8</span><span class="number">.4</span><span class="number">.4</span><span class="number">.53</span>: [udp sum ok] <span class="number">39366</span>+% [<span class="number">1</span>au] A? ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. (<span class="number">44</span>) (ttl <span class="number">64</span>, <span class="keyword">id</span> <span class="number">12795</span>, len <span class="number">72</span>)
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">02.134126</span> <span class="number">8.8</span><span class="number">.4</span><span class="number">.4</span><span class="number">.53</span> &gt; <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.10921</span>: <span class="number">39366</span> <span class="number">16</span>/<span class="number">0</span>/<span class="number">1</span> ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. A <span class="number">58.63</span><span class="number">.236</span><span class="number">.42</span>, ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. A <span class="number">58.63</span><span class="number">.236</span><span class="number">.43</span>, ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>.[|domain] (ttl <span class="number">46</span>, <span class="keyword">id</span> <span class="number">38437</span>, len <span class="number">328</span>)
+<span class="number">23</span>:<span class="number">43</span>:<span class="number">02.134731</span> <span class="number">10.168</span><span class="number">.1</span><span class="number">.11</span><span class="number">.53</span> &gt; <span class="number">10.168</span><span class="number">.9</span><span class="number">.34</span><span class="number">.55420</span>: <span class="number">3200</span> <span class="number">18</span>/<span class="number">0</span>/<span class="number">0</span> www<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. CNAME jupiter<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>., jupiter<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>. CNAME ara<span class="variable">.sina</span><span class="variable">.com</span><span class="variable">.cn</span>., [|domain] (ttl <span class="number">64</span>, <span class="keyword">id</span> <span class="number">34931</span>, len <span class="number">357</span>)
+</pre></figure>
+
+<p>说明unbound的递归查询服务正常。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/openbsd/">openbsd</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

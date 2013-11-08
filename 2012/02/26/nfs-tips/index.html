@@ -1,0 +1,283 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>NFS tips | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="一、solaris
+Solaris11 text x86默认安装已包含nfs service的相关组件">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="NFS tips"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-02-26T15:30:00.000Z"><a href="/2012/02/26/nfs-tips/">2012-02-26</a></time>
+      
+      
+  
+    <h1 class="title">NFS tips</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2>一、solaris</h2>
+<p>Solaris11 text x86默认安装已包含nfs service的相关组件<br><a id="more"></a></p>
+<h3>1.1 启动</h3>
+<pre><code><span class="preprocessor"># svcadm enable network/nfs/server</span></code></pre>
+<h3>1.2 共享</h3>
+<h4>1.2.1 定义nfs共享</h4>
+<pre><code><span class="comment">#</span> <span class="comment">share</span> <span class="literal">-</span><span class="comment">F</span> <span class="comment">nfs</span> <span class="literal">-</span><span class="comment">o</span> <span class="comment">root=@192</span>.<span class="comment">168</span>.<span class="comment">55</span>.<span class="comment">0/24</span> <span class="comment">/tank/iso</code></pre>
+<h4>1.2.2 修改nfs共享参数</h4>
+<pre><code># zfs <span class="operator"><span class="keyword">set</span> share=name=tank_iso,path=/tank/iso,prot=nfs,root=<span class="number">192.168</span><span class="number">.55</span><span class="number">.0</span>/<span class="number">24</span>,rw=*,sec=sys tank/iso</code></pre>
+<p>无法直接修改父目录的nfs共享参数，只能修改子目录。</p>
+<h4>1.2.3 取消共享</h4>
+<pre><code><span class="preprocessor"># unshare /share-mountpoint</span></code></pre>
+<h4>1.2.4 排错</h4>
+<p>如果nfs服务无法启动，可以使用下列的命令查看关联服务进程</p>
+<pre><code><span class="preprocessor"># svcs -xv</span></code></pre>
+<p><strong>检查rpcbind</strong></p>
+<pre><code><span class="preprocessor"># rpcinfo -u Localhost rpcbind</span>
+<span class="preprocessor"># ps -ef | grep rpcbind</span></code></pre>
+<p><strong>检查nfsd</strong></p>
+<pre><code><span class="preprocessor"># rpcinfo -u Localhost nfs</span>
+<span class="preprocessor"># ps -ef | grep nfs</span></code></pre>
+<p><strong>检查mount</strong></p>
+<pre><code><span class="preprocessor"># rpcinfo -u localhost mountd</span>
+<span class="preprocessor"># ps -ef | grep mountd</span></code></pre>
+<p><strong>检查nfs log</strong></p>
+<p>文件：/var/svc/log/network-nfs-server:default.log</p>
+<h2>二、linux</h2>
+<p>以下是在CentOS中安装和使用nfs的步骤</p>
+<h3>2.1 安装</h3>
+<pre><code><span class="preprocessor"># yum install portmap</span>
+<span class="preprocessor"># yum install nfs</span></code></pre>
+<h3>2.2 检查&amp;启动</h3>
+<pre><code><span class="preprocessor"># service portmap status</span>
+<span class="preprocessor"># service portmap start</span>
+<span class="preprocessor"># service nfs status</span>
+<span class="preprocessor"># service nfs start</span></code></pre>
+<h3>2.3 配置/etc/exports</h3>
+<pre><code>/directory 192.168.33.6(rw,sync)</code></pre>
+<p>说明:</p>
+<ol>
+<li>/directory是即将被发布的共享目录</li>
+<li>192.168.33.6是nfs client的ip地址，也可以用hostname</li>
+<li>建议使用sync这个参数，防止掉电</li>
+</ol>
+<p>修改完/etc/exports后，需要重新读取配置</p>
+<pre><code># service nfs re<span class="operator"><span class="keyword">load</span></code></pre>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/linux/">linux</a>, <a href="/categories/linux/netbsd/">netbsd</a>, <a href="/categories/linux/netbsd/solaris/">solaris</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

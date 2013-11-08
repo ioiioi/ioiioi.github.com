@@ -1,0 +1,266 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>networking | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title category">networking</h2>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-07-23T04:30:00.000Z"><a href="/2012/07/23/sinfor-tips/">2012-07-23</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/07/23/sinfor-tips/">深信服M5100S tips</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在某个项目中用到了深信服的M5100-S SSL VPN设备，而网上关于深信服设备的资料非常匮乏，因此我根据平时的积累，整理了一些资料和tips，以飨读者。</p>
+<h2>SNMP</h2>
+<p><strong>community</strong><br>在深信服的设备使用文档中从未提及SNMP，然而实际上是有SNMP这个功能的，只是community不是传统的<code>public</code>，而是<code>sinfors</code>。</p>
+<p><strong>oid</strong></p>
+<figure class="highlight"><pre><span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.3</span><span class="number">.0</span>    <span class="preprocessor"># 设备运行时间（UPTIME），以1/100秒为单位。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.1</span><span class="number">.0</span>    <span class="preprocessor"># 系统描述</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.5</span><span class="number">.0</span>    <span class="preprocessor"># 设备型号</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.4</span><span class="number">.0</span>    <span class="preprocessor"># 联系方式</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.1</span><span class="number">.6</span><span class="number">.0</span>    <span class="preprocessor"># 位置</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.0</span>    <span class="preprocessor"># 接口数量</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="variable">.x</span>     <span class="preprocessor"># 接口描述信息（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.10</span><span class="variable">.x</span>    <span class="preprocessor"># 接口接收总流量，以Byte为单位（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.11</span><span class="variable">.x</span>    <span class="preprocessor"># 接口发送总流量，以Byte为单位（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.8</span><span class="variable">.x</span>     <span class="preprocessor"># 接口接口状态（1-up，2-down）（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.1</span><span class="number">.5</span><span class="variable">.x</span>     <span class="preprocessor"># 接口速率，以10bps为单位（不同的x数值代表不同的接口，视设备回复而定）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.1</span><span class="number">.1</span><span class="number">.0</span>     <span class="preprocessor"># CPU占用率，以百分比为单位。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.1</span><span class="number">.2</span><span class="number">.0</span>     <span class="preprocessor"># 设备类型(如M5000)</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.1</span><span class="number">.3</span><span class="number">.0</span>     <span class="preprocessor"># 剩余内存，free+buffers，以KB为单位。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.2</span><span class="number">.1</span><span class="number">.0</span>     <span class="preprocessor"># VPN状态("vpn's status. 0 is stopped, 1 is normal, 2 is error" ) DLAN4.x版本因为lmdlan没有跟snmpagent程序通信，因此取不到正确的运行状态，会一直显示为1。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.2</span><span class="number">.2</span><span class="number">.0</span>     <span class="preprocessor"># VPN连接数，DLAN4.x版本因为lmdlan没有跟snmpagent程序通信，因此取不到正确的连接数，会一直显示为0。</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.2</span><span class="number">.3</span><span class="number">.0</span>     <span class="preprocessor"># 软件版本(如M5000-Q-4.0-R1)</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.3</span><span class="number">.1</span><span class="number">.0</span>     <span class="preprocessor"># SSL VPN状态（"ssl's status. 0 is stopped, 1 is normal, 2 is error"）</span>
+<span class="number">1.3</span><span class="number">.6</span><span class="number">.1</span><span class="number">.4</span><span class="number">.1</span><span class="number">.33333</span><span class="number">.1</span><span class="number">.3</span><span class="number">.2</span><span class="number">.0</span>     <span class="preprocessor"># SSL VPN连接数（即接入的用户数目）</span>
+</pre></figure>
+
+<p>实际上，在PRTG中，可以通过auto discovery扫描到端口带宽和uptime，至于CPU利用率、MEM剩余量则可以通过手工添加sensor。</p>
+<h2>CLI</h2>
+<p>M5100-S不支持命令行，但是作为一个网络工程师，对非CLI的设备心存反感，想ping一下互联设备，抓个包啥的都不行，好在深信服提供了一个update的工具，勉强可以使用。</p>
+<p>按F10将弹出如下窗口，支持的命令包括</p>
+<ol>
+<li>ifconfig</li>
+<li>netstat -rn</li>
+<li>ping</li>
+</ol>
+<p>从显示结果来看，sinfor的OS应该是在linux上进行裁剪的，因为假如是BSD，网卡名称就应该是fxp或xx等以驱动来命名。<br>既然如此，根据GPL协议，sinfor是否应该开放源代码呢？</p>
+<h2>dlan</h2>
+<p>只要有这个工具，是否意味着任何一台sinfor设备，只要用户不修改原始密码，就可以从公网任意访问xx了呢？那安全性从何谈起。</p>
+<h2>默认端口映射问题</h2>
+<p>M5100-S通过一条互联网专线访问外网，运营商分配给该客户的是112.180.254.33/29网段的IP地址，其中112.180.254.34是M5100-S的接口IP地址。默认情况下，这几个IP地址的443端口全部映射到该接口IP的443端口，也就是说，当客户分别访问这几个IP的443端口时，全部重定向至<a href="https://112.180.254.34。" target="_blank">https://112.180.254.34。</a></p>
+<p>难道，作为一个安全网络设备，不应该将：“非明确通过的即禁止”当作设计的首要原则吗？</p>
+<p>解决的办法：</p>
+<p>除了112.180.254.34这个IP外，明确禁止剩余IP的443端口映射。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

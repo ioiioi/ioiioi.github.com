@@ -1,0 +1,351 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>如何在VirtualBox中安装和克隆Debian VM | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="上一回中讲了如何在openSUSE中安装最新版VirtualBox，本回将讲如何安装和克隆Debian VM。
+1. 环境：
+
+HOST  OS : openSUSE11.3
+Guest OS : Debian 6.0.5 netinstall
+VirtualBox : 4.1.16">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="如何在VirtualBox中安装和克隆Debian VM"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-06T15:30:00.000Z"><a href="/2012/06/06/debian-template-on-virtualbox/">2012-06-6</a></time>
+      
+      
+  
+    <h1 class="title">如何在VirtualBox中安装和克隆Debian VM</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>上一回中讲了<a href="../how-to-install-virtualbox-on-opensuse">如何在openSUSE中安装最新版VirtualBox</a>，本回将讲如何安装和克隆Debian VM。</p>
+<h1>1. 环境：</h1>
+<ol>
+<li>HOST  OS : openSUSE11.3</li>
+<li>Guest OS : Debian 6.0.5 netinstall</li>
+<li>VirtualBox : 4.1.16</li>
+</ol>
+<a id="more"></a>
+
+<h1>2. 创建虚拟机</h1>
+<p><strong>2.1 创建vm模版</strong></p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createvm</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">modifyvm</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">memory</span> <span class="comment">512</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">acpi</span> <span class="comment">on</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">boot1</span> <span class="comment">dvd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nic1</span> <span class="comment">bridged</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">nictype1</span> <span class="comment">virtio</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">bridgeadapter1</span> <span class="comment">eth0</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">createhd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">filename</span> <span class="comment">/vbox</span>.<span class="comment">images/deb6</span>-<span class="comment">template/deb6</span>-<span class="comment">template</span>.<span class="comment">vdi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">size</span> <span class="comment">8000</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storagectl</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">add</span> <span class="comment">sata</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">controller</span> <span class="comment">IntelAhci</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">hdd</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/vbox</span>.<span class="comment">images/deb6</span>-<span class="comment">template/deb6</span>-<span class="comment">template</span>.<span class="comment">vdi</span>
+<span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/home/software/debian</span>-<span class="comment">6</span>.<span class="comment">0</span>.<span class="comment">5</span>-<span class="comment">i386</span>-<span class="comment">netinst</span>.<span class="comment">iso
+</pre></figure>
+
+<p>有四种硬盘接口选择：IDE、SATA、SCSI和SAS，从性能上来说，IDE最弱，SATA、SCSI和SAS相差无几，从兼容性来讲IDE最好，不过实际上现在的操作系统基本都已内置了SATA驱动，因此兼容性已经不是问题。<br>网卡类型有多种选择：AMD系列、intel系列和virtio，其中AMD系列对OS的兼容性最佳，而virtio的性能则最好的，不过对操作系统有一定的要求。</p>
+<blockquote>
+<p>Starting with version 3.1, VirtualBox provides support for the industry-standard “virtio” networking drivers, which are part of the open-source KVM project. The “virtio” networking drivers are available for the following guest operating systems:</p>
+<ol>
+<li>Linux kernels version 2.6.25 or later can be configured to provide virtio support; some distributions also back-ported virtio to older kernels.</li>
+<li>For Windows 2000, XP and Vista, virtio drivers can be downloaded and installed from the KVM project web page.</li>
+</ol>
+</blockquote>
+<p><strong>2.2 安装vm</strong></p>
+<p>启动vm：</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vboxheadless</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">startvm</span> <span class="comment">"deb6</span>-<span class="comment">template"
+</pre></figure>
+
+<p>然后通过RDP客户端（windows中是“远程连接”，linux中可用“rdesktop”）连接该vm，并按照正常的步骤完成Debian 6.0.5的安装。</p>
+<h1>3. 安装常用工具</h1>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude install tmux nmap tcpdump lsof htop git-core less iftop net-snmp</span>
+<span class="preprocessor"># aptitude purge vim-tiny && aptitude install vim</span>
+</pre></figure>
+
+<h1>4. 升级VBoxGuestAddition</h1>
+<p>Debian6.0.5自带的VBoxGuestAddition为3.2.0版本，版本比较老，因此需要升级至4.1.16。</p>
+<p>4.1 确保安装相关软件包</p>
+<figure class="highlight"><pre><span class="preprocessor"># aptitude install bzip2 dkms gcc make linux-header-2.6.32-5-686</span>
+</pre></figure>
+
+<p>4.2 插入VBoxGuestAddition光盘</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">/usr/share/virtualbox/VBoxGuestAdditions</span>.<span class="comment">iso
+</pre></figure>
+
+<p>在openSUSE中安装完VirtualBox之后，VBoxGuestAddition光盘以iso文件方式保存在<code>/usr/share/virtualbox/VBoxGuestAddition.iso</code><br>{: class=“info” }</p>
+<p>4.3 升级</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">mkdir</span> <span class="comment">/mnt/cdrom</span>
+<span class="comment">#</span> <span class="comment">mount</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">iso9660</span> <span class="comment">/mnt/cdrom</span> <span class="comment">/dev/sr0</span>
+<span class="comment">#</span> <span class="comment">sh</span> <span class="string">.</span><span class="comment">/VBoxLinuxAdditions</span>.<span class="comment">run</span>
+<span class="comment">Verifying</span> <span class="comment">archive</span> <span class="comment">integrity</span>.<span class="string">.</span><span class="string">.</span> <span class="comment">All</span> <span class="comment">good</span>.
+<span class="comment">Uncompressing</span> <span class="comment">VirtualBox</span> <span class="comment">4</span>.<span class="comment">1</span>.<span class="comment">16</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">for</span> <span class="comment">Linux</span>.<span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span>
+<span class="comment">VirtualBox</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">installer</span>
+<span class="comment">Removing</span> <span class="comment">existing</span> <span class="comment">VirtualBox</span> <span class="comment">DKMS</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">Removing</span> <span class="comment">existing</span> <span class="comment">VirtualBox</span> <span class="comment">non</span>-<span class="comment">DKMS</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">Building</span> <span class="comment">the</span> <span class="comment">VirtualBox</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="comment">kernel</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">Doing</span> <span class="comment">non</span>-<span class="comment">kernel</span> <span class="comment">setup</span> <span class="comment">of</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">You</span> <span class="comment">should</span> <span class="comment">restart</span> <span class="comment">your</span> <span class="comment">guest</span> <span class="comment">to</span> <span class="comment">make</span> <span class="comment">sure</span> <span class="comment">the</span> <span class="comment">new</span> <span class="comment">modules</span> <span class="comment">are</span> <span class="comment">actually</span> <span class="comment">used</span>
+
+<span class="comment">Installing</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">drivers</span>
+<span class="comment">Installing</span> <span class="comment">X</span>.<span class="comment">Org</span> <span class="comment">Server</span> <span class="comment">1</span>.<span class="comment">7</span> <span class="comment">modules</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">Setting</span> <span class="comment">up</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">to</span> <span class="comment">use</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+<span class="comment">You</span> <span class="comment">may</span> <span class="comment">need</span> <span class="comment">to</span> <span class="comment">restart</span> <span class="comment">the</span> <span class="comment">hal</span> <span class="comment">service</span> <span class="comment">and</span> <span class="comment">the</span> <span class="comment">Window</span> <span class="comment">System</span> <span class="comment">(or</span> <span class="comment">just</span> <span class="comment">restart</span>
+<span class="comment">the</span> <span class="comment">guest</span> <span class="comment">system)</span> <span class="comment">to</span> <span class="comment">enable</span> <span class="comment">the</span> <span class="comment">Guest</span> <span class="comment">Additions</span>.
+
+<span class="comment">Installing</span> <span class="comment">graphics</span> <span class="comment">libraries</span> <span class="comment">and</span> <span class="comment">desktop</span> <span class="comment">services</span> <span class="comment">components</span> <span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="comment">done</span>.
+</pre></figure>
+
+<p>4.4 检查版本</p>
+<p>最后重启guest并检查VBoxGuestAddition版本</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">showvminfo</span> <span class="comment">"deb6</span>-<span class="comment">template"</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+<span class="string">.</span><span class="string">.</span><span class="string">.</span><span class="string">.</span>
+<span class="comment">Guest:</span>
+
+<span class="comment">Configured</span> <span class="comment">memory</span> <span class="comment">balloon</span> <span class="comment">size:</span>      <span class="comment">0</span> <span class="comment">MB</span>
+<span class="comment">OS</span> <span class="comment">type:</span>                             <span class="comment">Linux26</span>
+<span class="comment">Additions</span> <span class="comment">run</span> <span class="comment">level:</span>                 <span class="comment">1</span>
+<span class="comment">Additions</span> <span class="comment">version:</span>                   <span class="comment">4</span>.<span class="comment">1</span>.<span class="comment">16r78094</span>
+<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">8</span>&lt;<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span>
+</pre></figure>
+
+<p>说明VBoxGuestAddition已经升级为4.1.16了。</p>
+<h1>5. 收尾</h1>
+<p>5.1 弹出安装光盘</p>
+<pre><code><span class="comment">#</span> <span class="comment">VBoxManage</span> <span class="comment">storageattach</span> <span class="comment">"deb6</span>-<span class="comment">template"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">storagectl</span> <span class="comment">"SATA</span> <span class="comment">Controller"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">port</span> <span class="comment">1</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">device</span> <span class="comment">0</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">type</span> <span class="comment">dvddrive</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">medium</span> <span class="comment">emptydrive</code></pre>
+<p>下次启动的时候，就不会从光盘启动了。</p>
+<p>5.2 解决eth1的问题</p>
+<p>linux利用udev对硬件设备进行识别，当udev检测到新网卡时（新mac地址），将在<code>/etc/udev/rules.d/70-persistent-net.rules</code>文件中生成新的记录，为新网卡分配一个ethX这样的网卡id，X从0开始，依次是1，2…</p>
+<p>克隆的时候，VirtualBox会为目标vm的网卡生成新的mac地址，而<code>70-persistent-net.rules</code>文件中已经含有源vm网卡的记录：eth0，因此，udev为目标vm的网卡重新分配网卡id：eth1，这导致IP地址失效，网卡id怪异等问题。</p>
+<p>解决该问题的方法是删掉源vm中的<code>/etc/udev/rules.d/70-persistent-net.rules</code>这个文件，目标vm启动后找不到该文件就会自行创建一个，永远都不会有eth0占用的问题。</p>
+<p>5.3 清空IP地址配置</p>
+<p>修改<code>/etc/network/interfaces</code>，注释掉eth0的配置信息，避免与目标vm的IP冲突。</p>
+<p>5.4 调整系统时间</p>
+<p>请参考“<a href="../ntp-service">NTP服务</a>”</p>
+<p>至此，完成一个Debian VM模版的安装和配置。</p>
+<h1>6. 克隆</h1>
+<pre><code><span class="comment">#</span> <span class="comment">vboxmanage</span> <span class="comment">clonevm</span> <span class="comment">"</span>&lt;<span class="comment">source</span> <span class="comment">vm</span>&gt;<span class="comment">"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">name="</span>&lt;<span class="comment">destination</span> <span class="comment">vm</span>&gt;<span class="comment">"</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">mode</span> <span class="comment">machine</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">register</code></pre>
+<p>源vm的config和vdi文件在同一个目录下，克隆后，目标vm的config和vdi文件也在同一个目录下。</p>
+<p>6.1 更改主机名</p>
+<pre><code><span class="preprocessor"># echo "&lt;destination vm&gt;" &gt; /etc/hostname</span>
+<span class="preprocessor"># hostname -F /etc/hostname</span></code></pre>
+<p>6.2 更改IP地址</p>
+<pre><code><span class="preprocessor"># vim /etc/network/interface</span></code></pre>
+<p>6.3 重启</p>
+<pre><code><span class="preprocessor"># shutdown -r now</span></code></pre>
+<p>本回说的是Debian VM，那Windows VM呢，且听<a href="../windows-template-on-virtualbox">下回分解</a></p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/debian/">debian</a>, <a href="/categories/debian/virtualbox/">virtualbox</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

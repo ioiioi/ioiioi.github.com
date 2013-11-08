@@ -1,0 +1,373 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>安装ubuntu domU | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="一、创建虚拟机硬盘
+# lvcreate -L 4096M -n lucid-srv domU">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="安装ubuntu domU"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-02-12T15:30:00.000Z"><a href="/2012/02/12/how-to-install-ubuntu-domU/">2012-02-12</a></time>
+      
+      
+  
+    <h1 class="title">安装ubuntu domU</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2>一、创建虚拟机硬盘</h2>
+<pre><code><span class="comment">#</span> <span class="comment">lvcreate</span> <span class="literal">-</span><span class="comment">L</span> <span class="comment">4096M</span> <span class="literal">-</span><span class="comment">n</span> <span class="comment">lucid</span>-<span class="comment">srv</span> <span class="comment">domU</code></pre>
+<a id="more"></a>
+
+<h2>二 、安装全虚拟的操作系统</h2>
+<p>通过virt-manager安装一个full-virt的ubuntu 10.04。</p>
+<p>说明：gitco的xen 3.4.3跟原生的virt-manager不兼容，导致virt-manager不能利用iso来安装hvm。有三种解决办法：</p>
+<ol>
+<li>使用centos自带的xen，版本是3.1.2，virt-manager可以正常使用；</li>
+<li><p>使用gitco 的xen 3.4.3，但是自行编译virt-manager0.8.5和virt 0.500-4，参考：<a href="http://pjwelsh.blogspot.com/2011/01/linux-centos-55-xen-34x-and-virt.html" target="_blank">http://pjwelsh.blogspot.com/2011/01/linux-centos-55-xen-34x-and-virt.html</a></p>
+</li>
+<li><p>直接使用qemu/qemu-x86_64安装</p>
+</li>
+</ol>
+<p>这三种方式中，第三种最简单，最方便。下面简单说说如何使用qemu安装domU：</p>
+<p>**安装</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">qemu</span>-<span class="comment">x86_64</span> <span class="literal">-</span><span class="comment">hda</span> <span class="comment">/dev/domU/lucid</span>-<span class="comment">amd64</span>-<span class="comment">srv</span> <span class="literal">-</span><span class="comment">hdb</span> <span class="comment">/dev/domU/lucid</span>-<span class="comment">amd64</span>-<span class="comment">srv</span>-<span class="comment">swap</span> <span class="literal">-</span><span class="comment">cdrom</span> <span class="comment">/path/to/your/ubuntu</span>-<span class="comment">10</span>.<span class="comment">04</span>.<span class="comment">3</span>-<span class="comment">amd64</span>-<span class="comment">srv</span>.<span class="comment">iso</span> <span class="literal">-</span><span class="comment">boot</span> <span class="comment">d
+</pre></figure>
+
+<p>这时将弹出一个窗口，接下来安装步骤跟在普通计算机上安装ubuntu是一样的。那安装完了之后如何启动呢？</p>
+<p><strong>启动</strong></p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">qemu</span>-<span class="comment">x86_64</span> <span class="literal">-</span><span class="comment">hda</span> <span class="comment">/dev/domU/lucid</span>-<span class="comment">amd64</span>-<span class="comment">srv</span> <span class="literal">-</span><span class="comment">hdb</span> <span class="comment">/dev/domU/lucid</span>-<span class="comment">amd64</span>-<span class="comment">srv</span>-<span class="comment">swap</span> <span class="literal">-</span><span class="comment">boot
+</pre></figure>
+
+<h2>三、更新源</h2>
+<p>ubuntu推荐日本的源jaist，实在是太快了。</p>
+<pre><code>$ su<span class="operator"><span class="keyword">do</span> apt-<span class="keyword">get</span> <span class="keyword">update</span></code></pre>
+<h2>四、安装linux-image-ec2</h2>
+<p>ubuntu中有两个内核支持xen pv</p>
+<ol>
+<li>linux-image-ec2</li>
+<li>linux-virtual</li>
+</ol>
+<p>任选一个安装即可。</p>
+<pre><code>$ su<span class="operator"><span class="keyword">do</span> apt-<span class="keyword">get</span> install linux-image-ec2</code></pre>
+<p>ubuntu 10.04默认内核就支持xen pv，因此不需要额外安装linux-virtual这个软件包（感谢JulyClyde@newsmth）<br>{: class=“info” }</p>
+<h2>五、安装grub</h2>
+<figure class="highlight"><pre>$ su<span class="operator"><span class="keyword">do</span> apt-<span class="keyword">get</span> purge grub2 grub-pc
+$ sudo <span class="keyword">update</span>-grub
+$ sudo apt-<span class="keyword">get</span> install grub
+$ sudo apt-<span class="keyword">get</span> grub
+</pre></figure>
+
+<p>六、添加/etc/init/hvc0.conf</p>
+<p>创建<code>/etc/init/hvc0.conf</code>，内容如下：</p>
+<figure class="highlight"><pre><span class="comment"># hvc0 - getty</span>
+<span class="comment">#</span>
+<span class="comment"># This service maintains a getty on hvc0 from the point the system is</span>
+<span class="comment"># started until it is shut down again.</span>
+start <span class="function_start"><span class="keyword">on</span> <span class="title">stopped</span></span> rc RUNLEVEL=[<span class="number">2345</span>]
+stop <span class="function_start"><span class="keyword">on</span> <span class="title">runlevel</span></span> [!<span class="number">2345</span>]
+respawn
+exec /sbin/getty -<span class="number">8</span> <span class="number">38400</span> hvc0
+</pre></figure>
+
+<h2>七、生成menu.lst</h2>
+<pre><code>$ su<span class="operator"><span class="keyword">do</span> <span class="keyword">update</span>-grub</code></pre>
+<h2>八、修改/etc/fstab</h2>
+<figure class="highlight"><pre># <span class="tag">&lt;<span class="title">file</span> <span class="attribute">system</span>&gt;</span> <span class="tag">&lt;<span class="title">mount</span> <span class="attribute">point</span>&gt;</span>   <span class="tag">&lt;<span class="title">type</span>&gt;</span>  <span class="tag">&lt;<span class="title">options</span>&gt;</span>           <span class="tag">&lt;<span class="title">dump</span>&gt;</span>  <span class="tag">&lt;<span class="title">pass</span>&gt;</span>
+proc            /proc           proc    nodev,noexec,nosuid 0       0
+/dev/xvda1      /               ext3    errors=remount-ro   0       1
+/dev/xvdb       none            swap    sw                  0       0
+</pre></figure>
+
+<p>在这里很多人会搞混，这里为什么用/dev/xvda1而不是/dev/xvda呢，因为在安装ubuntu的时候，ubuntu会对硬盘进行分区才能使用，前面提到的qemu</p>
+<p>qemu -hda  /dev/domU/lucid-srv -hdb /dev/domU/lucid-srv-swap就有两块硬盘，其中第一块硬盘就有一个分区，也是“/”挂载点，而第二块硬盘单独作为swap分区使用（swap分区有些特别）。以下是在ubuntu中执行fdisk -l的结果。</p>
+<figure class="highlight"><pre>admin<span class="property">@lucid</span>-srv:/proc$ sudo fdisk -l
+[sudo] password <span class="keyword">for</span> admin:
+
+
+Disk <span class="regexp">/dev/</span>xvda: <span class="number">4294</span> MB, <span class="number">4294967296</span> bytes
+<span class="number">10</span> heads, <span class="number">63</span> sectors/track, <span class="number">13315</span> cylinders
+Units = cylinders <span class="keyword">of</span> <span class="number">630</span> * <span class="number">512</span> = <span class="number">322560</span> bytes
+Sector size (logical<span class="regexp">/physical): 512 bytes /</span> <span class="number">512</span> bytes
+I<span class="regexp">/O size (minimum/optimal): 512 bytes /</span> <span class="number">512</span> bytes
+Disk identifier: <span class="number">0x000a81f1</span>
+
+
+    Device Boot      Start         End      Blocks   Id  System
+
+<span class="regexp">/dev/</span>xvda1   *           <span class="number">4</span>       <span class="number">13312</span>     <span class="number">4192256</span>   <span class="number">83</span>  Linux
+
+
+
+Disk <span class="regexp">/dev/</span>xvdb: <span class="number">536</span> MB, <span class="number">536870912</span> bytes
+<span class="number">255</span> heads, <span class="number">63</span> sectors/track, <span class="number">65</span> cylinders
+Units = cylinders <span class="keyword">of</span> <span class="number">16065</span> * <span class="number">512</span> = <span class="number">8225280</span> bytes
+Sector size (logical<span class="regexp">/physical): 512 bytes /</span> <span class="number">512</span> bytes
+I<span class="regexp">/O size (minimum/optimal): 512 bytes /</span> <span class="number">512</span> bytes
+Disk identifier: <span class="number">0x00000000</span>
+
+Disk <span class="regexp">/dev/</span>xvdb doesn<span class="string">'t contain a valid partition table
+</pre></figure>
+
+<p>当然，用户也可以在lucid-hvm安装完毕后，将分区1中的文件全部拷到一个不包含分区表的镜像或块设备中，这样就不需要理会到底是/dev/xvda1还是/dev/xvda了。</p>
+<p>这又该怎么操作呢？</p>
+<figure class="highlight"><pre><span class="preprocessor"># lvcreate -L 4096M -n lucid-amd64 domU</span>
+<span class="preprocessor"># mkfs.ext3 /dev/domU/lucid-amd64</span>
+<span class="preprocessor"># mount /dev/domU/lucid-amd64 /tmp/lucid-amd64</span>
+<span class="preprocessor"># kpartx -p "" -av /dev/domU/lucid-srv</span>
+<span class="preprocessor"># mount /dev/mapper/lucid-srv1 /tmp/lucid-srv</span>
+<span class="preprocessor"># cp -rpf /tmp/lucid-srv/* /tmp/lucid-amd64</span>
+<span class="preprocessor"># umount /tmp/lucid-amd && umount /tmp/lucid-srv</span>
+<span class="preprocessor"># kpartx -d /dev/domU/lucid-srv</span>
+</pre></figure>
+
+<p>通过该操作，/etc/fstab中的/dev/xvda1就可以改成/dev/xvda了。</p>
+<h2>九、将kernel拷到dom0中</h2>
+<figure class="highlight"><pre><span class="preprocessor"># kpartx -p "" -av /dev/domU/lucid-srv</span>
+<span class="preprocessor"># mount /dev/mapper/lucid-srv1 /tmp/lucid-srv</span>
+<span class="preprocessor"># cp /tmp/lucid-srv/boot/* /boot/domU/lucid/amd64/</span>
+<span class="preprocessor"># umount /tmp/lucid-srv</span>
+<span class="preprocessor"># kpartx -d /dev/domU/lucid-srv</span>
+</pre></figure>
+
+<h2>十、创建配置文件lucid-srv-pv.cfg</h2>
+<figure class="highlight"><pre>/etc/xen/domU/<span class="type">U1004</span>-<span class="number">64.</span>cfg
+<span class="title">name</span> = <span class="string">"U1004-64"</span>
+<span class="title">uuid</span> = <span class="string">"a54ebcb6-bb68-4b30-8253-5e1ec1acdd4a"</span>
+<span class="title">maxmem</span> = <span class="number">1024</span>
+<span class="title">memory</span> = <span class="number">1024</span>
+<span class="title">vcpus</span> = <span class="number">1</span>
+#bootloader = <span class="string">"/usr/bin/pygrub"</span>
+<span class="title">kernel</span> = <span class="string">"/boot/domU/lucid/amd64/vmlinuz-2.6.32-21-server"</span>
+<span class="title">ramdisk</span> = <span class="string">"/boot/domU/lucid/amd64/initrd.img-2.6.32-21-server"</span>
+<span class="title">on_poweroff</span> = <span class="string">"destroy"</span>
+<span class="title">on_reboot</span> = <span class="string">"restart"</span>
+<span class="title">on_crash</span> = <span class="string">"restart"</span>
+<span class="title">disk</span> = [ <span class="string">"phy:/dev/domU/lucid-srv,xvda,w"</span>,
+            <span class="string">"phy:/dev/domU/lucid-srv-swap,xvdb,w"</span>
+]
+<span class="title">root</span>=<span class="string">"/dev/xvda1 ro"</span>
+<span class="title">vif</span> = [ <span class="string">"mac=00:16:3e:79:72:aa,bridge=eth0"</span> ]
+</pre></figure>
+
+<p>这时执行<code>xm create U1004-64.cfg</code>命令后，就可以通过dom0中的内核启动domU了，假如需要通过pygrub来启动domU，只需要简单的将配置文件中的kernel和ramdisk注释掉，同时启用bootloader一行就可以实现pygrub了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/ubuntu/">ubuntu</a>, <a href="/categories/ubuntu/domU/">domU</a>, <a href="/categories/ubuntu/domU/xen/">xen</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

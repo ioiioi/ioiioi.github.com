@@ -1,0 +1,334 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>FreeBSD学习笔记 | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="o 禁用sendmail
+
+在/etc/hosts中添加域名
+
+譬如
+# cat /etc/hosts
+127.0.0.1 freebsd.darkblue.com
+
+
+
+修改/etc/rc.conf
+
+sendmail_submit_enable=&quot;NO&quot;    # Start a localho">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="FreeBSD学习笔记"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2011-07-19T13:00:00.000Z"><a href="/2011/07/19/freebsd-notes/">2011-07-19</a></time>
+      
+      
+  
+    <h1 class="title">FreeBSD学习笔记</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h4>o 禁用sendmail</h4>
+<ul>
+<li>在/etc/hosts中添加域名</li>
+</ul>
+<p>譬如</p>
+<figure class="highlight"><pre><span class="preprocessor"># cat /etc/hosts</span>
+<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span> freebsd<span class="variable">.darkblue</span><span class="variable">.com</span>
+</pre></figure>
+
+<ul>
+<li>修改/etc/rc.conf</li>
+</ul>
+<figure class="highlight"><pre><span class="setting">sendmail_submit_enable=<span class="value"><span class="string">"NO"</span>    # Start a localhost-only MTA for mail submission</span></span>
+<span class="setting">sendmail_outbound_enable=<span class="value"><span class="string">"NO"</span>  # Dequeue stuck mail (<span class="keyword">YES</span>/<span class="keyword">NO</span>).</span></span>
+<span class="setting">sendmail_msp_queue_enable=<span class="value"><span class="string">"NO"</span> # Dequeue stuck clientmqueue mail (<span class="keyword">YES</span>/<span class="keyword">NO</span>).</span></span>
+</pre></figure>
+
+<h4>o 安装完vim-lite后，需要freebsd重启才能在root下面打开vim</h4>
+<h4>o 修改网卡IP地址后立即生效的方法</h4>
+<p>通过编辑<code>/etc/rc.conf</code>来修改网卡IP地址，接着执行<code># sh /etc/netstart</code>，新的IP地址立刻生效，不需要重启系统</p>
+<h4>o 如何查看加载到内核中的模块？</h4>
+<pre><code><span class="preprocessor"># kldstat</span></code></pre>
+<h4>o 如何加载模块到内核中？</h4>
+<pre><code># kld<span class="operator"><span class="keyword">load</span> dummynet.ko</code></pre>
+<p>安装freebsd 7.3的时候选择developer，dummynet.ko就已默认安装，不需要重新编译内核。</p>
+<h4>o 如何安装和配置snmpd（net-snmp）</h4>
+<ul>
+<li>先安装和配置snmpd：</li>
+</ul>
+<figure class="highlight"><pre># pkg_add -r net-snmp
+# echo <span class="string">"snmpd_enable="</span><span class="type">YES</span><span class="string">""</span> &gt;&gt; /etc/rc.conf
+;以下是snmpd.conf的简单配置，如果没有就自己创建一个
+# cat /usr/local/share/snmp/snmpd.conf
+;如果没有就创建一个snmpd.conf
+<span class="title">syslocation</span> somewhere
+<span class="title">syscontact</span> admin@example.com
+<span class="title">rocommunity</span> public
+<span class="title">master</span> yes
+<span class="title">disk</span> /
+<span class="title">disk</span> /tmp
+<span class="title">disk</span> /usr
+<span class="title">disk</span> /var
+<span class="title">disk</span> /home
+</pre></figure>
+
+<ul>
+<li>接着启动snmpd：</li>
+</ul>
+<figure class="highlight"><pre># /usr/<span class="keyword">local</span>/etc/rc.d/snmpd start
+;snmpd默认会使用/usr/<span class="keyword">local</span>/share/snmp/snmpd.conf启动
+</pre></figure>
+
+<h4>o 如何在freebsd 7.3中创建filter bridge</h4>
+<ul>
+<li>加载if_bridge.ko模块</li>
+</ul>
+<figure class="highlight"><pre># vim /boot/loader.conf
+<span class="title">if_bridge_load</span>=<span class="string">"YES"</span>
+<span class="title">bridgestp_load</span>=<span class="string">"YES"</span>
+<span class="title">dummynet_load</span>=<span class="string">"YES"</span>
+</pre></figure>
+
+<ul>
+<li>配置桥接</li>
+</ul>
+<figure class="highlight"><pre># vim /etc/rc.conf
+<span class="title">cloned_interfaces</span>=<span class="string">"bridge0"</span>
+<span class="title">ifconfig_bridge0</span>=<span class="string">"addm le1 addm le2 up"</span>
+<span class="title">ifconfig_em0</span>=<span class="string">"up"</span>
+<span class="title">ifconfig_em1</span>=<span class="string">"up"</span>
+
+# vim /etc/sysctl.conf
+<span class="title">net</span>.link.bridge.ipfw=<span class="number">1</span>
+</pre></figure>
+
+<h4>o 如何在freebsd中安装ntop</h4>
+<figure class="highlight"><pre><span class="preprocessor"># pkg_add -r ntop</span>
+<span class="preprocessor"># pkg_add -r GeoIP</span>
+<span class="preprocessor"># pkg_add -r rrdtool</span>
+</pre></figure>
+
+<p>随后下载GeoIP所需要的dat文件</p>
+<p>运行：</p>
+<pre><code><span class="preprocessor"># /usr/local/bin/ntop</span></code></pre>
+<p>根据提示输入administrator的账号和密码。</p>
+<p>接着就可以通过浏览器来访问ntop了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/freebsd/">freebsd</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

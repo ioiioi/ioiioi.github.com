@@ -1,0 +1,345 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>virtualization | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title category">virtualization</h2>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-10-03T15:00:00.000Z"><a href="/2012/10/03/use-iscsi-as-vm-storage-backend/">2012-10-3</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/10/03/use-iscsi-as-vm-storage-backend/">使用iSCSI作为VM的storage backend</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>iSCSI作为VM的storage backend也很流行，原因是iSCSI协议非常适合于小文件的读写，而且其对硬件设备几乎没有什么要求，只要IP可达即可。</p>
+<p>在本文中，我们仍然以solaris11作为外置存储，不得不说，solaris11实在是太强悍了，ZFS，comstar，nfs都是存储必备的组件模块。</p>
+<h1>iSCSI server</h1>
+<p>iSCSI server安装在solaris11上，solaris11</p>
+<h1>iSCSI client</h1>
+<p>iSCSI client将安装在hypervisor上，本文以CentOS为例。</p>
+<h2>安装iSCSI client</h2>
+<p>[root@DL165-1 ~]# yum install iscsi-initiator-utils</p>
+<h2>配置iSCSI client</h2>
+<figure class="highlight"><pre>[root@DL165-<span class="number">1</span> ~]<span class="comment"># vim /etc/iscsi/iscsid.conf</span>
+<span class="keyword">...</span>
+node.session.auth.username = linuxabc
+node.session.auth.password = <span class="number">123456</span>
+discovery.sendtargets.auth.username = linuxabc
+discovery.sendtargets.auth.password = <span class="number">123456</span>
+<span class="keyword">...</span>
+</pre></figure>
+
+<h2>启动iSCSI服务</h2>
+<figure class="highlight"><pre>[root<span class="variable">@DL165</span>-<span class="number">1</span> ~]<span class="comment"># /etc/init.d/iscsi start</span>
+</pre></figure>
+
+<h2>连接到iSCSI server</h2>
+<figure class="highlight"><pre><span class="title">[</span><span class="comment">root@DL165</span>-<span class="comment">1</span> <span class="comment">~</span>]<span class="comment">#</span> <span class="comment">iscsiadm</span> <span class="literal">-</span><span class="comment">m</span> <span class="comment">discovery</span> <span class="literal">-</span><span class="comment">t</span> <span class="comment">sendtargets</span> <span class="literal">-</span><span class="comment">p</span> <span class="comment">192</span>.<span class="comment">168</span>.<span class="comment">55</span>.<span class="comment">120</span>
+<span class="title">[</span><span class="comment">root@DL165</span>-<span class="comment">1</span> <span class="comment">~</span>]<span class="comment">#</span> <span class="comment">iscsiadm</span> <span class="literal">-</span><span class="comment">m</span> <span class="comment">node</span> <span class="literal">-</span><span class="comment">T</span> <span class="comment">iqn</span>.<span class="comment">2010</span>-<span class="comment">06</span>.<span class="comment">xen</span>-<span class="comment">sanhead:xen</span>-<span class="comment">alfie</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">login</span>
+<span class="title">[</span><span class="comment">root@DL165</span>-<span class="comment">1</span> <span class="comment">~</span>]<span class="comment">#</span> <span class="comment">/etc/init</span>.<span class="comment">d/iscsi</span> <span class="comment">restart
+</pre></figure>
+
+<p>在xen dom0中执行<code>fdisk -l</code>就会看到系统中多出了一个块设备/dev/sdc，那正是ZFS storage上的iSCSI target。</p>
+<figure class="highlight"><pre>[root@DL165-<span class="number">1</span> ~]<span class="comment"># fdisk -l</span>
+<span class="keyword">...</span>
+Disk /dev/sdc: <span class="number">8589</span> MB, <span class="number">8589934592</span> bytes
+<span class="number">64</span> heads, <span class="number">32</span> sectors/track, <span class="number">8192</span> cylinders
+Units = cylinders of <span class="number">2048</span> * <span class="number">512</span> = <span class="number">1048576</span> bytes
+
+Disk /dev/sdc doesn<span class="string">'t contain a valid partition table
+</pre></figure>
+
+<p>最后在xen dom0机器上把domU配置文件的disk一行改成：</p>
+<figure class="highlight"><pre><span class="setting">disk = <span class="value">[ <span class="string">"phy:/dev/sdc,xvda,w"</span> ]</span></span>
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-10-02T15:00:00.000Z"><a href="/2012/10/02/upgrade-xen-and-centos/">2012-10-2</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/10/02/upgrade-xen-and-centos/">CentOS5.6+xen3.4.3升级至CentOS5.8+xen3.4.4</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>去年使用gitco repos成功地在CentOS5.6上安装了xen 3.4.3，已经稳定地运行了一年。前段时间CentOS和xen都升级了，于是便有了下文。</p>
+<h2>升级CentOS</h2>
+<p>在升级之前为了稳妥起见，先备份相关的配置文件。</p>
+<p>CentOS的升级很简单，就是<code>yum update</code>，然后重启，唯一需要注意的就是重启前需要调整<code>/boot/grub/menu.lst</code>中的启动顺序，因为升级后，CentOS默认的内核启动顺序是新版的kernel。</p>
+<p>验证一下</p>
+<figure class="highlight"><pre>[root<span class="variable">@DL165</span>-<span class="number">2</span> ~]<span class="comment"># cat /etc/redhat-release </span>
+<span class="constant">CentOS</span> release <span class="number">5.8</span> (<span class="constant">Final</span>)
+</pre></figure>
+
+<h2>升级xen</h2>
+<figure class="highlight"><pre>[root<span class="variable">@DL165</span>-<span class="number">2</span> ~]<span class="comment"># mv /etc/yum.repos.d/GITCO-xen3.4.3 backup</span>
+[root<span class="variable">@DL165</span>-<span class="number">2</span> ~]<span class="comment"># wget http://www.gitco.de/xen3.4.4</span>
+[root<span class="variable">@DL165</span>-<span class="number">2</span> ~]<span class="comment"># yum update xen</span>
+</pre></figure>
+
+<p>将从xen3.4.3升级至xen3.4.4，验证一下：</p>
+<figure class="highlight"><pre>[root@<span class="type">DL165</span>-<span class="number">2</span> ~]# xm info
+<span class="title">host</span>                   : <span class="type">DL165</span>-<span class="number">2</span>
+<span class="title">release</span>                : <span class="number">2.6</span><span class="number">.18</span>-<span class="number">308.13</span><span class="number">.1</span>.el5xen
+<span class="title">version</span>                : #<span class="number">1</span> <span class="type">SMP</span> <span class="type">Tue</span> <span class="type">Aug</span> <span class="number">21</span> <span class="number">17</span>:<span class="number">51</span>:<span class="number">21</span> <span class="type">EDT</span> <span class="number">2012</span>
+<span class="title">machine</span>                : x86_64
+<span class="title">nr_cpus</span>                : <span class="number">8</span>
+<span class="title">nr_nodes</span>               : <span class="number">1</span>
+<span class="title">cores_per_socket</span>       : <span class="number">4</span>
+<span class="title">threads_per_core</span>       : <span class="number">1</span>
+<span class="title">cpu_mhz</span>                : <span class="number">2693</span>
+<span class="title">hw_caps</span>                : <span class="number">178</span>bf3ff:efd3fbff:<span class="number">00000000</span>:<span class="number">00000310</span>:<span class="number">00802001</span>:<span class="number">00000000</span>:<span class="number">000037</span>ff:<span class="number">00000000</span>
+<span class="title">virt_caps</span>              : hvm
+<span class="title">total_memory</span>           : <span class="number">8191</span>
+<span class="title">free_memory</span>            : <span class="number">7579</span>
+<span class="title">node_to_cpu</span>            : node0:<span class="number">0</span>-<span class="number">7</span>
+<span class="title">node_to_memory</span>         : node0:<span class="number">7579</span>
+<span class="title">xen_major</span>              : <span class="number">3</span>
+<span class="title">xen_minor</span>              : <span class="number">4</span>
+<span class="title">xen_extra</span>              : <span class="number">.4</span>
+<span class="title">xen_caps</span>               : xen-<span class="number">3.0</span>-x86_64 xen-<span class="number">3.0</span>-x86_32p hvm-<span class="number">3.0</span>-x86_32 hvm-<span class="number">3.0</span>-x86_32p hvm-<span class="number">3.0</span>-x86_64 
+<span class="title">xen_scheduler</span>          : credit
+<span class="title">xen_pagesize</span>           : <span class="number">4096</span>
+<span class="title">platform_params</span>        : virt_start=<span class="number">0xffff800000000000</span>
+<span class="title">xen_changeset</span>          : unavailable
+<span class="title">cc_compiler</span>            : gcc version <span class="number">4.1</span><span class="number">.2</span> <span class="number">20080704</span> (<span class="type">Red</span> <span class="type">Hat</span> <span class="number">4.1</span><span class="number">.2</span>-<span class="number">52</span>)
+<span class="title">cc_compile_by</span>          : root
+<span class="title">cc_compile_domain</span>      : gitco.tld
+<span class="title">cc_compile_date</span>        : <span class="type">Mon</span> <span class="type">Jun</span> <span class="number">25</span> <span class="number">11</span>:<span class="number">29</span>:<span class="number">36</span> <span class="type">CEST</span> <span class="number">2012</span>
+
+<span class="title">xend_config_format</span>     : <span class="number">4</span>
+</pre></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

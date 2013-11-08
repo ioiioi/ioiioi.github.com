@@ -1,0 +1,645 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>octopress | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title category">octopress</h2>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-30T15:00:00.000Z"><a href="/2012/04/30/what-can-we-deal-with-little-vps/">2012-04-30</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/30/what-can-we-deal-with-little-vps/">在debian中安装octopress</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>前面讲了<a href="">如何在heroku中部署octopress</a>，不过heroku毕竟不在自己的手上，对于用户来说是一个遗憾，贝多芬说了：要扼住命运的咽喉。因此自己的博客就要部署在自己的VPS上。下面讲一下如何在debian squeeze中部署git+ruby+nginx+octopress。</p>
+<h1>git</h1>
+<p>git的安装很简单：</p>
+<figure class="highlight"><pre><span class="preprocessor"># apt-get update</span>
+<span class="preprocessor"># apt-get install git-core</span>
+<span class="preprocessor"># git config --global user.name "alfie chan"</span>
+<span class="preprocessor"># git config --global user.email admin@linuxabc.net.cn</span>
+</pre></figure>
+
+<h1>ruby</h1>
+<p>ruby的版本众多，安装和管理比较复杂。另外，<a href="http://www.lucas-nussbaum.net/blog/?p=617" target="_blank">debian开发者对ruby的代码树管理很不满</a>，<br>已经决定终止对ruby进行打包，这使得ruby在debian上的安装更为麻烦，目前squeeze中ruby的版本是1.9.1（用户通过<code>apt-cache search</code>会看到一个ruby 1.9.2，但那是虚拟包，不是真正的1.9.2），然而ocotpress对ruby的版本要求是1.9.2，因此我先是采用rvm，但是遇到一些问题，最后决定手工编译的方式进行安装。</p>
+<figure class="highlight"><pre># bash &lt; &lt;( curl http://rvm.beginrescueend.com/releases/rvm-install-head )
+...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 D<span class="operator"><span class="keyword">load</span>  Upload   Total   Spent    <span class="keyword">Left</span>  Speed
+<span class="number">100</span>  <span class="number">994</span>k  <span class="number">100</span>  <span class="number">994</span>k    <span class="number">0</span>     <span class="number">0</span>  <span class="number">45792</span>      <span class="number">0</span>  <span class="number">0</span>:<span class="number">00</span>:<span class="number">22</span>  <span class="number">0</span>:<span class="number">00</span>:<span class="number">22</span> --:--:-- <span class="number">41842</span>
+
+Installing RVM <span class="keyword">to</span> /usr/<span class="keyword">local</span>/rvm/
+    Creating RVM system <span class="keyword">user</span> <span class="keyword">group</span> <span class="string">'rvm'</span>
+
+# RVM:  Shell scripts enabling management <span class="keyword">of</span> multiple ruby environments.
+# RTFM: https://rvm.io/
+# HELP: http://webchat.freenode.net/?channels=rvm (#rvm <span class="keyword">on</span> irc.freenode.net)
+# Cheatsheet: http://cheat.errtheblog.com/s/rvm/
+# Screencast: http://screencasts.org/episodes/how-<span class="keyword">to</span>-use-rvm
+
+# <span class="keyword">In</span> <span class="keyword">case</span> <span class="keyword">of</span> <span class="keyword">any</span> issues <span class="keyword">read</span> <span class="keyword">output</span> <span class="keyword">of</span> <span class="string">'rvm requirements'</span> <span class="keyword">and</span>/<span class="keyword">or</span> <span class="string">'rvm notes'</span>
+
+Installation <span class="keyword">of</span> RVM <span class="keyword">in</span> /usr/<span class="keyword">local</span>/rvm/ <span class="keyword">is</span> almost complete:
+
+  * <span class="keyword">First</span> you need <span class="keyword">to</span> <span class="keyword">add</span> <span class="keyword">all</span> users that will be <span class="keyword">using</span> rvm <span class="keyword">to</span> <span class="string">'rvm'</span> <span class="keyword">group</span>,
+    <span class="keyword">and</span> logout - login again, anyone <span class="keyword">using</span> rvm will be operating <span class="keyword">with</span> <span class="string">`umask g+w`</span>.
+
+  * <span class="keyword">To</span> <span class="keyword">start</span> <span class="keyword">using</span> RVM you need <span class="keyword">to</span> run <span class="string">`source /etc/profile.d/rvm.sh`</span>
+    <span class="keyword">in</span> <span class="keyword">all</span> your <span class="keyword">open</span> shell windows, <span class="keyword">in</span> rare cases you need <span class="keyword">to</span> reopen <span class="keyword">all</span> shell windows.
+
+# root,
+#
+#   Thank you <span class="keyword">for</span> <span class="keyword">using</span> RVM!
+#   I sincerely hope that RVM helps <span class="keyword">to</span> make your life easier <span class="keyword">and</span> more enjoyable!!!
+#
+# ~Wayne
+
+
+rvm <span class="number">1.13</span><span class="number">.0</span> (stable) <span class="keyword">by</span> Wayne E. Seguin &lt;wayneeseguin@gmail.com&gt;, Michal Papis &lt;mpapis@gmail.com&gt; [h
+ttps://rvm.io/]
+</pre></figure>
+
+<p>根据上面的提示，执行：</p>
+<pre><code><span class="preprocessor"># source /etc/profile.d/rvm.sh</span></code></pre>
+<p>然后：</p>
+<pre><code><span class="preprocessor"># rvm install 1.9.2</span></code></pre>
+<p>出现错误，根据<code>/usr/local/rvm/1.9.2/extract.log</code>的错误提示，原来安装的过程中还需要用到<code>make</code>和<code>bzip2</code>这两个工具。</p>
+<p>于是：</p>
+<pre><code><span class="preprocessor"># aptitude install make bzip2</span></code></pre>
+<p>接着：</p>
+<figure class="highlight"><pre><span class="comment"># rvm install 1.9.2</span>
+Fetching yaml-<span class="number">0.1</span><span class="number">.4</span>.tar.gz to /usr/local/rvm/archives
+Extracting yaml-<span class="number">0.1</span><span class="number">.4</span>.tar.gz to /usr/local/rvm/src
+Configuring yaml <span class="keyword">in</span> /usr/local/rvm/src/yaml-<span class="number">0.1</span><span class="number">.4</span>.
+Compiling yaml <span class="keyword">in</span> /usr/local/rvm/src/yaml-<span class="number">0.1</span><span class="number">.4</span>.
+Installing yaml to /usr/local/rvm/usr
+Installing Ruby from <span class="keyword">source</span> to: /usr/local/rvm/rubies/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320, this may take a <span class="keyword">while</span> depend
+ing on your cpu(s)<span class="keyword">...</span>
+
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#fetching</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#extracting ruby-1.9.2-p320 to /usr/local/rvm/src/ruby-1.9.2-p320</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#extracted to /usr/local/rvm/src/ruby-1.9.2-p320</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#configuring</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#compiling</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#installing</span>
+Retrieving rubygems-<span class="number">1.8</span><span class="number">.24</span>
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+<span class="number">100</span>  371k  <span class="number">100</span>  371k    <span class="number">0</span>     <span class="number">0</span>  <span class="number">35412</span>      <span class="number">0</span>  <span class="number">0</span>:<span class="number">00</span>:<span class="number">10</span>  <span class="number">0</span>:<span class="number">00</span>:<span class="number">10</span> --:--:-- <span class="number">51058</span>
+Extracting rubygems-<span class="number">1.8</span><span class="number">.24</span> <span class="keyword">...</span>
+Removing old Rubygems files...
+Installing rubygems-<span class="number">1.8</span><span class="number">.24</span> <span class="keyword">for</span> ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 <span class="keyword">...</span>
+Installation of rubygems completed successfully.
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - adjusting <span class="comment">#shebangs for (gem irb erb ri rdoc testrb rake).</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#importing default gemsets (/usr/local/rvm/gemsets/)</span>
+Install of ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#complete</span>
+</pre></figure>
+
+<p>然后通过git将octopress克隆到本地：</p>
+<figure class="highlight"><pre><span class="comment"># git clone git://github.com/imathis/octopress.git octopress</span>
+<span class="comment"># cd octopress</span>
+====================================================================================
+= NOTICE                                                                           =
+====================================================================================
+= RVM has encountered a new <span class="keyword">or</span> modified .rvmrc <span class="type">file</span> <span class="keyword">in</span> <span class="keyword">the</span> current directory       =
+= This <span class="keyword">is</span> a shell <span class="keyword">script</span> <span class="keyword">and</span> therefore may <span class="keyword">contain</span> any shell commands.             =
+=                                                                                  =
+= Examine <span class="keyword">the</span> <span class="property">contents</span> <span class="keyword">of</span> this <span class="type">file</span> carefully <span class="keyword">to</span> be sure <span class="keyword">the</span> <span class="property">contents</span> are          =
+= safe <span class="keyword">before</span> trusting <span class="keyword">it</span>! ( Choose v[iew] <span class="keyword">below</span> <span class="keyword">to</span> view <span class="keyword">the</span> <span class="property">contents</span> )            =
+====================================================================================
+Do you wish <span class="keyword">to</span> trust this .rvmrc <span class="type">file</span>? (/home/chenr/octopress/.rvmrc)
+y[es], n[o], v[iew], c[ancel]&gt; y
+Using /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320
+</pre></figure>
+
+<figure class="highlight"><pre><span class="comment"># rake install</span>
+rake aborted!
+You have already activated rake <span class="number">0.9</span><span class="number">.2</span><span class="number">.2</span>, <span class="keyword">but</span> your Gemfile requires rake <span class="number">0.9</span><span class="number">.2</span>. Using bundle exec may solve this.
+
+(See full trace <span class="keyword">by</span> <span class="property">running</span> task <span class="keyword">with</span> <span class="comment">--trace)</span>
+</pre></figure>
+
+<p>也就是说要用bundle exec rake</p>
+<figure class="highlight"><pre>root<span class="property">@deb600</span>-<span class="number">64</span>-mgmt:<span class="regexp">/home/chenr/</span>octopress<span class="comment"># bundle exec rake install</span>
+<span class="comment">## Copying classic theme into ./source and ./sass</span>
+root<span class="property">@deb600</span>-<span class="number">64</span>-mgmt:<span class="regexp">/home/chenr/</span>octopress<span class="comment">#</span>
+</pre></figure>
+
+<p>创建第一篇博客</p>
+<figure class="highlight"><pre><span class="preprocessor"># bundle exec rake new_post["hello-octopress"]</span>
+<span class="preprocessor"># vim ./source/_post/2012-04-30-hello-octopress.markdown</span>
+</pre></figure>
+
+<p>生成静态网站</p>
+<figure class="highlight"><pre>deb600-<span class="number">64</span>-mgmt:/home/chenr/octopress/source/_posts<span class="comment"># bundle exec rake generat</span>
+(<span class="keyword">in</span> /home/chenr/octopress)
+<span class="comment">## Generating Site with Jekyll</span>
+unchanged sass/screen.scss
+Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.yml
+/usr/<span class="keyword">local</span>/rvm/rubies/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/lib/ruby/<span class="number">1.9</span><span class="number">.1</span>/net/https.rb:<span class="number">92</span>:<span class="keyword">in</span> `require': no such <span class="type">file</span> <span class="keyword">to</span> load <span class="comment">-- openssl (LoadError)</span>
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/rubies/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/lib/ruby/<span class="number">1.9</span><span class="number">.1</span>/net/https.rb:<span class="number">92</span>:<span class="keyword">in</span> `&lt;top (required)&gt;'
+        <span class="keyword">from</span> /home/chenr/octopress/plugins/gist_tag.rb:<span class="number">10</span>:<span class="keyword">in</span> `require'
+        <span class="keyword">from</span> /home/chenr/octopress/plugins/gist_tag.rb:<span class="number">10</span>:<span class="keyword">in</span> `&lt;top (required)&gt;'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">76</span>:<span class="keyword">in</span> `require'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">76</span>:<span class="keyword">in</span> `block <span class="keyword">in</span> setup'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">75</span>:<span class="keyword">in</span> `each'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">75</span>:<span class="keyword">in</span> `setup'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">30</span>:<span class="keyword">in</span> `initialize'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/bin/jekyll:<span class="number">224</span>:<span class="keyword">in</span> `new'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/bin/jekyll:<span class="number">224</span>:<span class="keyword">in</span> `&lt;top (required)&gt;'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/bin/jekyll:<span class="number">23</span>:<span class="keyword">in</span> `load'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/bin/jekyll:<span class="number">23</span>:<span class="keyword">in</span> `&lt;main&gt;'
+</pre></figure>
+
+<p>google<br><code>/usr/local/rvm/rubies/ruby-1.9.2-p320/lib/ruby/1.9.1/net/https.rb:92:in</code>require&#39;: no such file to load — openssl (LoadError)`</p>
+<p>依稀记得octopress推荐使用ruby-1.9.2-p290，于是</p>
+<figure class="highlight"><pre><span class="preprocessor"># rvm install ruby-1.9.2-p290</span>
+<span class="preprocessor"># rvm use ruby-1.9.2-p290</span>
+<span class="preprocessor"># bundle exec rake generate</span>
+</pre></figure>
+
+<p>错误依旧，傻眼了，还得求助google，我换了一下关键字<code>require&#39;: no such file to load -- openssl (LoadError)</code></p>
+<p>这次有结果了：<a href="http://blog.bigdinosaur.org/setting-up-octopress/" target="_blank">Setting Up Octopress</a></p>
+<p>原来是还缺<code>libssl-dev</code>这个软件包</p>
+<pre><code><span class="preprocessor"># aptitude install libssl-dev</span>
+<span class="preprocessor"># rvm reinstall ruby-1.9.2-p290</span></code></pre>
+<p>终于成功了！归根结底，rvm在安装ruby时，即便缺乏依赖包也没有提示，看来用rvm来安装ruby不怎么靠谱啊。即便用rbenv</p>
+<h1>nginx</h1>
+<h2>编译和安装</h2>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="string">.</span><span class="comment">/configure</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">sbin</span>-<span class="comment">path=/usr/sbin</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">conf</span>-<span class="comment">path=/etc/nginx/nginx</span>.<span class="comment">conf</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">error</span>-<span class="comment">log</span>-<span class="comment">path=/var/log/nginx/error</span>.<span class="comment">log</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">pid</span>-<span class="comment">path=/var/run/nginx</span>.<span class="comment">pid</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">lock</span>-<span class="comment">path=/var/lock/nginx</span>.<span class="comment">lock</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">log</span>-<span class="comment">path=/var/log/nginx/access</span>.<span class="comment">log</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">client</span>-<span class="comment">body</span>-<span class="comment">temp</span>-<span class="comment">path=/var/lib/nginx/body</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">proxy</span>-<span class="comment">temp</span>-<span class="comment">path=/var/lib/nginx/proxy</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">fastcgi</span>-<span class="comment">temp</span>-<span class="comment">path=/var/lib/nginx/fastcgi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">debug</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_stub_status_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_flv_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_ssl_module</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_dav_module</span>
+
+
+<span class="comment">Configuration</span> <span class="comment">summary</span>
+  <span class="literal">+</span> <span class="comment">using</span> <span class="comment">system</span> <span class="comment">PCRE</span> <span class="comment">library</span>
+  <span class="literal">+</span> <span class="comment">using</span> <span class="comment">system</span> <span class="comment">OpenSSL</span> <span class="comment">library</span>
+  <span class="literal">+</span> <span class="comment">md5:</span> <span class="comment">using</span> <span class="comment">OpenSSL</span> <span class="comment">library</span>
+  <span class="literal">+</span> <span class="comment">sha1:</span> <span class="comment">using</span> <span class="comment">OpenSSL</span> <span class="comment">library</span>
+  <span class="literal">+</span> <span class="comment">using</span> <span class="comment">system</span> <span class="comment">zlib</span> <span class="comment">library</span>
+
+  <span class="comment">nginx</span> <span class="comment">path</span> <span class="comment">prefix:</span> <span class="comment">"/usr/local/nginx"</span>
+  <span class="comment">nginx</span> <span class="comment">binary</span> <span class="comment">file:</span> <span class="comment">"/usr/sbin"</span>
+  <span class="comment">nginx</span> <span class="comment">configuration</span> <span class="comment">prefix:</span> <span class="comment">"/etc/nginx"</span>
+  <span class="comment">nginx</span> <span class="comment">configuration</span> <span class="comment">file:</span> <span class="comment">"/etc/nginx/nginx</span>.<span class="comment">conf"</span>
+  <span class="comment">nginx</span> <span class="comment">pid</span> <span class="comment">file:</span> <span class="comment">"/var/run/nginx</span>.<span class="comment">pid"</span>
+  <span class="comment">nginx</span> <span class="comment">error</span> <span class="comment">log</span> <span class="comment">file:</span> <span class="comment">"/var/log/nginx/error</span>.<span class="comment">log"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">access</span> <span class="comment">log</span> <span class="comment">file:</span> <span class="comment">"/var/log/nginx/access</span>.<span class="comment">log"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">client</span> <span class="comment">request</span> <span class="comment">body</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"/var/lib/nginx/body"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">proxy</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"/var/lib/nginx/proxy"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">fastcgi</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"/var/lib/nginx/fastcgi"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">uwsgi</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"uwsgi_temp"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">scgi</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"scgi_temp"</span>
+
+<span class="comment">#</span> <span class="comment">make</span> <span class="comment">&</span> <span class="comment">make</span> <span class="comment">install
+</pre></figure>
+
+<h1>mkdir /var/log/nginx &amp;&amp; chown nginx:nignix /var/log/nginx</h1>
+<h1>mkdir /var/lib/nginx &amp;&amp; chown nginx:nignix /var/lib/nginx</h1>
+<figure class="highlight"><pre>/etc/<span class="filename">init.d/nginx
+</pre></figure>
+
+<p>检测一下：</p>
+<pre><code><span class="preprocessor"># lynx localhost</span></code></pre>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-04-30T15:00:00.000Z"><a href="/2012/04/30/how-to-install-octopress-on-debian/">2012-04-30</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/30/how-to-install-octopress-on-debian/">在debian中安装octopress</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>前面讲了<a href="">如何在heroku中部署octopress</a>，不过heroku毕竟不在自己的手上，对于用户来说是一个遗憾，贝多芬说了：要扼住命运的咽喉。因此自己的博客就要部署在自己的VPS上。下面讲一下如何在debian squeeze中部署git+ruby+nginx+octopress。</p>
+<h1>git</h1>
+<p>git的安装很简单：</p>
+<figure class="highlight"><pre><span class="preprocessor"># apt-get update</span>
+<span class="preprocessor"># apt-get install git-core</span>
+<span class="preprocessor"># git config --global user.name "alfie chan"</span>
+<span class="preprocessor"># git config --global user.email admin@linuxabc.net.cn</span>
+</pre></figure>
+
+<h1>ruby</h1>
+<p>ruby的版本众多，安装和管理比较复杂。另外，<a href="http://www.lucas-nussbaum.net/blog/?p=617" target="_blank">debian开发者对ruby的代码树管理很不满</a>，<br>已经决定终止对ruby进行打包，这使得ruby在debian上的安装更为麻烦，目前squeeze中ruby的版本是1.9.1（用户通过<code>apt-cache search</code>会看到一个ruby 1.9.2，但那是虚拟包，不是真正的1.9.2），然而ocotpress对ruby的版本要求是1.9.2，因此我先是采用rvm，但是遇到一些问题，最后决定手工编译的方式进行安装。</p>
+<figure class="highlight"><pre># bash &lt; &lt;( curl http://rvm.beginrescueend.com/releases/rvm-install-head )
+...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 D<span class="operator"><span class="keyword">load</span>  Upload   Total   Spent    <span class="keyword">Left</span>  Speed
+<span class="number">100</span>  <span class="number">994</span>k  <span class="number">100</span>  <span class="number">994</span>k    <span class="number">0</span>     <span class="number">0</span>  <span class="number">45792</span>      <span class="number">0</span>  <span class="number">0</span>:<span class="number">00</span>:<span class="number">22</span>  <span class="number">0</span>:<span class="number">00</span>:<span class="number">22</span> --:--:-- <span class="number">41842</span>
+
+Installing RVM <span class="keyword">to</span> /usr/<span class="keyword">local</span>/rvm/
+    Creating RVM system <span class="keyword">user</span> <span class="keyword">group</span> <span class="string">'rvm'</span>
+
+# RVM:  Shell scripts enabling management <span class="keyword">of</span> multiple ruby environments.
+# RTFM: https://rvm.io/
+# HELP: http://webchat.freenode.net/?channels=rvm (#rvm <span class="keyword">on</span> irc.freenode.net)
+# Cheatsheet: http://cheat.errtheblog.com/s/rvm/
+# Screencast: http://screencasts.org/episodes/how-<span class="keyword">to</span>-use-rvm
+
+# <span class="keyword">In</span> <span class="keyword">case</span> <span class="keyword">of</span> <span class="keyword">any</span> issues <span class="keyword">read</span> <span class="keyword">output</span> <span class="keyword">of</span> <span class="string">'rvm requirements'</span> <span class="keyword">and</span>/<span class="keyword">or</span> <span class="string">'rvm notes'</span>
+
+Installation <span class="keyword">of</span> RVM <span class="keyword">in</span> /usr/<span class="keyword">local</span>/rvm/ <span class="keyword">is</span> almost complete:
+
+  * <span class="keyword">First</span> you need <span class="keyword">to</span> <span class="keyword">add</span> <span class="keyword">all</span> users that will be <span class="keyword">using</span> rvm <span class="keyword">to</span> <span class="string">'rvm'</span> <span class="keyword">group</span>,
+    <span class="keyword">and</span> logout - login again, anyone <span class="keyword">using</span> rvm will be operating <span class="keyword">with</span> <span class="string">`umask g+w`</span>.
+
+  * <span class="keyword">To</span> <span class="keyword">start</span> <span class="keyword">using</span> RVM you need <span class="keyword">to</span> run <span class="string">`source /etc/profile.d/rvm.sh`</span>
+    <span class="keyword">in</span> <span class="keyword">all</span> your <span class="keyword">open</span> shell windows, <span class="keyword">in</span> rare cases you need <span class="keyword">to</span> reopen <span class="keyword">all</span> shell windows.
+
+# root,
+#
+#   Thank you <span class="keyword">for</span> <span class="keyword">using</span> RVM!
+#   I sincerely hope that RVM helps <span class="keyword">to</span> make your life easier <span class="keyword">and</span> more enjoyable!!!
+#
+# ~Wayne
+
+
+rvm <span class="number">1.13</span><span class="number">.0</span> (stable) <span class="keyword">by</span> Wayne E. Seguin &lt;wayneeseguin@gmail.com&gt;, Michal Papis &lt;mpapis@gmail.com&gt; [h
+ttps://rvm.io/]
+</pre></figure>
+
+<p>根据上面的提示，执行：</p>
+<pre><code><span class="preprocessor"># source /etc/profile.d/rvm.sh</span></code></pre>
+<p>然后：</p>
+<pre><code><span class="preprocessor"># rvm install 1.9.2</span></code></pre>
+<p>出现错误，根据<code>/usr/local/rvm/1.9.2/extract.log</code>的错误提示，原来安装的过程中还需要用到<code>make</code>和<code>bzip2</code>这两个工具。</p>
+<p>于是：</p>
+<pre><code><span class="preprocessor"># aptitude install make bzip2</span></code></pre>
+<p>接着：</p>
+<figure class="highlight"><pre><span class="comment"># rvm install 1.9.2</span>
+Fetching yaml-<span class="number">0.1</span><span class="number">.4</span>.tar.gz to /usr/local/rvm/archives
+Extracting yaml-<span class="number">0.1</span><span class="number">.4</span>.tar.gz to /usr/local/rvm/src
+Configuring yaml <span class="keyword">in</span> /usr/local/rvm/src/yaml-<span class="number">0.1</span><span class="number">.4</span>.
+Compiling yaml <span class="keyword">in</span> /usr/local/rvm/src/yaml-<span class="number">0.1</span><span class="number">.4</span>.
+Installing yaml to /usr/local/rvm/usr
+Installing Ruby from <span class="keyword">source</span> to: /usr/local/rvm/rubies/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320, this may take a <span class="keyword">while</span> depend
+ing on your cpu(s)<span class="keyword">...</span>
+
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#fetching</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#extracting ruby-1.9.2-p320 to /usr/local/rvm/src/ruby-1.9.2-p320</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#extracted to /usr/local/rvm/src/ruby-1.9.2-p320</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#configuring</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#compiling</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#installing</span>
+Retrieving rubygems-<span class="number">1.8</span><span class="number">.24</span>
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+<span class="number">100</span>  371k  <span class="number">100</span>  371k    <span class="number">0</span>     <span class="number">0</span>  <span class="number">35412</span>      <span class="number">0</span>  <span class="number">0</span>:<span class="number">00</span>:<span class="number">10</span>  <span class="number">0</span>:<span class="number">00</span>:<span class="number">10</span> --:--:-- <span class="number">51058</span>
+Extracting rubygems-<span class="number">1.8</span><span class="number">.24</span> <span class="keyword">...</span>
+Removing old Rubygems files...
+Installing rubygems-<span class="number">1.8</span><span class="number">.24</span> <span class="keyword">for</span> ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 <span class="keyword">...</span>
+Installation of rubygems completed successfully.
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - adjusting <span class="comment">#shebangs for (gem irb erb ri rdoc testrb rake).</span>
+ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#importing default gemsets (/usr/local/rvm/gemsets/)</span>
+Install of ruby-<span class="number">1.9</span><span class="number">.2</span>-p320 - <span class="comment">#complete</span>
+</pre></figure>
+
+<p>然后通过git将octopress克隆到本地：</p>
+<figure class="highlight"><pre><span class="comment"># git clone git://github.com/imathis/octopress.git octopress</span>
+<span class="comment"># cd octopress</span>
+====================================================================================
+= NOTICE                                                                           =
+====================================================================================
+= RVM has encountered a new <span class="keyword">or</span> modified .rvmrc <span class="type">file</span> <span class="keyword">in</span> <span class="keyword">the</span> current directory       =
+= This <span class="keyword">is</span> a shell <span class="keyword">script</span> <span class="keyword">and</span> therefore may <span class="keyword">contain</span> any shell commands.             =
+=                                                                                  =
+= Examine <span class="keyword">the</span> <span class="property">contents</span> <span class="keyword">of</span> this <span class="type">file</span> carefully <span class="keyword">to</span> be sure <span class="keyword">the</span> <span class="property">contents</span> are          =
+= safe <span class="keyword">before</span> trusting <span class="keyword">it</span>! ( Choose v[iew] <span class="keyword">below</span> <span class="keyword">to</span> view <span class="keyword">the</span> <span class="property">contents</span> )            =
+====================================================================================
+Do you wish <span class="keyword">to</span> trust this .rvmrc <span class="type">file</span>? (/home/chenr/octopress/.rvmrc)
+y[es], n[o], v[iew], c[ancel]&gt; y
+Using /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320
+</pre></figure>
+
+<figure class="highlight"><pre><span class="comment"># rake install</span>
+rake aborted!
+You have already activated rake <span class="number">0.9</span><span class="number">.2</span><span class="number">.2</span>, <span class="keyword">but</span> your Gemfile requires rake <span class="number">0.9</span><span class="number">.2</span>. Using bundle exec may solve this.
+
+(See full trace <span class="keyword">by</span> <span class="property">running</span> task <span class="keyword">with</span> <span class="comment">--trace)</span>
+</pre></figure>
+
+<p>也就是说要用bundle exec rake</p>
+<figure class="highlight"><pre>root<span class="property">@deb600</span>-<span class="number">64</span>-mgmt:<span class="regexp">/home/chenr/</span>octopress<span class="comment"># bundle exec rake install</span>
+<span class="comment">## Copying classic theme into ./source and ./sass</span>
+root<span class="property">@deb600</span>-<span class="number">64</span>-mgmt:<span class="regexp">/home/chenr/</span>octopress<span class="comment">#</span>
+</pre></figure>
+
+<p>创建第一篇博客</p>
+<figure class="highlight"><pre><span class="preprocessor"># bundle exec rake new_post["hello-octopress"]</span>
+<span class="preprocessor"># vim ./source/_post/2012-04-30-hello-octopress.markdown</span>
+</pre></figure>
+
+<p>生成静态网站</p>
+<figure class="highlight"><pre>deb600-<span class="number">64</span>-mgmt:/home/chenr/octopress/source/_posts<span class="comment"># bundle exec rake generat</span>
+(<span class="keyword">in</span> /home/chenr/octopress)
+<span class="comment">## Generating Site with Jekyll</span>
+unchanged sass/screen.scss
+Configuration <span class="keyword">from</span> /home/chenr/octopress/_config.yml
+/usr/<span class="keyword">local</span>/rvm/rubies/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/lib/ruby/<span class="number">1.9</span><span class="number">.1</span>/net/https.rb:<span class="number">92</span>:<span class="keyword">in</span> `require': no such <span class="type">file</span> <span class="keyword">to</span> load <span class="comment">-- openssl (LoadError)</span>
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/rubies/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/lib/ruby/<span class="number">1.9</span><span class="number">.1</span>/net/https.rb:<span class="number">92</span>:<span class="keyword">in</span> `&lt;top (required)&gt;'
+        <span class="keyword">from</span> /home/chenr/octopress/plugins/gist_tag.rb:<span class="number">10</span>:<span class="keyword">in</span> `require'
+        <span class="keyword">from</span> /home/chenr/octopress/plugins/gist_tag.rb:<span class="number">10</span>:<span class="keyword">in</span> `&lt;top (required)&gt;'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">76</span>:<span class="keyword">in</span> `require'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">76</span>:<span class="keyword">in</span> `block <span class="keyword">in</span> setup'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">75</span>:<span class="keyword">in</span> `each'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">75</span>:<span class="keyword">in</span> `setup'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/lib/jekyll/site.rb:<span class="number">30</span>:<span class="keyword">in</span> `initialize'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/bin/jekyll:<span class="number">224</span>:<span class="keyword">in</span> `new'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/gems/jekyll-<span class="number">0.11</span><span class="number">.0</span>/bin/jekyll:<span class="number">224</span>:<span class="keyword">in</span> `&lt;top (required)&gt;'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/bin/jekyll:<span class="number">23</span>:<span class="keyword">in</span> `load'
+        <span class="keyword">from</span> /usr/<span class="keyword">local</span>/rvm/gems/ruby-<span class="number">1.9</span><span class="number">.2</span>-p320/bin/jekyll:<span class="number">23</span>:<span class="keyword">in</span> `&lt;main&gt;'
+</pre></figure>
+
+<p>google<br><code>/usr/local/rvm/rubies/ruby-1.9.2-p320/lib/ruby/1.9.1/net/https.rb:92:in</code>require&#39;: no such file to load — openssl (LoadError)`</p>
+<p>依稀记得octopress推荐使用ruby-1.9.2-p290，于是</p>
+<figure class="highlight"><pre><span class="preprocessor"># rvm install ruby-1.9.2-p290</span>
+<span class="preprocessor"># rvm use ruby-1.9.2-p290</span>
+<span class="preprocessor"># bundle exec rake generate</span>
+</pre></figure>
+
+<p>错误依旧，傻眼了，还得求助google，我换了一下关键字<code>require&#39;: no such file to load -- openssl (LoadError)</code></p>
+<p>这次有结果了：<a href="http://blog.bigdinosaur.org/setting-up-octopress/" target="_blank">Setting Up Octopress</a></p>
+<p>原来是还缺<code>libssl-dev</code>这个软件包</p>
+<pre><code><span class="preprocessor"># aptitude install libssl-dev</span>
+<span class="preprocessor"># rvm reinstall ruby-1.9.2-p290</span></code></pre>
+<p>终于成功了！归根结底，rvm在安装ruby时，即便缺乏依赖包也没有提示，看来用rvm来安装ruby不怎么靠谱啊。即便用rbenv</p>
+<h1>nginx</h1>
+<h2>编译和安装</h2>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="string">.</span><span class="comment">/configure</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">sbin</span>-<span class="comment">path=/usr/sbin</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">conf</span>-<span class="comment">path=/etc/nginx/nginx</span>.<span class="comment">conf</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">error</span>-<span class="comment">log</span>-<span class="comment">path=/var/log/nginx/error</span>.<span class="comment">log</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">pid</span>-<span class="comment">path=/var/run/nginx</span>.<span class="comment">pid</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">lock</span>-<span class="comment">path=/var/lock/nginx</span>.<span class="comment">lock</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">log</span>-<span class="comment">path=/var/log/nginx/access</span>.<span class="comment">log</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">client</span>-<span class="comment">body</span>-<span class="comment">temp</span>-<span class="comment">path=/var/lib/nginx/body</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">proxy</span>-<span class="comment">temp</span>-<span class="comment">path=/var/lib/nginx/proxy</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">http</span>-<span class="comment">fastcgi</span>-<span class="comment">temp</span>-<span class="comment">path=/var/lib/nginx/fastcgi</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">debug</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_stub_status_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_flv_module</span> <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_ssl_module</span> <span class="comment">\</span>
+ <span class="literal">-</span><span class="literal">-</span><span class="comment">with</span>-<span class="comment">http_dav_module</span>
+
+
+<span class="comment">Configuration</span> <span class="comment">summary</span>
+  <span class="literal">+</span> <span class="comment">using</span> <span class="comment">system</span> <span class="comment">PCRE</span> <span class="comment">library</span>
+  <span class="literal">+</span> <span class="comment">using</span> <span class="comment">system</span> <span class="comment">OpenSSL</span> <span class="comment">library</span>
+  <span class="literal">+</span> <span class="comment">md5:</span> <span class="comment">using</span> <span class="comment">OpenSSL</span> <span class="comment">library</span>
+  <span class="literal">+</span> <span class="comment">sha1:</span> <span class="comment">using</span> <span class="comment">OpenSSL</span> <span class="comment">library</span>
+  <span class="literal">+</span> <span class="comment">using</span> <span class="comment">system</span> <span class="comment">zlib</span> <span class="comment">library</span>
+
+  <span class="comment">nginx</span> <span class="comment">path</span> <span class="comment">prefix:</span> <span class="comment">"/usr/local/nginx"</span>
+  <span class="comment">nginx</span> <span class="comment">binary</span> <span class="comment">file:</span> <span class="comment">"/usr/sbin"</span>
+  <span class="comment">nginx</span> <span class="comment">configuration</span> <span class="comment">prefix:</span> <span class="comment">"/etc/nginx"</span>
+  <span class="comment">nginx</span> <span class="comment">configuration</span> <span class="comment">file:</span> <span class="comment">"/etc/nginx/nginx</span>.<span class="comment">conf"</span>
+  <span class="comment">nginx</span> <span class="comment">pid</span> <span class="comment">file:</span> <span class="comment">"/var/run/nginx</span>.<span class="comment">pid"</span>
+  <span class="comment">nginx</span> <span class="comment">error</span> <span class="comment">log</span> <span class="comment">file:</span> <span class="comment">"/var/log/nginx/error</span>.<span class="comment">log"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">access</span> <span class="comment">log</span> <span class="comment">file:</span> <span class="comment">"/var/log/nginx/access</span>.<span class="comment">log"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">client</span> <span class="comment">request</span> <span class="comment">body</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"/var/lib/nginx/body"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">proxy</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"/var/lib/nginx/proxy"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">fastcgi</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"/var/lib/nginx/fastcgi"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">uwsgi</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"uwsgi_temp"</span>
+  <span class="comment">nginx</span> <span class="comment">http</span> <span class="comment">scgi</span> <span class="comment">temporary</span> <span class="comment">files:</span> <span class="comment">"scgi_temp"</span>
+
+<span class="comment">#</span> <span class="comment">make</span> <span class="comment">&</span> <span class="comment">make</span> <span class="comment">install
+</pre></figure>
+
+<h1>mkdir /var/log/nginx &amp;&amp; chown nginx:nignix /var/log/nginx</h1>
+<h1>mkdir /var/lib/nginx &amp;&amp; chown nginx:nignix /var/lib/nginx</h1>
+<figure class="highlight"><pre>/etc/<span class="filename">init.d/nginx
+</pre></figure>
+
+<p>检测一下：</p>
+<pre><code><span class="preprocessor"># lynx localhost</span></code></pre>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

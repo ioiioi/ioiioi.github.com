@@ -1,0 +1,345 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>网络设备管理 - rancid | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  <meta name="description" content="Rancid的全称是Really Awesome New Cisco ConfIg Differ，顾名思义，该软件的初衷是为了管理cisco设备，然而由于它非常实用，目前已经被扩展到支持多达xx种网络设备，诸如常见的dell，hp，juniper,foundry,redback等，当然，国内常见的h">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="网络设备管理 - rancid"/>
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-09T03:30:00.000Z"><a href="/2012/06/09/how-to-setup-rancid-on-debian/">2012-06-9</a></time>
+      
+      
+  
+    <h1 class="title">网络设备管理 - rancid</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>Rancid的全称是Really Awesome New Cisco ConfIg Differ，顾名思义，该软件的初衷是为了管理cisco设备，然而由于它非常实用，目前已经被扩展到支持多达xx种网络设备，诸如常见的dell，hp，juniper,foundry,redback等，当然，国内常见的h3c也不在话下。<br>It‘s not that the name is not being recognized, it’s that the scripts it&#39;s running have errors in the first line which produce &quot;</p>
+<p>“No such file or directory”<br>Lookup list of groups</p>
+<p>For each device in each list of groups<br>• Connect to the equipment (telnet, ssh, …)<br>• Run ”show” commands – config, inventory, …<br>• Collect, filter/format data<br>• Retrieve the resulting config files<br>• CVS check-in the changes<br>• Generate a diff from the previous version<br>• E-mail the diff to a mail address (individual or group)</p>
+<h1>rancid</h1>
+<p>rancid的工作原理</p>
+<h2>安装</h2>
+<pre><code><span class="preprocessor"># aptitude install rancid-core rancid rancid-utils</span></code></pre>
+<h2>Rancid配置</h2>
+<p>/etc/rancid/rancid.conf</p>
+<figure class="highlight"><pre><span class="setting">CVSROOT=<span class="value">$BASEDIR/SVN; export CVSROOT</span></span>
+<span class="setting">RCSSYS=<span class="value">svn; export RCSSYS</span></span>
+<span class="setting">LIST_OF_GROUPS=<span class="value">”access dist core”</span></span>
+</pre></figure>
+
+<ol>
+<li>rancid支持CVS和SVN这两种版本管理工具，本文选择了SVN，因为CVS太古老了。</li>
+<li>根据cisco的定义，一个大型的网络规划应该分成三层，分别是access、distribution和core，因此我们也创建三个组：access、dist、core</li>
+</ol>
+<p>配置设备</p>
+<p>cd /var/lib/rancid/<br>mkdir access<br>mkdir dist<br>mkdir core<br>touch access/router.db<br>touch dist/router.db<br>touch core/router.db</p>
+<p>接着往router.db里面填内容：</p>
+<figure class="highlight"><pre><span class="comment"># vim access/router.db</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">1</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_A</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">2</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_B</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">3</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_C</span>
+<span class="number">10.0</span>.<span class="number">0</span>.<span class="number">4</span><span class="symbol">:h3c</span><span class="symbol">:up</span><span class="symbol">:sw_access_1f_D</span>
+...
+</pre></figure>
+
+<p>依次创建dist/router.db和core/router.db</p>
+<figure class="highlight"><pre># vim .cloginrc
+add user * <span class="xml"><span class="tag">&lt;<span class="title">username</span>&gt;</span>
+add password * <span class="tag">&lt;<span class="title">password</span>&gt;</span>
+add method * telnet</span>
+</pre></figure>
+
+<h2>H3C脚本</h2>
+<p>H3C并不在rancid的官方支持之列，不过好在有热心的网友Jethro Binks制作了<a href="http://sites.google.com/site/jrbinks/code/rancid/h3c" target="_blank">h3c的脚本</a></p>
+<p>H3C的OS叫Comware，有3和5这两个系列，常见的S3100，S3600，S5600，S5800等均能正常使用。以下是经过测试的型号列表：</p>
+<ol>
+<li>H3C S3100 (Comware 3)</li>
+<li>H3C S5600 (Comware 3)</li>
+<li>H3C S7506 (Comware 5)</li>
+<li>H3C S7906E (Comware 5)</li>
+<li>H3C S5820X (Comware 5)</li>
+<li>H3C S5800 (Comware 5)</li>
+<li>H3C S3610 (Comware 5)</li>
+<li>H3C MSR30-60 (Comware 5)</li>
+</ol>
+<p>Jethro Binks的脚本并不适合于Debian,需要做一点小修改：</p>
+<p><strong>h3clogin:</strong></p>
+<p>将</p>
+<pre><code><span class="shebang">#! /usr/local/bin/expect --</span></code></pre>
+<p>改成</p>
+<pre><code><span class="shebang">#! /usr/bin/expect --</span></code></pre>
+<p><strong>h3crancid:</strong></p>
+<p>将</p>
+<pre><code><span class="shebang">#! /usr/bin/perl5</span></code></pre>
+<p>改成</p>
+<pre><code><span class="shebang">#! /usr/bin/perl</span></code></pre>
+<p>接着将它们拷贝到<code>/usr/lib/rancid/bin</code>中，同时赋予<code>+x</code>的属性。</p>
+<pre><code><span class="preprocessor"># cp h3clogin h3crancid /usr/lib/rancid/bin</span>
+<span class="preprocessor"># chmod +x h3crancid h3clogin</span></code></pre>
+<h2>H3C设备配置</h2>
+<p>rancid的脚本将使用perl+expect来登录H3C设备，并执行一些display命令来获取设备信息，虽然然而所以安全性需要着重考虑，直接给完整的特权账号肯定不合适，最好创建一个单独的ranciduser，并且仅分配level1权限：</p>
+<p>local-user ranciduser<br>authorization-attribute level 1</p>
+<p>看到这，有些读者不禁倒吸一口凉气：糟糕，手头上管理着几十台设备，难不成我要逐台登录和创建几十个相同的帐号？别急，我们完全可以利用clogin/h3clogin来自动完成这个任务。</p>
+<figure class="highlight"><pre># vim <span class="operator"><span class="keyword">create</span>.rancid.account
+sys
+<span class="keyword">local</span>-<span class="keyword">user</span> rancid
+<span class="keyword">authorization</span>-attribute <span class="keyword">level</span> <span class="number">1</span>
+quit
+save
+</pre></figure>
+
+<p>h3clogin -x /path/to/commands.file <device-ip></p>
+<p>最后测试一下</p>
+<pre><code># sudo -u rancid -H /usr/lib/rancid/h3clogin <span class="tag">&lt;<span class="title">H3C-device-ip</span>&gt;</span> FIXME</code></pre>
+<h2>配置变更</h2>
+<h3>硬件配置变更</h3>
+<h3>软件配置变更</h3>
+<h1>版本管理工具</h1>
+<p>rancid利用版本管理工具对配置变更进行管理，这是一个聪明而省力的做法，unix哲学就是帅。rancid支持CVS和SVN这两个版本管理工具，本文选择的是SVN，因为CVS太古老了。</p>
+<h2>安装svn</h2>
+<pre><code><span class="preprocessor"># aptitude install svn</span></code></pre>
+<h2>整合svn</h2>
+<p>cd /var/lib/rancid/<br>svnadmin create configs<br>svn mkdir file:///var/lib/rancid/configs/access -m “created folder”<br>svn mkdir file:///var/lib/rancid/configs/dist -m “created folder”<br>svn mkdir file:///var/lib/rancid/configs/core -m “created folder”<br>svn co file:///var/lib/rancid/configs/access ./access/<br>svn co file:///var/lib/rancid/configs/dist ./dist/<br>svn co file:///var/lib/rancid/configs/core ./core/</p>
+<p>chown -R rancid:rancid /var/lib/rancid/<br>chmod 0600 /var/lib/rancid/.cloginrc</p>
+<h1>sudo -u rancid -H /usr/lib/rancid/bin/rancid-run</h1>
+<p>svn mkdir access/configs<br>svn mkdir dist/configs<br>svn mkdir core/configs<br>svn add access/<em><br>svn add dist/</em><br>svn add core/*<br>svn commit -m “added files” access/<br>svn commit -m “added files” dist/<br>svn commit -m “added files” core/</p>
+<h1>配置变更提醒</h1>
+<p>当rancid检测到变更时，<code>control_rancid</code>组件利用sendmail将变更信息通过邮件发送给管理员。对于debian来说，我们将使用默认的MTA exim4来完成这项工作。</p>
+<h2>exim4的安装和配置</h2>
+<p>详见《<a href="">如何利用exim4通过gmail发送邮件</a>》</p>
+<h2>/etc/aliases</h2>
+<figure class="highlight"><pre><span class="comment"># vim /etc/aliases</span>
+<span class="keyword">...</span>
+rancid-&lt;group-name&gt; : mail-address@domain.name
+rancid-adimin-&lt;group-name&gt; : mail-address@domain.name
+<span class="keyword">...</span>
+<span class="comment"># newaliases</span>
+<span class="comment"># /etc/init.d/exim4 restart</span>
+</pre></figure>
+
+<p>当配置变更时，邮件将发送给rancid-<group-name>，当有错误信息时，邮件将发送给rancid-admin-<group-name>。</p>
+<p>至此完成了配置变更的邮件提醒功能。</p>
+<h1>查看变更历史记录</h1>
+<h2>viewvc安装</h2>
+<h2>viewvc配置</h2>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/debian/">debian</a>, <a href="/categories/debian/network/">network</a>
+  </div>
+
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+    
+    
+      <a class="addthis_button_pinterest_pinit" pi:pinit:layout="horizontal"></a>
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

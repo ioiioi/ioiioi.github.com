@@ -1,0 +1,359 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>openSUSE | linuxabc</title>
+  <meta name="author" content="alfie chan">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="linuxabc"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="linuxabc" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">linuxabc</a></h1>
+  <h2><a href="/">focus on security, network management and embeded OS</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title category">openSUSE</h2>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-05T15:00:00.000Z"><a href="/2012/06/05/how-to-install-virtualbox-on-opensuse/">2012-06-5</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/05/how-to-install-virtualbox-on-opensuse/">如何在openSUSE中安装最新版VirtualBox</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>上一回讲到<a href="../how-to-upgrade-opensuse-from-11.1-to-11.3">如何将openSUSE从11.1升级到11.3</a>，下面讲讲如何安装最新版的VirtualBox。</p>
+<h1>一、安装</h1>
+<p>1、导入VirtualBox的public rpm key</p>
+<figure class="highlight"><pre># wget -q http://down<span class="operator"><span class="keyword">load</span>.virtualbox.org/virtualbox/debian/oracle_vbox.<span class="keyword">asc</span>
+# rpm --import oracle_vbox.<span class="keyword">asc</span>
+</pre></figure>
+
+<p>2、添加VirtualBox的repos</p>
+<figure class="highlight"><pre><span class="preprocessor"># cd /etc/zypp/repos.d/</span>
+<span class="preprocessor"># wget http://download.virtualbox.org/virtualbox/rpm/opensuse/11.3/virtualbox.repo</span>
+</pre></figure>
+
+<p>3、安装必需的组件</p>
+<figure class="highlight"><pre><span class="preprocessor"># zypper in kernel-source kernel-syms gcc make Xerces-c</span>
+</pre></figure>
+
+<p>4、安装VirtualBox</p>
+<figure class="highlight"><pre><span class="preprocessor"># zypper in VirtualBox-4.1</span>
+</pre></figure>
+
+<p>5、安装Extension Pack</p>
+<p>VirtualBox将VRDP、sharefolder等功能特性打包成Extension Pack。其中，VRDP最具吸引力，透过该功能，即便host不安装Xdesktop环境，用户也能通过RDP客户端也连接vm。</p>
+<figure class="highlight"><pre><span class="preprocessor"># cd /home/software</span>
+<span class="preprocessor"># wget http://download.virtualbox.org/virtualbox/4.1.16/Oracle_VM_VirtualBox_Extension_Pack-4.1.16-78094.vbox-extpack</span>
+<span class="preprocessor"># VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-4.1.16-78094.vbox-extpack</span>
+</pre></figure>
+
+<h1>二、配置</h1>
+<p>VirtualBox默认的配置中，vm的vdi和config文件分开存放，而我更倾向于以下的目录组织方式：</p>
+<figure class="highlight"><pre><span class="comment">#</span> <span class="comment">tree</span> <span class="literal">-</span><span class="comment">A</span> <span class="literal">-</span><span class="comment">S</span> <span class="comment">/vbox</span>.<span class="comment">images/</span>
+<span class="comment">/vbox</span>.<span class="comment">images/</span>
+<span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">archive</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">tinycore</span>-<span class="comment">2</span>.<span class="comment">1</span>-<span class="comment">x86</span>.<span class="comment">7z</span>
+<span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">deb6</span>-<span class="comment">template</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">Logs</span>
+<span class="comment">|</span>   <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>
+<span class="comment">|</span>   <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>.<span class="comment">1</span>
+<span class="comment">|</span>   <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>.<span class="comment">2</span>
+<span class="comment">|</span>   <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>.<span class="comment">3</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">deb6</span>-<span class="comment">template</span>.<span class="comment">vbox</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">deb6</span>-<span class="comment">template</span>.<span class="comment">vbox</span>-<span class="comment">prev</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">deb6</span>-<span class="comment">template</span>.<span class="comment">vdi</span>
+<span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">netmgmt</span>-<span class="comment">deb6</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">Logs</span>
+<span class="comment">|</span>   <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>
+<span class="comment">|</span>   <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>.<span class="comment">1</span>
+<span class="comment">|</span>   <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>.<span class="comment">2</span>
+<span class="comment">|</span>   <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>.<span class="comment">3</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">netmgmt</span>-<span class="comment">deb6</span>.<span class="comment">vbox</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">netmgmt</span>-<span class="comment">deb6</span>.<span class="comment">vbox</span>-<span class="comment">prev</span>
+<span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">netmgmt</span>-<span class="comment">deb6</span>.<span class="comment">vdi</span>
+<span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">win2k3</span>-<span class="comment">template</span>
+    <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">Logs</span>
+    <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>
+    <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>.<span class="comment">1</span>
+    <span class="comment">|</span>   <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">VBox</span>.<span class="comment">log</span>.<span class="comment">2</span>
+    <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">win2k3</span>-<span class="comment">template</span>.<span class="comment">vbox</span>
+    <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">win2k3</span>-<span class="comment">template</span>.<span class="comment">vbox</span>-<span class="comment">prev</span>
+    <span class="literal">+</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">win2k3</span>-<span class="comment">template</span>.<span class="comment">vdi
+</pre></figure>
+
+<p>vm的config、vdi和log放在同一个目录下，方便管理。因此，需要重新对<code>machinefolder</code>进行配置：</p>
+<figure class="highlight"><pre><span class="preprocessor"># vboxmanage setproperty machinefolder /vbox.images/</span>
+</pre></figure>
+
+<p>至此完成了最新版VirtualBox的安装。</p>
+<p>接下来，该如何创建和克隆vm呢？<a href="../debian-template-on-virtualbox">且听下回分解</a>。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+    <article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2012-06-04T15:00:00.000Z"><a href="/2012/06/04/how-to-upgrade-opensuse-from-11.1-to-11.3/">2012-06-4</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/04/how-to-upgrade-opensuse-from-11.1-to-11.3/">如何将openSUSE从11.1升级到11.3</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近需要在一台openSUSE 11.1上安装virtualbox，死活装不上去，请教google大神后发现，大多数成功的案例都是在11.3下发生的，于是便开始了我下面的11.1到11.3的升级之旅。</p>
+<p>openSUSE官方forum上看到不少跨版本升级失败的例子，因此决定采用步步为营的升级法，也很简单，就是先从11.1升级到11.2，然后再从11.2升级到11.3，虽然啰嗦了一些，但是安全。</p>
+<p>1、禁用旧的repos</p>
+<figure class="highlight"><pre><span class="preprocessor"># zypper mr –all -d</span>
+</pre></figure>
+
+<p>2、添加新版本的repos</p>
+<figure class="highlight"><pre><span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/distribution/11.2/repo/non-oss/ "11.2-repo-non-oss"</span>
+<span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/distribution/11.2/repo/oss/ "11.2-repo-oss"</span>
+<span class="preprocessor"># zypper ar -f http://ftp.jaist.ac.jp/pub/Linux/openSUSE/update/11.2/ "11.2-repo-update"</span>
+</pre></figure>
+
+<p>3、更新local metadata和repo内容</p>
+<figure class="highlight"><pre><span class="preprocessor"># zypper refresh</span>
+</pre></figure>
+
+<p>4、安装新版本的zypper</p>
+<figure class="highlight"><pre><span class="preprocessor"># zypper in zypper</span>
+</pre></figure>
+
+<p>5、升级版本</p>
+<figure class="highlight"><pre><span class="preprocessor"># zypper dup</span>
+</pre></figure>
+
+<p>6、配置</p>
+<figure class="highlight"><pre><span class="preprocessor"># SuSEconfig</span>
+</pre></figure>
+
+<p>7、重启</p>
+<figure class="highlight"><pre><span class="preprocessor"># shutdown -r now</span>
+</pre></figure>
+
+<p>8、验证</p>
+<figure class="highlight"><pre><span class="preprocessor"># cat /etc/SuSE-release</span>
+</pre></figure>
+
+<p>大约耗时2.5小时，过程还算顺利，此步骤完成了从11.1升级到11.2，接着再重复一次整个步骤又可以从11.2升级到11.3了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:ioiioi.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/RouterOS/MikroTik/">MikroTik</a><small>2</small></li>
+  
+    <li><a href="/categories/RouterOS/">RouterOS</a><small>3</small></li>
+  
+    <li><a href="/categories/VPS/">VPS</a><small>1</small></li>
+  
+    <li><a href="/categories/confluence/">confluence</a><small>1</small></li>
+  
+    <li><a href="/categories/dhcp/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/debian/">debian</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/">debian</a><small>12</small></li>
+  
+    <li><a href="/categories/dhcp/">dhcp</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/">domU</a><small>1</small></li>
+  
+    <li><a href="/categories/freebsd/">freebsd</a><small>1</small></li>
+  
+    <li><a href="/categories/iptable/">iptable</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/iscsi/">iscsi</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/kvm/">kvm</a><small>1</small></li>
+  
+    <li><a href="/categories/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/network/ldap/">ldap</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/linksys/">linksys</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/">netbsd</a><small>1</small></li>
+  
+    <li><a href="/categories/openbsd/netmgmt/">netmgmt</a><small>1</small></li>
+  
+    <li><a href="/categories/network/">network</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/network/">network</a><small>2</small></li>
+  
+    <li><a href="/categories/networking/">networking</a><small>1</small></li>
+  
+    <li><a href="/categories/nexenta/">nexenta</a><small>4</small></li>
+  
+    <li><a href="/categories/octopress/">octopress</a><small>3</small></li>
+  
+    <li><a href="/categories/debian/octopress/">octopress</a><small>2</small></li>
+  
+    <li><a href="/categories/openSUSE/">openSUSE</a><small>2</small></li>
+  
+    <li><a href="/categories/openbsd/">openbsd</a><small>8</small></li>
+  
+    <li><a href="/categories/openbsd openntpd/">openbsd openntpd</a><small>1</small></li>
+  
+    <li><a href="/categories/openwrt/">openwrt</a><small>1</small></li>
+  
+    <li><a href="/categories/others/">others</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/netbsd/solaris/">solaris</a><small>1</small></li>
+  
+    <li><a href="/categories/ubuntu/">ubuntu</a><small>1</small></li>
+  
+    <li><a href="/categories/vim/">vim</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualbox/">virtualbox</a><small>5</small></li>
+  
+    <li><a href="/categories/windows/virtualbox/">virtualbox</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/">virtualization</a><small>2</small></li>
+  
+    <li><a href="/categories/kvm/virtualization/">virtualization</a><small>1</small></li>
+  
+    <li><a href="/categories/vpn/">vpn</a><small>1</small></li>
+  
+    <li><a href="/categories/windows/">windows</a><small>1</small></li>
+  
+    <li><a href="/categories/virtualization/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/debian/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/">xen</a><small>2</small></li>
+  
+    <li><a href="/categories/ubuntu/domU/xen/">xen</a><small>1</small></li>
+  
+    <li><a href="/categories/xen/kvm/虚拟化/">虚拟化</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2013 alfie chan
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
